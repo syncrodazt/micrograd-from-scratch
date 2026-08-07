@@ -1,0 +1,21 @@
+# Environments
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Graphviz output
+*.gv
+*.gv.pdf
+*.gv.svg
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
