@@ -1,0 +1,382 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review — retrieval session 2026-08-09</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="2026-08-09-recall.html">คำตอบดิบ</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Retrieval review · 2026-08-09</div>
+    <h1>3 จุดที่ผิด และช่องว่างที่ยังไม่เห็น</h1>
+    <p class="standfirst">
+      ตรวจคำตอบจากการอธิบายออกเสียงระหว่างเดิน 30 นาที โดยไม่เปิดโน้ต —
+      อะไรแม่นแล้ว อะไรผิด และอะไรที่หายไปจากภาพโดยไม่รู้ตัว
+    </p>
+    <div class="meta">
+      2026-08-09 · Day 3 · M1 micrograd
+      <span class="dl">· ต้นฉบับ <a href="2026-08-09-review.md">review.md</a></span>
+    </div>
+  </header>
+
+  <h2>สรุปก่อน: ผ่านเกินเกณฑ์มาก</h2>
+
+  <p>
+    ข้อ 1–6 ที่ให้ไปตอบได้ครบทุกข้อ และหลายจุดไปไกลกว่าที่ถาม —
+    โดยเฉพาะการ<strong>แก้ตัวเองกลางประโยค</strong>ตอนพูดเรื่อง system:
+  </p>
+
+  <div class="note good">
+    <p><em>"เราปรับ input… อ๋อ ไม่ใช่ input เรา fix แล้วเพราะมันเป็น training data เราปรับ weight"</em></p>
+    <p>นั่นไม่ใช่การท่องจำ นั่นคือคนที่กำลังคิดจริง</p>
+  </div>
+
+  <p>แต่มี <strong>3 จุดที่ผิด</strong> และหนึ่งในนั้นสำคัญ</p>
+
+  <h2>🔴 สามจุดที่ต้องแก้</h2>
+
+  <h3>1. id vs hash — ผิดเรื่องพฤติกรรมจริงของ Python</h3>
+
+  <div class="note bad">
+    <span class="note-label">สิ่งที่พูดไว้</span>
+    <p><em>"ถ้าเรามี Value ที่เป็น 2 สองตัวคนละตัวแปร — hash มันเหมือนกัน แต่ ID ไม่เหมือนกัน"</em></p>
+  </div>
+
+  <p>รันเทสต์กับ <code>Value</code> แบบที่มีอยู่ตอนนี้:</p>
+
+<pre><code>a = Value(2.0); b = Value(2.0)
+
+a.data == b.data    : True
+id(a)  == id(b)     : False
+hash(a) == hash(b)  : False   ← คิดว่า True</code></pre>
+
+  <p>
+    <strong>hash ต่างกันด้วย</strong> เพราะตอนนี้ <code>Value</code> ยังไม่มี <code>__eq__</code>
+    Python จึงถือว่า <em>"เท่ากัน = เป็นก้อนเดียวกัน"</em> แล้วคำนวณ hash จาก id ตรงๆ —
+    <span class="g" data-t="identity">hash กับ id</span> จึงพูดเรื่องเดียวกันอยู่ตอนนี้
+  </p>
+
+  <p>สิ่งที่อธิบายไว้จะเป็นจริงก็ต่อเมื่อเขียน <code>__eq__</code> เอง:</p>
+
+<pre><code>class Value2:  def __eq__(self, o): return self.data == o.data
+
+hash(c) == hash(d)  : True
+len({c, d})         : 1     ← ยุบเหลือ node เดียว! กราฟพังทันที</code></pre>
+
+  <div class="note">
+    <p>
+      <strong>ความเข้าใจเชิงแนวคิดถูก</strong> (id = ตัวตน, hash = ความเท่ากัน) —
+      ผิดแค่ว่า <em>ตอนนี้</em> Python ยังไม่ได้แยกสองอย่างนี้ให้
+      เพราะเรายังไม่ได้บอกมันว่า “เท่ากัน” แปลว่าอะไร
+      (ดู <span class="g" data-t="hashable">hashable</span>)
+    </p>
+  </div>
+
+  <h3>2. Newton's method ≠ gradient descent</h3>
+
+  <p>ที่พูดว่า <em>"มันเหมือนทฤษฎีของนิวตัน Newton method"</em> — <strong>คนละอย่าง</strong>:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>สูตรอัปเดต</th><th>ใช้อนุพันธ์อันดับ</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Gradient descent</strong></td><td><code>x ← x − lr · f′(x)</code></td><td><strong>หนึ่ง</strong></td></tr>
+      <tr><td><strong>Newton's method</strong></td><td><code>x ← x − f′(x) / f″(x)</code></td><td><strong>สอง</strong> (Hessian)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    Newton ลู่เข้าเร็วกว่ามาก แต่ต้องคำนวณ Hessian ซึ่งสำหรับพารามิเตอร์พันล้านตัว
+    คือเมทริกซ์ขนาดพันล้าน × พันล้าน — <strong>เป็นไปไม่ได้</strong>
+    นี่คือเหตุผลที่ deep learning ใช้ first-order เกือบทั้งหมด
+  </p>
+
+  <p>
+    ที่อธิบายไว้ (<em>"หาความชัน แล้ว shift ไปทางความชันนิดหน่อย"</em>) คือ
+    <strong>gradient descent</strong> ถูกแล้ว แค่เรียกชื่อผิด
+  </p>
+
+  <h3>3. k-means ไม่ใช่ classifier</h3>
+
+  <p>คำถามที่ฝากไว้: <em>"วิธี ML ธรรมดาสำหรับจุดใน 2D คืออะไร จำไม่ได้ K-means?"</em></p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>ทำอะไร</th><th>มี label ไหม</th></tr></thead>
+    <tbody>
+      <tr><td><strong>k-means</strong></td><td>จับกลุ่มจุดที่คล้ายกัน (clustering)</td><td>❌ ไม่มี — unsupervised</td></tr>
+      <tr><td><strong>k-NN</strong></td><td>ดู k เพื่อนบ้านที่ใกล้ที่สุด แล้วโหวต</td><td>✅ มี — supervised</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>วิธีคลาสสิกสำหรับ binary classification บนจุด 2D:</strong>
+    logistic regression · k-NN · SVM · decision tree
+  </p>
+
+  <div class="note good">
+    <span class="note-label">คำตอบที่แท้จริงของ “ทำไมต้องใช้ NN”</span>
+    <p>
+      วิธีคลาสสิก <strong>คนต้องเป็นคนเลือกรูปทรงของเส้นแบ่ง</strong> —
+      logistic regression วาดเส้นตรงได้อย่างเดียว ถ้าอยากได้เส้นโค้งต้องนั่งคิด feature เอง
+      (<code>x²</code>, <code>xy</code>, …) SVM ต้องเลือก kernel
+    </p>
+    <p>
+      <strong>Neural net เรียนรูปทรงนั้นเอง</strong> จากข้อมูล ไม่ต้องมีใครบอก —
+      ยิ่งปัญหาซับซ้อน (ภาพ เสียง ภาษา) ยิ่งไม่มีมนุษย์คนไหนออกแบบ feature ได้ทัน
+      นั่นแหละคือเหตุผล
+    </p>
+  </div>
+
+  <h2>🧩 Closure — สอนใหม่ด้วยมุมอื่น</h2>
+
+  <h3>สิ่งที่เข้าใจถูกแล้ว</h3>
+
+  <div class="note">
+    <p><em>"มันคล้าย global variable แต่เป็น global ใน context ของ function"</em></p>
+  </div>
+
+  <p><strong>ใกล้มาก</strong> แต่พลาดคุณสมบัติที่สำคัญที่สุดไป — และคุณสมบัตินั้นคือเหตุผลที่มันมีอยู่</p>
+
+  <h3>คุณสมบัติที่ยังไม่เห็น: ตัวแปรมีชีวิตอยู่ต่อ หลังฟังก์ชันแม่จบไปแล้ว</h3>
+
+  <p>ปกติตัวแปร local <strong>ตายทันที</strong>ที่ฟังก์ชันจบ แต่ลองรันอันนี้:</p>
+
+<pre><code>def make_counter():
+    n = 0
+    def bump():
+        nonlocal n
+        n += 1
+        return n
+    return bump          # ← make_counter จบตรงนี้ n ควรจะตายแล้ว
+
+c1 = make_counter()
+c2 = make_counter()
+
+print(c1(), c1(), c1())   # 1 2 3
+print(c2())               # 1   ← ไม่ใช่ 4</code></pre>
+
+  <p><strong>สังเกตสองอย่าง:</strong></p>
+
+  <ol>
+    <li><code>make_counter</code> <strong>จบไปนานแล้ว</strong> แต่ <code>c1()</code> ยังใช้ <code>n</code> ได้
+      → <code>n</code> ไม่ตาย เพราะ <code>bump</code> ยังถือกล่องมันอยู่</li>
+    <li><code>c1</code> กับ <code>c2</code> มี <code>n</code> <strong>คนละตัว</strong>
+      → นี่คือจุดที่ต่างจาก global โดยสิ้นเชิง</li>
+  </ol>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>global</th><th><span class="g" data-t="closure">closure</span></th></tr></thead>
+    <tbody>
+      <tr><td>มีกี่กล่อง</td><td><strong>หนึ่งกล่องตลอดกาล</strong></td><td><strong>กล่องใหม่ทุกครั้งที่เรียกฟังก์ชันแม่</strong></td></tr>
+      <tr><td>ใครแตะได้</td><td>ทุกคนในโปรแกรม</td><td>เฉพาะฟังก์ชันที่ถูกสร้างพร้อมกัน</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>และนี่คือเหตุผลที่ <code>trace()</code> ใช้ closure ถูกแล้ว</strong> —
+    เรียก <code>trace(d)</code> สองครั้งได้ตะกร้าคนละใบ ไม่ปนกัน
+    ถ้าใช้ global จริง ครั้งที่สองจะเจอ node เก่าค้างอยู่
+  </p>
+
+  <h3>ทำไมชื่อ “closure”</h3>
+
+  <p>ที่เดาว่ามาจาก <em>"close global variable"</em> — เกือบ แต่มาจากอีกทาง:</p>
+
+  <ul>
+    <li><code>bump</code> ใช้ชื่อ <code>n</code> แต่ไม่ได้นิยามเอง ไม่ได้รับมาเป็น argument
+      → <code>n</code> เรียกว่า <span class="g" data-t="freevar">free variable</span></li>
+    <li>ฟังก์ชันที่มีตัวแปรลอยแบบนี้เรียกว่า <strong>“เปิด” (open)</strong> —
+      เอาไปรันเดี่ยวๆ ไม่ได้ ไม่รู้ว่า <code>n</code> คืออะไร</li>
+    <li>Python <strong>“ปิด” (close over)</strong> มันให้ โดยแนบกล่องติดตัวไป → กลายเป็น <strong>closure</strong></li>
+  </ul>
+
+  <h3>ทำไมต้องรู้ตอนนี้ — payoff อยู่พรุ่งนี้</h3>
+
+  <div class="note">
+    <p>
+      <code>_backward</code> ของแต่ละ operation จะเป็น closure ที่
+      <strong>แบก <code>self</code>, <code>other</code> และ <code>out</code> ติดตัวไป
+      หลังจาก <code>__add__</code> return ไปแล้ว</strong>
+    </p>
+    <p>
+      พอถึงเวลา backward — <code>__add__</code> จบไปนานแล้ว แต่ closure ยังจำได้ว่าตัวเองเกิดจากใคร
+      <strong>นี่คือกลไกที่ทำให้ backward pass เป็นไปได้เลย</strong>
+      ถ้าไม่มี closure จะต้องเก็บข้อมูลพวกนี้ไว้เองด้วยมือทุก node
+    </p>
+  </div>
+
+  <div class="ask">
+    ลองรัน <code>make_counter</code> ข้างบนจริงๆ 30 วินาที —
+    เห็น <code>1 2 3</code> แล้ว <code>1</code> ด้วยตาตัวเอง จะ get ทันที
+  </div>
+
+  <h2>🔤 Dunder — สั้นๆ</h2>
+
+  <p><code>__add__</code>, <code>__repr__</code>, <code>__init__</code> — “<span class="g" data-t="dunder">dunder</span>” = <strong>d</strong>ouble <strong>under</strong>score</p>
+
+  <div class="note good">
+    <p><strong>แนวคิดเดียวที่ต้องจำ: เราไม่ได้เรียกมัน — เราเขียนไว้ แล้ว Python เรียกให้</strong></p>
+  </div>
+
+<pre><code>a + b      →  Python เรียก a.__add__(b)
+print(a)   →  Python เรียก a.__repr__()
+len(a)     →  Python เรียก a.__len__()</code></pre>
+
+  <p>
+    มันคือ <strong>จุดเสียบปลั๊ก (hook)</strong> ที่ Python เปิดไว้ให้ class ของเรา
+    เข้าไปแทรกพฤติกรรมของ syntax พื้นฐาน
+  </p>
+
+  <p>
+    <strong>ทำไมชื่ออัปลักษณ์แบบนั้น</strong> — เพื่อไม่ให้ชนกับชื่อเมธอดปกติที่คนตั้งเอง
+    ไม่มีใครบังเอิญตั้งชื่อเมธอดว่า <code>__add__</code>
+  </p>
+
+  <h2>✅ ที่แม่นแล้ว ไม่ต้องกลับไปทบทวน</h2>
+
+  <ul>
+    <li>ทำไม <span class="g" data-t="numgrad">numerical gradient</span> ใช้ไม่ได้ — <strong>2 เหตุผลครบ</strong> และเสริมเองว่า “โมเดลจริงมีพันล้านตัวแปร”</li>
+    <li><span class="g" data-t="dag">DAG</span> vs <span class="g" data-t="tree">tree</span> + <code>x*y + x</code> — ครบ</li>
+    <li><span class="g" data-t="staging">git add</span> เก็บสำเนา ณ วินาทีนั้น — ครบ</li>
+    <li><code>Value</code> เก็บอะไร — ครบ (<code>data</code>, <code>_prev</code>, <code>_op</code>, <code>grad</code>)</li>
+    <li>Loss = ผลต่างระหว่าง y ที่อยากได้กับ y ที่ได้ <strong>ยุบเป็นตัวเลขตัวเดียว</strong> ← ข้อ “ตัวเลขตัวเดียว” สำคัญมาก</li>
+    <li>Learning rate + อุปมายักษ์ก้าวข้ามภูเขา — ถูกและอธิบายเก่ง</li>
+  </ul>
+
+  <h3>สองอันนี้ดีเป็นพิเศษ</h3>
+
+  <div class="note good">
+    <p>
+      <strong>1.</strong> <em>"เราต้อง forward pass ก่อน เพราะตอนหา gradient เราต้องรู้ค่าแต่ละตัวใน
+      <span class="g" data-t="compgraph">computation graph</span>"</em> —
+      นี่คือประเด็นที่ละเอียดและคนพลาดกันเยอะ backward ต้องใช้ค่าจาก forward
+      (เช่น gradient ของ <code>a</code> ใน <code>a*b</code> ต้องใช้ค่าของ <code>b</code>)
+      เห็นเองโดยไม่มีใครบอก
+    </p>
+    <p>
+      <strong>2.</strong> อุปมาตีเทนนิส — <em>"ถ้าไม่รู้ว่ามันแตกต่างทางไหน เราก็ไม่รู้จะปรับไปทางไหน
+      ก็ต้องสุ่มมั่วๆ"</em> — นั่นคือคำตอบว่า<strong>ทำไมต้องมี gradient แทนที่จะสุ่ม</strong>
+      อธิบายได้ดีกว่าตำราหลายเล่ม
+    </p>
+  </div>
+
+  <h2>📌 ตอบคำถามที่ฝากไว้ระหว่างทาง</h2>
+
+  <h3>“ทำไมเรียกว่า Loss Function?”</h3>
+
+  <p>
+    มาจาก statistical decision theory — loss คือ “ราคาที่ต้องจ่ายเมื่อทายผิด”
+    ชื่ออื่นที่ใช้แทนกันได้: cost function, objective function, error function
+  </p>
+
+  <p>
+    และที่พูดถูกว่า minimize/maximize เป็นแค่เรื่องเครื่องหมาย —
+    ถ้ากลับเครื่องหมายจะเรียกว่า <em>utility</em> หรือ <em>reward</em> แล้ว maximize แทน
+    ซึ่งคือสิ่งที่ RL ทำ
+  </p>
+
+  <h3>“PyTorch ใช้ class ชื่อ Value ไหม?”</h3>
+
+  <p>
+    ไม่ — PyTorch ใช้ <strong><code>Tensor</code></strong> และเก็บข้อมูลกราฟไว้ที่
+    <code>.grad_fn</code> (≈ <code>_op</code> + <code>_prev</code> รวมกัน),
+    <code>.grad</code> (= <code>grad</code>), <code>.requires_grad</code>
+  </p>
+
+  <p>
+    ชื่อ <code>Value</code> เป็นของ micrograd โดยเฉพาะ แต่<strong>แนวคิดเหมือนกันเป๊ะ</strong> —
+    micrograd คือ PyTorch ที่ถอด tensor ออกเหลือ scalar
+  </p>
+
+  <h2>⚠️ สิ่งที่ไม่ได้พูดถึงเลย</h2>
+
+  <p>ไม่ใช่ว่าตอบผิด — แต่<strong>หายไปจากภาพ</strong> ซึ่งบอกว่ายังไม่อยู่ในหัว:</p>
+
+  <div class="note bad">
+    <span class="note-label">ช่องว่างใหญ่ที่สุด</span>
+    <p>
+      <strong>Activation function / nonlinearity</strong> —
+      อธิบาย neuron ว่า <code>w·x + b</code> แล้วจบ
+      <strong>แต่ถ้ามีแค่นั้น การซ้อน layer กี่ชั้นก็ยุบเหลือสมการเส้นตรงเดียว</strong>
+      เครือข่าย 100 ชั้นจะเก่งเท่า logistic regression เป๊ะ
+      นี่คือเหตุผลที่ <code>tanh</code> ต้องมี
+    </p>
+  </div>
+
+  <ol start="2">
+    <li>ทำไมลำดับถึงสำคัญตอน backward — ไม่ได้แตะเรื่อง <span class="g" data-t="toposort">topological sort</span> เลย</li>
+    <li><span class="g" data-t="repr">__repr__</span> และเหตุผลที่ต้องมี</li>
+    <li><span class="g" data-t="reflected">Reflected operator</span> (<code>__rmul__</code>) — จะบล็อกตอน Neuron</li>
+    <li><span class="g" data-t="mutdefault">Mutable default argument</span></li>
+    <li><strong>gradient ของ node ที่มีลูกหลายตัวต้องทำยังไง</strong> — บอกว่า “ซ้ำแล้วจะมีปัญหาตอนคำนวณ gradient” ถูก
+      แต่ยังไม่ได้บอกว่า<em>ปัญหาอะไร</em> — อันนี้ตั้งใจไม่เฉลย เก็บไว้เจอเอง</li>
+  </ol>
+
+  <h2>🎯 อัปเกรดหนึ่งอย่างสำหรับสมองสาย control</h2>
+
+  <p>
+    ที่ map ไปที่ <strong>control</strong> — <em>"เรามี system เราอยากให้ output เป็นอย่างที่ต้องการ"</em>
+    ใกล้แล้วแต่ยังไม่ตรง:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>ปรับอะไร</th><th>อะไรคงที่</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Control</strong></td><td><strong>input</strong> (สัญญาณควบคุม)</td><td>plant คงที่</td></tr>
+      <tr><td><strong>Training NN</strong></td><td><strong>พารามิเตอร์ของ plant เอง</strong></td><td>input–output data คงที่</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    การเทรน NN ไม่ใช่ control — <strong>มันคือ system identification / parameter estimation</strong>
+    มี input–output data ชุดหนึ่ง แล้วปรับ<em>ตัวแบบ</em>ให้ fit ข้อมูลนั้น
+  </p>
+
+  <p>
+    ที่พูดเองระหว่างอัดว่า <em>"อ๋อ input เรา fix แล้ว เราปรับ weight"</em> —
+    <strong>ไปถึงข้อสรุปนี้เองแล้ว</strong> ผมแค่ให้ชื่อเรียกที่ถูกต้องกับมัน
+  </p>
+
+  <p>
+    (ส่วน backprop เอง ≈ <strong>adjoint / costate equation</strong> ที่วิ่งย้อนเวลากลับ —
+    อันนั้นตรงเป๊ะ)
+  </p>
+
+  <h2>รายการทบทวนของวันนี้</h2>
+
+  <ul>
+    <li>รัน <code>make_counter</code> ให้เห็น <code>1 2 3</code> แล้ว <code>1</code></li>
+    <li>จำแยก: gradient descent (1st order) vs Newton (2nd order)</li>
+    <li>จำแยก: k-means (ไม่มี label) vs k-NN (มี label)</li>
+    <li>จำว่า <strong>ตอนนี้</strong> <code>hash(Value(2.0)) != hash(Value(2.0))</code> — และจะเปลี่ยนก็ต่อเมื่อเขียน <code>__eq__</code></li>
+  </ul>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="2026-08-09-recall.html">← คำตอบดิบ</a>
+      <a href="../index.html">Learning log →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>

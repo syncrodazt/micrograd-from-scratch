@@ -1,0 +1,362 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference — Python scope: global, nonlocal, closure</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Reference · Python</div>
+    <h1>global · nonlocal · closure</h1>
+    <p class="standfirst">
+      สามคำที่คนสับสนกันมากที่สุดใน Python — เพราะจริงๆ แล้วมันไม่ใช่ของประเภทเดียวกัน
+      หน้านี้เป็นเอกสารอ้างอิง กลับมาเปิดซ้ำได้เรื่อยๆ
+    </p>
+    <div class="meta">2026-08-09 · ใช้กับ <code>trace()</code> วันนี้ และ <code>_backward</code> พรุ่งนี้</div>
+  </header>
+
+  <h2>เคลียร์ประเภทก่อน</h2>
+
+  <p>ความสับสนเกือบทั้งหมดมาจากการเอาสามอย่างนี้มาวางเทียบกันทั้งที่มันคนละชนิด:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>เป็นอะไร</th><th>ทำหน้าที่อะไร</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong><span class="g" data-t="closure">closure</span></strong></td>
+        <td><strong>กลไก</strong> ของภาษา</td>
+        <td>ฟังก์ชันข้างในจำตัวแปรของฟังก์ชันข้างนอกได้ — เกิดขึ้นเองอัตโนมัติ</td>
+      </tr>
+      <tr>
+        <td><strong><code><span class="g" data-t="nonlocal">nonlocal</span></code></strong></td>
+        <td><strong>คำสั่ง</strong> (keyword)</td>
+        <td>“ตอนฉัน assign ทับชื่อนี้ ให้ไปแก้ของฟังก์ชันแม่ อย่าสร้างตัวใหม่”</td>
+      </tr>
+      <tr>
+        <td><strong><code><span class="g" data-t="globalkw">global</span></code></strong></td>
+        <td><strong>คำสั่ง</strong> (keyword)</td>
+        <td>เหมือนกัน แต่ชี้ไปที่ระดับไฟล์แทน</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note good">
+    <span class="note-label">ประโยคเดียวที่ต้องจำ</span>
+    <p>
+      <strong>closure เกิดขึ้นแม้ไม่ใช้ <code>nonlocal</code> เลย</strong> —
+      ถ้าแค่อ่านค่า หรือแค่ <code>.append()</code> ก็เป็น closure อยู่แล้ว
+      <code>nonlocal</code> จำเป็นเฉพาะตอน<strong>เขียนทับชื่อ</strong>
+    </p>
+  </div>
+
+  <h2>ลำดับการค้นหาชื่อ: LEGB</h2>
+
+  <p>Python หาชื่อตัวแปรตามลำดับนี้ และหยุดทันทีที่เจอ:</p>
+
+<pre><code>L  Local        ในฟังก์ชันตัวเอง
+E  Enclosing    ฟังก์ชันแม่ที่ครอบอยู่        ← closure อยู่ตรงนี้
+G  Global       ระดับไฟล์ (module)
+B  Built-in     len, print, sum ...</code></pre>
+
+  <p>
+    <span class="g" data-t="legb">LEGB</span> ใช้กับการ <em>อ่าน</em> เท่านั้น —
+    การ <strong>เขียนทับ</strong> จะสร้างตัวใหม่ที่ <code>L</code> เสมอ
+    เว้นแต่จะประกาศ <code>nonlocal</code> (ไปที่ E) หรือ <code>global</code> (ไปที่ G)
+  </p>
+
+  <h2>คุณสมบัติที่ทำให้ closure เป็น closure</h2>
+
+  <p>
+    ตัวแปร local ปกติ <strong>ตายทันที</strong>ที่ฟังก์ชันจบ
+    แต่ตัวแปรที่ถูก closure จับไว้ <strong>อยู่ต่อ</strong>:
+  </p>
+
+<pre><code>def make_counter():
+    n = 0
+    def bump():
+        nonlocal n
+        n += 1
+        return n
+    return bump          # ← make_counter จบตรงนี้ n ควรจะตายแล้ว
+
+c1 = make_counter()
+c2 = make_counter()
+
+print(c1(), c1(), c1())   # 1 2 3
+print(c2())               # 1   ← ไม่ใช่ 4</code></pre>
+
+  <ol>
+    <li><code>make_counter</code> <strong>จบไปแล้ว</strong> แต่ <code>c1()</code> ยังใช้ <code>n</code> ได้ —
+      <code>n</code> ไม่ตายเพราะ <code>bump</code> ยังถือกล่องมันอยู่</li>
+    <li><code>c1</code> กับ <code>c2</code> มี <code>n</code> <strong>คนละตัว</strong></li>
+  </ol>
+
+  <h2>“ไม่ตาย” ≠ “เป็น global”</h2>
+
+  <p>
+    นี่คือจุดที่คนพลาดมากที่สุด — ทั้ง global และ closure ต่างก็ “ไม่ตาย”
+    แต่<strong>ด้วยเหตุผลคนละอย่าง</strong> และผลที่ตามมาต่างกันสิ้นเชิง
+  </p>
+
+<pre><code># ---- GLOBAL ----                  # ---- CLOSURE ----
+count = 0                           def make_bump():
+def bump_global():                      count = 0
+    global count                        def bump():
+    count += 1                              nonlocal count
+    return count                            count += 1
+                                            return count
+                                        return bump</code></pre>
+
+  <h3>ต่างข้อ 1 — จำนวนชุด</h3>
+
+<pre><code>=== GLOBAL: สองคนใช้ ตัวเดียวกัน ===
+A: 1 2 3
+B: 4                    ← B อยากเริ่มใหม่ แต่ได้ต่อจาก A
+
+=== CLOSURE: สองคน ได้คนละตัว ===
+a: 1 2 3
+b: 1                    ← b เริ่มที่ 1 ไม่เกี่ยวกับ a
+a ต่อ: 4                ← a ยังนับของตัวเองต่อ</code></pre>
+
+  <p><strong>global มีชุดเดียวตลอดกาล · closure ได้ชุดใหม่ทุกครั้งที่เรียกฟังก์ชันแม่</strong></p>
+
+  <h3>ต่างข้อ 2 — เข้าถึงได้จากไหน</h3>
+
+<pre><code>'count' อยู่ใน globals() ไหม : True
+ค่าของมันคือ                  : 4       ← ของ global เท่านั้น
+a เก็บ count ไว้ที่            : 4
+b เก็บ count ไว้ที่            : 1</code></pre>
+
+  <div class="note">
+    <p>
+      <code>count</code> ของ <code>a</code> และของ <code>b</code>
+      <strong>ไม่ได้อยู่ใน <code>globals()</code> เลย</strong> และไม่ได้อยู่ใน namespace ไหนทั้งนั้น —
+      <strong>เรียกถึงมันด้วยชื่อไม่ได้จากที่ใดในโปรแกรม</strong>
+      มันมีอยู่แค่ในกล่อง (cell) ที่ <code>a</code> ถืออยู่ ต้องงัดผ่าน
+      <code>a.__closure__[0].cell_contents</code> ถึงจะแอบดูได้
+    </p>
+  </div>
+
+  <h3>ต่างข้อ 3 — ใครก็พัง global ได้</h3>
+
+<pre><code>count = 999                        ← ใครสักคนเขียนบรรทัดนี้
+หลังจากนั้น bump_global()  -> 1000  💥
+แต่ closure ของ a ยังเป็น  -> 5     ✅ ไม่มีใครแตะได้</code></pre>
+
+  <h2>อุปมาที่ใช้ได้</h2>
+
+  <div class="tw">
+  <table>
+    <tbody>
+      <tr>
+        <td><strong>global</strong></td>
+        <td>ตู้เก็บของกลางของทั้งอาคาร — <strong>มีตู้เดียว ใครก็เปิดได้ ใครก็รื้อได้</strong></td>
+      </tr>
+      <tr>
+        <td><strong>closure</strong></td>
+        <td><strong>ล็อกเกอร์ส่วนตัวใบใหม่</strong> ที่ออกให้ทุกครั้งที่เรียกฟังก์ชันแม่ —
+          มีแค่ฟังก์ชันข้างในที่ถือกุญแจ</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>เหตุผลที่ “ไม่ตาย” ต่างกัน:</strong></p>
+  <ul>
+    <li>global ไม่ตายเพราะมัน<strong>อยู่ใน namespace ของไฟล์</strong>ตลอดอายุโปรแกรม</li>
+    <li>closure ไม่ตายเพราะ<strong>ยังมีคนถือกุญแจอยู่</strong> — พอไม่มีใครถือ <code>a</code> แล้ว กล่องนั้นก็ถูกเก็บกวาดไป</li>
+  </ul>
+
+  <h2>ตารางสรุป</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th><code>global</code></th><th><code>nonlocal</code> (closure)</th></tr></thead>
+    <tbody>
+      <tr><td>ชี้ไปที่ scope ไหน</td><td>ระดับ<strong>ไฟล์</strong></td><td>ฟังก์ชัน<strong>แม่ที่ครอบอยู่</strong></td></tr>
+      <tr><td>มีกี่ชุด</td><td><strong>1 ชุดตลอดกาล</strong></td><td><strong>1 ชุดต่อการเรียกฟังก์ชันแม่ 1 ครั้ง</strong></td></tr>
+      <tr><td>เรียกด้วยชื่อจากข้างนอก</td><td>✅ ได้</td><td>❌ ไม่ได้เลย</td></tr>
+      <tr><td>คนอื่นเขียนทับได้</td><td>✅ ได้ (อันตราย)</td><td>❌ ไม่ได้</td></tr>
+      <tr><td>ตายเมื่อไหร่</td><td>จบโปรแกรม</td><td>เมื่อไม่มีใครถือฟังก์ชันข้างในแล้ว</td></tr>
+      <tr><td><strong>สร้างชื่อใหม่ได้ไหม</strong></td><td>✅ ได้</td><td>❌ <strong>ต้องมีอยู่ก่อน</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>ข้อสุดท้ายทดสอบแล้ว:</p>
+
+<pre><code>global brand_new  → สร้างขึ้นมาเฉยๆ ได้ (brand_new = 42)
+nonlocal nope     → SyntaxError: no binding for nonlocal 'nope' found</code></pre>
+
+  <h2>เมื่อไหร่ต้องใส่ keyword</h2>
+
+<pre><code>def outer():
+    bucket = []
+    total  = [0]
+
+    def inner():
+        len(bucket)         # อ่านเฉยๆ         → ไม่ต้อง
+        bucket.append("x")  # แก้ของในกล่อง    → ไม่ต้อง
+        total[0] += 1       # แก้ของในกล่อง    → ไม่ต้อง (แม้จะมี +=)
+        # bucket = []       # ชี้ไปกล่องใหม่   → ต้อง nonlocal</code></pre>
+
+  <div class="note bad">
+    <span class="note-label">เส้นแบ่งที่แท้จริง</span>
+    <p>
+      <strong>ไม่ใช่ <code>+=</code> — แต่คือ “ชื่อนั้นยังชี้ไปที่เดิมไหม”</strong><br>
+      <code>total[0] += 1</code> ไม่ต้องใช้ <code>nonlocal</code> เพราะชื่อ <code>total</code>
+      ยังชี้ list ก้อนเดิม แค่ของข้างในเปลี่ยน
+    </p>
+  </div>
+
+  <h2>ส่องดูของจริง</h2>
+
+<pre><code>f.__code__.co_freevars   → ('nodes',)      ชื่อที่ f ใช้แต่ไม่ได้นิยามเอง
+f.__closure__            → (&lt;cell at 0x...&gt;,)   กล่องที่ f แบกติดตัวไป
+f.__closure__[0].cell_contents  → []       ข้างในกล่อง
+
+ฟังก์ชันธรรมดา __closure__ → None</code></pre>
+
+  <p>
+    <span class="g" data-t="freevar">Free variable</span> = ชื่อที่ฟังก์ชันใช้แต่ไม่ได้นิยามเอง
+    และไม่ได้รับมาเป็น argument ฟังก์ชันที่มีตัวแปรลอยแบบนี้เรียกว่า <em>“เปิด”</em> —
+    Python <strong>“ปิด” (close over)</strong> มันให้ จึงได้ชื่อว่า <strong>closure</strong>
+  </p>
+
+  <h2>ทำไม <code>trace()</code> ต้องใช้ closure ไม่ใช่ global</h2>
+
+<pre><code>def trace(root):
+    nodes = set()          # ← ล็อกเกอร์ใบใหม่ทุกครั้งที่เรียก trace
+    def f(node):
+        nodes.add(node)    # ← ไม่ต้อง nonlocal เพราะ add ไม่ได้เปลี่ยนกล่อง
+    ...</code></pre>
+
+  <p>ถ้าใช้ global แทน:</p>
+
+<pre><code>nodes = set()              # ตัวเดียวทั้งโปรแกรม
+def trace(root):
+    global nodes
+    ...</code></pre>
+
+  <p>
+    → เรียก <code>trace(d)</code> แล้วเรียก <code>trace(z)</code> ต่อ
+    <strong>จะได้ node ของ <code>d</code> ปนมาด้วย</strong> ต้องมานั่งล้างเองทุกครั้ง
+    และถ้าลืมล้างจะเจอบั๊กที่หาไม่เจอ
+  </p>
+
+  <h2>Payoff: <code>_backward</code></h2>
+
+  <div class="note good">
+    <p>
+      <code>_backward</code> ของแต่ละ operation จะเป็น closure ที่
+      <strong>แบก <code>self</code>, <code>other</code> และ <code>out</code> ติดตัวไป
+      หลังจาก <code>__add__</code> return ไปแล้ว</strong>
+    </p>
+    <p>
+      พอถึงเวลา backward — <code>__add__</code> จบไปนานแล้ว แต่ closure ยังจำได้ว่าตัวเองเกิดจากใคร
+      <strong>นี่คือกลไกที่ทำให้ backward pass เป็นไปได้</strong>
+      ถ้าไม่มี closure จะต้องเก็บข้อมูลพวกนี้ไว้เองด้วยมือทุก node
+    </p>
+    <p>
+      และเพราะแต่ละ node ได้ล็อกเกอร์คนละใบ node ที่ต่างกันจึงจำ <code>self</code>/<code>other</code>
+      ของตัวเองได้โดยไม่ปนกัน — ซึ่งถ้าใช้ global จะทำไม่ได้เลย
+    </p>
+  </div>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <div id="quiz"></div>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    <a href="https://docs.python.org/3/reference/executionmodel.html#binding-of-names">Python Reference — Binding of names</a>
+    · <a href="https://docs.python.org/3/reference/simple_stmts.html#the-nonlocal-statement">The <code>nonlocal</code> statement</a>
+    · <a href="https://docs.python.org/3/reference/simple_stmts.html#the-global-statement">The <code>global</code> statement</a>
+    · <a href="https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces">Tutorial — Scopes and Namespaces</a>
+  </div>
+
+  <div class="ask">
+    วิธีที่เร็วที่สุดที่จะเข้าใจหน้านี้: พิมพ์ <code>make_counter</code> เองสัก 8 บรรทัด
+    แล้วดู <code>c1</code> กับ <code>c2</code> แยกกันจริงๆ ด้วยตา
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="glossary.html">← Glossary</a>
+      <a href="../index.html">Learning log →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "ตัวแปรที่ closure จับไว้ กับตัวแปร <code>global</code> — ต่างกันที่ข้อไหน<strong>มากที่สุด</strong>?",
+    opts: [
+      "closure ได้ชุดใหม่ทุกครั้งที่เรียกฟังก์ชันแม่ ส่วน global มีชุดเดียว",
+      "closure เก็บได้เฉพาะตัวเลข ส่วน global เก็บ object ชนิดใดก็ได้",
+      "closure ถูกลบทิ้งทันทีที่ฟังก์ชันแม่ทำงานจบ ส่วน global อยู่ต่อ"
+    ],
+    a: 0,
+    why: "ทั้งคู่ “ไม่ตาย” เหมือนกัน แต่คนละเหตุผล — global อยู่ใน namespace ของไฟล์ตลอดอายุโปรแกรม ส่วน closure อยู่เพราะ<b>ยังมีคนถือกุญแจ</b> ผลคือเรียก <code>make_counter()</code> สองครั้งได้ตัวนับสองชุดที่ไม่ยุ่งกัน แต่ global ใช้ร่วมกันหมด"
+  },
+  {
+    q: "บรรทัดไหน<strong>ไม่ต้อง</strong>ประกาศ <code>nonlocal</code>?",
+    opts: [
+      "<code>bucket.append(x)</code> — เพราะชื่อยังชี้ไปกล่องเดิม",
+      "<code>bucket = [x]</code> — เพราะเป็นการกำหนดค่าใหม่ตรงๆ",
+      "<code>counter = counter + 1</code> — เพราะอ่านค่าเดิมมาก่อนแล้ว"
+    ],
+    a: 0,
+    why: "เส้นแบ่งไม่ใช่ <code>+=</code> หรือ <code>=</code> — แต่คือ <b>“ชื่อนั้นยังชี้ไปที่เดิมไหม”</b> <code>.append()</code> แก้ของ<i>ใน</i>กล่อง ชื่อยังชี้กล่องเดิม → ไม่ต้อง ส่วนอีกสองข้อทำให้ชื่อชี้ไปค่าใหม่ → ต้องประกาศ"
+  },
+  {
+    q: "ข้อไหนคือความต่างระหว่าง <code>global</code> กับ <code>nonlocal</code> ที่ถูกต้อง?",
+    opts: [
+      "<code>global</code> สร้างชื่อใหม่ได้ แต่ <code>nonlocal</code> ต้องมีชื่ออยู่ก่อน",
+      "<code>nonlocal</code> สร้างชื่อใหม่ได้ แต่ <code>global</code> ต้องมีชื่ออยู่ก่อน",
+      "ทั้งสองคำสั่งสร้างชื่อใหม่ขึ้นมาได้เหมือนกันทุกประการ"
+    ],
+    a: 0,
+    why: "<code>global brand_new; brand_new = 42</code> สร้างขึ้นมาเฉยๆ ได้ แต่ <code>nonlocal nope</code> ที่ไม่มีอยู่ในฟังก์ชันแม่จะได้ <code>SyntaxError: no binding for nonlocal 'nope' found</code> — เพราะ Python ต้องรู้ตั้งแต่ตอน compile ว่าจะผูกไปที่ scope ไหน"
+  },
+  {
+    q: "ถ้าเปลี่ยน <code>trace()</code> ให้ใช้ <code>global nodes</code> แทน closure — จะเกิดอะไรขึ้น?",
+    opts: [
+      "เรียกครั้งที่สองจะได้ node ของกราฟก่อนหน้าปนมาด้วย",
+      "โปรแกรมจะพังทันทีเพราะ <code>set</code> ใช้เป็น global ไม่ได้",
+      "ผลลัพธ์เหมือนเดิมทุกประการ ต่างแค่รูปแบบการเขียน"
+    ],
+    a: 0,
+    why: "global มีชุดเดียว — <code>trace(d)</code> แล้วต่อด้วย <code>trace(z)</code> จะได้ node ของ <code>d</code> ค้างอยู่ ต้องล้างเองทุกครั้ง และวันที่ลืมล้างจะเจอบั๊กที่หาไม่เจอ <b>closure ให้ล็อกเกอร์ใบใหม่ทุกครั้ง</b> จึงไม่มีปัญหานี้เลย"
+  },
+  {
+    q: "<code>f.__closure__</code> ของฟังก์ชันธรรมดา (ไม่ได้ซ้อนในฟังก์ชันอื่น) จะได้ค่าอะไร?",
+    opts: [
+      "<code>None</code> — เพราะไม่มี free variable ให้ต้องปิด",
+      "<code>()</code> — tuple ว่าง เพราะมีกล่องแต่ยังไม่มีของ",
+      "<code>{}</code> — dict ว่าง เพราะยังไม่ได้ผูกกับ scope ใด"
+    ],
+    a: 0,
+    why: "ไม่มี free variable = ไม่มีอะไรต้อง “ปิด” = ไม่ใช่ closure Python จึงให้ <code>None</code> ไม่ใช่ tuple ว่าง ตรวจคู่กับ <code>f.__code__.co_freevars</code> ซึ่งจะได้ <code>()</code> — <b>สองอันนี้ให้ชนิดต่างกัน อย่าสับสน</b>"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>

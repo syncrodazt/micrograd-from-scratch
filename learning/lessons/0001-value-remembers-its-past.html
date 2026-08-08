@@ -193,11 +193,7 @@ add_item(3)   # [1, 2, 3]</code></pre>
 
   <h2>ตรวจตัวเอง</h2>
 
-  <ol>
-    <li>ทำไม <code>__add__</code> ต้อง <em>คืน object ใหม่</em> แทนที่จะแก้ <code>self</code>?</li>
-    <li><code>3 * a</code> จะพังทั้งที่ <code>a * 3</code> ทำงานได้ — เพราะอะไร และแก้ด้วยเมธอดชื่ออะไร? (<span class="g" data-t="reflected">reflected operator</span>)</li>
-    <li>ถ้าลบ <code>_op</code> ออกจาก <code>Value</code> จะยังคำนวณ forward ได้ไหม? แล้วอะไรจะพัง?</li>
-  </ol>
+  <div id="quiz"></div>
 
   <div class="src">
     <span class="src-label">แหล่งอ้างอิงหลัก</span>
@@ -224,3 +220,60 @@ add_item(3)   # [1, 2, 3]</code></pre>
 
 <script src="../assets/glossary-data.js"></script>
 <script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "ทำไม numerical gradient <code>(f(x+h) - f(x)) / h</code> ถึงใช้เทรนโมเดลใหญ่ไม่ได้?",
+    opts: [
+      "ต้องคำนวณ f ใหม่หนึ่งรอบเต็มต่อพารามิเตอร์หนึ่งตัว",
+      "ต้องรู้สูตรอนุพันธ์ของทุกฟังก์ชันไว้ล่วงหน้าก่อน",
+      "ต้องใช้ไลบรารีคณิตศาสตร์เชิงสัญลักษณ์มาช่วยคำนวณ"
+    ],
+    a: 0,
+    why: "โมเดลที่มีพารามิเตอร์ล้านตัวต้องคำนวณ forward ล้านรอบต่อการอัปเดตหนึ่งครั้ง — <b>reverse-mode autodiff เดินย้อนกลับครั้งเดียวได้ครบทุกตัว</b> นอกจากนี้ผลลัพธ์ยังไม่แม่นด้วย (<code>-3.0000000000001137</code>) เพราะการลบเลขทศนิยมที่ใกล้กันมากทำให้เสียนัยสำคัญ"
+  },
+  {
+    q: "<code>d = a + b</code> — <code>d</code> ต้องเก็บอะไรเพิ่มจากค่าตัวเลข ถึงจะเดินย้อนกลับได้ทีหลัง?",
+    opts: [
+      "node ที่ทำให้เกิดตัวนี้ และ operation ที่ใช้สร้าง",
+      "ค่าอนุพันธ์ของทุกตัวแปรที่เกี่ยวข้องไว้ล่วงหน้า",
+      "สำเนาของค่าเดิมก่อนการคำนวณครั้งล่าสุดหนึ่งชุด"
+    ],
+    a: 0,
+    why: "หาคำตอบด้วยการถามว่า <b>“ถ้าจะวาดรูปกราฟ ต้องมีข้อมูลอะไร”</b> — กล่องคือ <code>data</code>, ลูกศรคือ <code>_prev</code>, ป้ายตรงกลางคือ <code>_op</code> ส่วน gradient ยังไม่ต้องมีตอนนี้ เพราะมันคำนวณทีหลังจากกราฟ ไม่ใช่เก็บไว้ล่วงหน้า"
+  },
+  {
+    q: "ถ้าลบ <code>_op</code> ออกจาก <code>Value</code> ทั้งหมด — จะเกิดอะไรขึ้น?",
+    opts: [
+      "forward ยังถูก แต่กราฟบอกไม่ได้ว่าใช้ operation อะไร",
+      "forward จะพังทันที เพราะ <code>__add__</code> หา operation ไม่เจอ",
+      "<code>_prev</code> จะว่างเปล่าไปด้วย เพราะสองช่องนี้ผูกกันอยู่"
+    ],
+    a: 0,
+    why: "<code>_op</code> ไม่ได้มีส่วนในการคำนวณค่าเลย — <code>self.data + other.data</code> ทำงานได้โดยไม่ต้องรู้ว่าตัวเองชื่อ <code>+</code> มันมีไว้เพื่อ<b>อธิบายกราฟให้มนุษย์อ่าน</b> เท่านั้น นี่คือเหตุผลที่ op node ในรูปเป็นเรื่องของการวาด ไม่ใช่ของโครงสร้างข้อมูล"
+  },
+  {
+    q: "<code>def __init__(self, data, _prev=[])</code> — ปัญหาคืออะไร?",
+    opts: [
+      "ทุก object ที่ไม่ส่ง <code>_prev</code> มา จะแชร์ list ก้อนเดียวกัน",
+      "list จะถูกสร้างใหม่ทุกครั้งที่เรียก ทำให้โปรแกรมช้าลงมาก",
+      "Python ไม่ยอมให้ใช้ list เป็นค่า default ของพารามิเตอร์เลย"
+    ],
+    a: 0,
+    why: "<code>[]</code> ถูกสร้าง<b>ครั้งเดียวตอน Python อ่านบรรทัด <code>def</code></b> ไม่ใช่ทุกครั้งที่เรียก พิสูจน์ได้: <code>add_item(1)</code> → <code>[1]</code>, <code>add_item(2)</code> → <code>[1, 2]</code> — และมันไม่ error ให้เห็น มันแค่ให้คำตอบผิดเงียบๆ ใช้ <code>()</code> หรือ <code>None</code> แทน"
+  },
+  {
+    q: "<code>a * 3</code> ทำงานได้ แต่ <code>3 * a</code> พัง — เพราะอะไร?",
+    opts: [
+      "Python ถาม <code>int</code> ก่อน พอตอบไม่ได้จึงต้องมี <code>__rmul__</code>",
+      "Python ไม่อนุญาตให้ <code>int</code> อยู่ทางซ้ายของ operator ที่ overload",
+      "<code>Value.__mul__</code> ต้องประกาศเป็น static method จึงจะทำงานถูก"
+    ],
+    a: 0,
+    why: "Python ถามฝั่งซ้ายก่อนเสมอ — <code>(3).__mul__(a)</code> ไม่รู้จัก <code>Value</code> จึงตอบ <code>NotImplemented</code> แล้ว Python <b>ถึงจะย้อนไปถามฝั่งขวาด้วยเมธอด reflected</b> <code>a.__rmul__(3)</code> จำอาการไว้: <b>“สลับข้างแล้วพัง = ขาด <code>__r...__</code>”</b>"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>

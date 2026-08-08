@@ -81,6 +81,16 @@ window.GLOSSARY = {
     en: "nonlocal keyword",
     def: "บอก Python ว่า \"ชื่อนี้ที่ฉันกำลังจะ assign ทับ คือตัวแปรของฟังก์ชันข้างนอก ไม่ใช่ตัวใหม่ของฉัน\" จำเป็นเฉพาะตอนใช้ <code>=</code> หรือ <code>+=</code> — ถ้าแค่ <code>.append()</code> หรือ <code>.add()</code> ไม่ต้องใช้ เพราะนั่นคือการแก้ของในกล่อง ไม่ใช่การเปลี่ยนกล่อง"
   },
+  "globalkw": {
+    term: "global",
+    en: "global keyword",
+    def: "บอก Python ว่า \"ชื่อนี้ที่ฉันกำลังจะ assign ทับ คือตัวแปรระดับไฟล์ ไม่ใช่ตัวใหม่ของฉัน\" ต่างจาก <code>nonlocal</code> ตรงที่ <strong>สร้างชื่อใหม่ขึ้นมาได้</strong> และตัวแปรนั้น <strong>มีชุดเดียวตลอดอายุโปรแกรม</strong> ใครก็เข้าถึงและเขียนทับได้"
+  },
+  "legb": {
+    term: "LEGB",
+    en: "Local → Enclosing → Global → Built-in",
+    def: "ลำดับที่ Python ค้นหาชื่อตัวแปร: ในฟังก์ชันตัวเอง → ฟังก์ชันแม่ที่ครอบอยู่ → ระดับไฟล์ → ของที่ Python แถมมา (<code>len</code>, <code>print</code>) การ <em>อ่าน</em> ไล่ตามลำดับนี้อัตโนมัติ แต่การ <em>เขียนทับ</em> จะสร้างตัวใหม่ใน Local เสมอ เว้นแต่จะประกาศ <code>nonlocal</code> หรือ <code>global</code>"
+  },
   "sideeffect": {
     term: "Side effect",
     en: "side effect",

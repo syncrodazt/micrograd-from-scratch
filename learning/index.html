@@ -17,12 +17,75 @@
     <div class="meta">Andrej Karpathy · Neural Networks: Zero to Hero #1</div>
   </header>
 
-  <h2>บทเรียน</h2>
+  <!-- ============ TOPIC FINDER ============ -->
+
+  <div class="sec" id="find">
+    <h2>หาเรื่องนี้ได้ที่ไหน</h2>
+    <span class="sec-note">เริ่มที่นี่ถ้ารู้ว่าอยากทบทวนอะไร</span>
+  </div>
+
+  <div class="finder">
+    <div class="finder-row">
+      <div class="finder-q"><code>Value</code> เก็บอะไร ทำไม</div>
+      <div class="finder-a"><a href="lessons/0001-value-remembers-its-past.html">Lesson 01</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">ทำไม numerical gradient ใช้ไม่ได้</div>
+      <div class="finder-a"><a href="lessons/0001-value-remembers-its-past.html">Lesson 01</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">dunder · operator overloading · <code>__repr__</code></div>
+      <div class="finder-a"><a href="lessons/0001-value-remembers-its-past.html">Lesson 01</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">DAG vs tree · node ที่ถูกใช้ซ้ำ</div>
+      <div class="finder-a"><a href="lessons/0002-dag-not-tree.html">Lesson 02</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q"><code>set</code> vs <code>list</code> · เรื่องลำดับ</div>
+      <div class="finder-a"><a href="lessons/0002-dag-not-tree.html">Lesson 02</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">คิด recursion ยังไงไม่ให้งง</div>
+      <div class="finder-a"><a href="lessons/0003-drawing-the-graph.html">Lesson 03</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q"><code>id()</code> vs <code>hash()</code> · ตั้งชื่อ node</div>
+      <div class="finder-a"><a href="lessons/0003-drawing-the-graph.html">Lesson 03</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">graphviz · วาดกราฟในโน้ตบุ๊ก</div>
+      <div class="finder-a"><a href="lessons/0003-drawing-the-graph.html">Lesson 03</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q"><strong>closure · <code>nonlocal</code> · <code>global</code></strong></div>
+      <div class="finder-a"><a href="reference/python-scope.html">Reference · Python scope</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q"><code>python -m</code> · venv · PATH · Python หลายตัว</div>
+      <div class="finder-a"><a href="lessons/0004-toolchain.html">Lesson 04</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">git staging · <code>--amend</code> · <code>origin/main</code></div>
+      <div class="finder-a"><a href="lessons/0004-toolchain.html">Lesson 04</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">คำศัพท์เฉพาะทั้งหมด</div>
+      <div class="finder-a"><a href="reference/glossary.html">Glossary</a></div>
+    </div>
+  </div>
+
+  <!-- ============ LESSONS ============ -->
+
+  <div class="sec" id="lessons">
+    <h2>บทเรียน</h2>
+    <span class="sec-note">เรียงตามวัน · มี quiz ท้ายทุกบท</span>
+  </div>
 
   <div class="cards">
 
     <a class="card" href="lessons/0001-value-remembers-its-past.html">
-      <div class="c-num">Lesson 01 · 2026-08-08</div>
+      <div class="c-num">Lesson 01 · 2026-08-08 · 5 ข้อ</div>
       <div class="c-title">Value ที่จำที่มาของตัวเองได้</div>
       <p class="c-desc">
         ทำไม <code>float</code> ธรรมดาถึงใช้ทำ autograd ไม่ได้ · node หนึ่งตัวต้องเก็บอะไรบ้าง ·
@@ -31,7 +94,7 @@
     </a>
 
     <a class="card" href="lessons/0002-dag-not-tree.html">
-      <div class="c-num">Lesson 02 · 2026-08-08</div>
+      <div class="c-num">Lesson 02 · 2026-08-08 · 6 ข้อ</div>
       <div class="c-title">DAG ไม่ใช่ tree</div>
       <p class="c-desc">
         <code>x*y + x</code> มี <code>x</code> กี่ node · การมาบรรจบกันคือใจกลางของ backprop ·
@@ -40,7 +103,7 @@
     </a>
 
     <a class="card" href="lessons/0003-drawing-the-graph.html">
-      <div class="c-num">Lesson 03 · 2026-08-08</div>
+      <div class="c-num">Lesson 03 · 2026-08-08 · 5 ข้อ</div>
       <div class="c-title">Recursion, closure และการเดินกราฟ</div>
       <p class="c-desc">
         กรอบคิด 4 ข้อที่ไม่ต้องไล่การทำงานในหัว · ทำไมเรียกว่า closure ·
@@ -49,7 +112,7 @@
     </a>
 
     <a class="card" href="lessons/0004-toolchain.html">
-      <div class="c-num">Lesson 04 · 2026-08-08</div>
+      <div class="c-num">Lesson 04 · 2026-08-08 · 6 ข้อ</div>
       <div class="c-title">Python ที่ถูกตัว และ Git ที่ย้อนได้</div>
       <p class="c-desc">
         Python สามตัวในเครื่องเดียว · <code>python -m</code> · <code>requirements.txt</code> ที่ใช้ไม่ได้ ·
@@ -57,17 +120,98 @@
       </p>
     </a>
 
+  </div>
+
+  <!-- ============ REFERENCE ============ -->
+
+  <div class="sec" id="reference">
+    <h2>อ้างอิง</h2>
+    <span class="sec-note">หน้าที่กลับมาเปิดซ้ำบ่อย</span>
+  </div>
+
+  <div class="cards">
+
     <a class="card" href="reference/glossary.html">
-      <div class="c-num">Reference</div>
+      <div class="c-num">Reference · 32 คำ</div>
       <div class="c-title">Glossary</div>
       <p class="c-desc">
-        คำศัพท์ทุกคำที่ใช้ในบทเรียน นิยามเดียว ที่เดียว
+        คำศัพท์ทุกคำที่ใช้ในบทเรียน นิยามเดียว ที่เดียว —
+        คำที่ขีดเส้นประในทุกหน้าลิงก์กลับมาที่นี่
+      </p>
+    </a>
+
+    <a class="card" href="reference/python-scope.html">
+      <div class="c-num">Reference · Python · 5 ข้อ</div>
+      <div class="c-title">global · nonlocal · closure</div>
+      <p class="c-desc">
+        สามอย่างนี้ไม่ใช่ของประเภทเดียวกัน · LEGB · ทำไม “ไม่ตาย” ≠ “เป็น global” ·
+        เส้นแบ่งของ <code>nonlocal</code> · ทำไม <code>trace()</code> ต้องใช้ closure
       </p>
     </a>
 
   </div>
 
-  <h2>อยู่ตรงไหนแล้ว</h2>
+  <!-- ============ RETRIEVAL ============ -->
+
+  <div class="sec" id="retrieval">
+    <h2>บันทึกการทบทวน</h2>
+    <span class="sec-note">อธิบายออกเสียงโดยไม่เปิดโน้ต แล้วเอามาตรวจ</span>
+  </div>
+
+  <div class="cards">
+
+    <a class="card" href="retrieval/2026-08-09-review.html">
+      <div class="c-num">2026-08-09 · Review</div>
+      <div class="c-title">3 จุดที่ผิด และช่องว่างที่ยังไม่เห็น</div>
+      <p class="c-desc">
+        <code>id</code> vs <code>hash</code> · Newton ≠ gradient descent · k-means ≠ k-NN ·
+        closure สอนใหม่ · nonlinearity ที่หายไปจากภาพ
+      </p>
+    </a>
+
+    <a class="card" href="retrieval/2026-08-09-recall.html">
+      <div class="c-num">2026-08-09 · เดิน ~30 นาที</div>
+      <div class="c-title">คำตอบดิบ (ถอดเสียง ไม่แก้)</div>
+      <p class="c-desc">
+        ทำไมต้องมี neural net · system กับ weight · gradient descent · loss · backprop ·
+        Value · DAG · closure · id vs hash · git add
+      </p>
+    </a>
+
+  </div>
+
+  <!-- ============ LEARNING RECORDS ============ -->
+
+  <div class="sec" id="records">
+    <h2>บันทึกสิ่งที่เรียนรู้</h2>
+    <span class="sec-note">แบบ ADR — เฉพาะ insight ที่ไม่ชัดในตัวเอง</span>
+  </div>
+
+  <ul class="filelist">
+    <li>
+      <span class="fl-name"><a href="learning-records/0001-graph-is-a-dag-not-a-tree.md">0001</a></span>
+      <span class="fl-desc">computation graph เป็น DAG ไม่ใช่ tree — พิสูจน์ด้วย <code>is</code> และ <code>id()</code></span>
+    </li>
+    <li>
+      <span class="fl-name"><a href="learning-records/0002-recursion-is-a-contract-not-an-execution.md">0002</a></span>
+      <span class="fl-desc">recursion คือสัญญา ไม่ใช่ลำดับการทำงาน — และบั๊กที่เกิดจากการข้ามข้อนี้</span>
+    </li>
+    <li>
+      <span class="fl-name"><a href="learning-records/0003-dedup-storage-vs-dedup-traversal.md">0003</a></span>
+      <span class="fl-desc">dedup ที่ตัวเก็บ ≠ dedup ที่การเดิน — <strong>ยังแก้ไม่เสร็จ</strong></span>
+    </li>
+    <li>
+      <span class="fl-name"><a href="learning-records/0004-verify-which-python-before-installing.md">0004</a></span>
+      <span class="fl-desc">เช็คก่อนเสมอว่ากำลังคุยกับ Python ตัวไหน — กฎถาวร</span>
+    </li>
+  </ul>
+
+  <!-- ============ STATUS ============ -->
+
+  <div class="sec" id="status">
+    <h2>อยู่ตรงไหนแล้ว</h2>
+    <span class="sec-note">Day 3 · 2026-08-09</span>
+  </div>
 
   <div class="tw">
   <table>
@@ -75,20 +219,45 @@
     <tbody>
       <tr><td><code>Value</code> · <code>__init__</code> <code>__repr__</code> <code>__add__</code> <code>__mul__</code></td><td>✅ ทำงานได้</td></tr>
       <tr><td>graphviz ต่อเข้ากับ Jupyter</td><td>✅ วาดรูปออกแล้ว</td></tr>
-      <tr><td><code>trace()</code> — เดินกราฟเก็บ nodes + edges</td><td>🟡 ได้ผลถูก แต่ยังเดินซ้ำ</td></tr>
+      <tr><td><code>trace()</code> — เดินกราฟเก็บ nodes + edges</td><td>🟡 ผลถูก แต่ยังเดินซ้ำ</td></tr>
       <tr><td>วาดกราฟจากผลของ <code>trace()</code></td><td>⬜ ต่อไป</td></tr>
-      <tr><td><code>grad</code> · <code>_backward</code> · topological sort · <code>backward()</code></td><td>⬜ ยังไม่เริ่ม</td></tr>
+      <tr><td><code>grad</code> · คำนวณ gradient ด้วยมือ</td><td>⬜ วันนี้</td></tr>
+      <tr><td><code>_backward</code> · topological sort · <code>backward()</code></td><td>⬜ พรุ่งนี้</td></tr>
+      <tr><td><code>tanh</code> · reflected operators</td><td>⬜ D5</td></tr>
+      <tr><td>Neuron → Layer → MLP → training loop</td><td>⬜ D6–D7</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h2>คำถามที่ยังเปิดอยู่</h2>
+  <h3>คำถามที่ยังเปิดอยู่</h3>
 
   <ul>
     <li>การ์ดกันเดินซ้ำควรอยู่บรรทัดไหนของ recursion และควรเช็คว่าอะไร</li>
     <li>เจอ node ซ้ำแล้วควร <code>return</code> ทันที หรือไม่เก็บแต่เดินลึกต่อ — สองอย่างนี้ให้ผลไม่เหมือนกัน</li>
     <li>ถ้า node หนึ่งโผล่สองครั้งในลำดับที่ใช้เรียก <code>_backward()</code> gradient จะผิดไปกี่เท่า</li>
     <li>label ของ node กลางควรตั้งมือ หรือให้สร้างอัตโนมัติจาก <code>data</code></li>
+  </ul>
+
+  <!-- ============ PROJECT DOCS ============ -->
+
+  <div class="sec" id="docs">
+    <h2>เอกสารโครงการ</h2>
+    <span class="sec-note">พื้นหลังของทุกบทเรียน</span>
+  </div>
+
+  <ul class="filelist">
+    <li>
+      <span class="fl-name"><a href="MISSION.md">MISSION.md</a></span>
+      <span class="fl-desc">ทำไมถึงเรียนเรื่องนี้ · นิยามของ “เสร็จ” 3 ข้อ · ข้อจำกัดที่ตั้งไว้เอง</span>
+    </li>
+    <li>
+      <span class="fl-name"><a href="RESOURCES.md">RESOURCES.md</a></span>
+      <span class="fl-desc">แหล่งอ้างอิงที่ตรวจแล้ว + ชุมชนไว้ใช้ตอนติดนานเกินหนึ่งวัน</span>
+    </li>
+    <li>
+      <span class="fl-name"><a href="NOTES.md">NOTES.md</a></span>
+      <span class="fl-desc">วิธีสอนที่ได้ผล · สิ่งที่ห้ามทำ · จังหวะการเรียนที่สังเกตได้</span>
+    </li>
   </ul>
 
   <div class="ask">
@@ -107,3 +276,4 @@
 
 <script src="assets/glossary-data.js"></script>
 <script src="assets/lesson.js"></script>
+<script src="assets/nav.js"></script>

@@ -216,11 +216,7 @@ USER PATH:    no Graphviz</code></pre>
 
   <h2>ตรวจตัวเอง</h2>
 
-  <ol>
-    <li>แก้ไฟล์ → <code>git add</code> → แก้ต่อ → <code>git commit</code> โดยไม่ add ซ้ำ — commit เก็บเวอร์ชันไหน?</li>
-    <li>ทำไม <code>pip install X</code> ถึงอันตรายกว่า <code>python -m pip install X</code>?</li>
-    <li><code>--force</code> กับ <code>--force-with-lease</code> ต่างกันยังไง และทำไมควรใช้อย่างหลังเสมอ?</li>
-  </ol>
+  <div id="quiz"></div>
 
   <div class="src">
     <span class="src-label">แหล่งอ้างอิงหลัก</span>
@@ -248,3 +244,70 @@ USER PATH:    no Graphviz</code></pre>
 
 <script src="../assets/glossary-data.js"></script>
 <script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "แก้ไฟล์ → <code>git add</code> → แก้ไฟล์ต่ออีกรอบ → <code>git commit</code> โดยไม่ add ซ้ำ — commit เก็บเวอร์ชันไหน?",
+    opts: [
+      "เวอร์ชันตอน <code>git add</code> เพราะ add คัดลอกเนื้อไฟล์ ณ วินาทีนั้น",
+      "เวอร์ชันล่าสุดบนดิสก์ เพราะ commit อ่านไฟล์ใหม่ตอนที่สั่งคำสั่งนั้น",
+      "Git จะปฏิเสธไม่ยอม commit จนกว่าจะสั่ง <code>git add</code> ซ้ำอีกครั้ง"
+    ],
+    a: 0,
+    why: "<code>git add</code> <b>คัดลอกเนื้อไฟล์เข้า staging area</b> ไม่ใช่แค่จดชื่อไฟล์ไว้ ไฟล์เดียวกันจึงโผล่สองที่พร้อมกันใน <code>git status</code> ได้ — ทั้งใน “Changes to be committed” และ “Changes not staged” ป้องกันด้วยการพิมพ์ <code>git diff --staged</code> ก่อน commit ทุกครั้ง"
+  },
+  {
+    q: "ทำไม <code>python -m pip install X</code> ถึงปลอดภัยกว่า <code>pip install X</code>?",
+    opts: [
+      "เพราะ <code>-m</code> การันตีว่าเป็น pip ของ Python ตัวที่รันคำสั่งนั้นจริง",
+      "เพราะ <code>-m</code> ทำให้ติดตั้งเร็วขึ้น โดยข้ามขั้นตอนการค้นหาไฟล์ทิ้ง",
+      "เพราะ <code>-m</code> บังคับให้ลง package แบบ global แทนที่จะลงใน venv"
+    ],
+    a: 0,
+    why: "<code>pip</code> เฉยๆ คือ <b>ไฟล์ .exe ตัวหนึ่งบน PATH</b> ซึ่งไม่มีทางรู้แน่ว่าผูกกับ Python ตัวไหน บนเครื่องนี้มี Python สามตัว และ conda แย่ง PATH ไปก่อน — package ที่ลงจึงไปอยู่ผิดที่ทั้งหมด วิธีที่กันพลาดที่สุดคือระบุ path ตรงๆ: <code>.venv\\Scripts\\python.exe -m pip ...</code>"
+  },
+  {
+    q: "<code>git commit --amend</code> ทำอะไรจริงๆ ในระดับโครงสร้างข้อมูล?",
+    opts: [
+      "สร้าง commit ใหม่ แล้วเลื่อน pointer ของ branch มาชี้ที่ตัวใหม่นั้น",
+      "แก้เนื้อหาใน commit เดิมโดยตรง โดยที่ hash ยังคงเป็นค่าเดิมอยู่",
+      "ลบ commit เดิมออกจากฐานข้อมูลอย่างถาวร กู้กลับคืนมาไม่ได้อีกเลย"
+    ],
+    a: 0,
+    why: "<b>commit ใน Git แก้ไม่ได้</b> เพราะ hash คำนวณมาจากเนื้อหา ถ้าเนื้อหาเปลี่ยน hash ก็ต้องเปลี่ยน ตัวเก่ายังอยู่ในฐานข้อมูล แค่ไม่มีใครชี้ถึง — กู้ได้ด้วย <code>git reflog</code> เกือบทุกคำสั่งของ Git คือ “สร้าง node ใหม่ + เลื่อน pointer” รูปเดียวกับ computation graph"
+  },
+  {
+    q: "<code>requirements.txt</code> ที่มีบรรทัด <code>Brotli @ file:///D:/bld/...</code> — ปัญหาคืออะไร?",
+    opts: [
+      "ชี้ไป path ของเครื่องที่ build package คนอื่นจึงติดตั้งตามไม่ได้เลย",
+      "ทำให้ pip ต้องดาวน์โหลดจากอินเทอร์เน็ตช้ากว่าปกติหลายเท่าตัวมาก",
+      "ระบุเวอร์ชันไว้ไม่ครบ ทำให้ pip เลือกเวอร์ชันล่าสุดมาให้เสมอทุกครั้ง"
+    ],
+    a: 0,
+    why: "path พวกนั้นอยู่บนเครื่องที่ build conda package ซึ่ง<b>ไม่มีอยู่บนเครื่องใครเลยในโลก</b> ใครก็ตามที่ clone repo แล้วรัน <code>pip install -r requirements.txt</code> จะพังทันที — ซึ่งทำลายเหตุผลทั้งหมดที่มีไฟล์นี้ สาเหตุคือ <code>pip freeze</code> ถูกรันด้วย Python ผิดตัว"
+  },
+  {
+    q: "<code>origin/main</code> คืออะไร?",
+    opts: [
+      "pointer ในเครื่องเรา ที่จำว่า remote อยู่ตรงไหนตอนคุยกันครั้งล่าสุด",
+      "การเชื่อมต่อสดกับ GitHub ที่คอยอัปเดตค่าให้อัตโนมัติอยู่ตลอดเวลา",
+      "ชื่อเล่นของ URL ปลายทาง ซึ่งถูกเก็บไว้ในไฟล์ <code>.git/config</code> นั่นเอง"
+    ],
+    a: 0,
+    why: "มันคือ <b>estimate ของ state ฝั่ง remote ที่อัปเดตเฉพาะตอน fetch / pull / push</b> — ระหว่างนั้นเป็นค่าค้าง ไม่มี continuous observation นี่คือเหตุผลที่ <code>git status</code> บอก ahead/behind ได้โดยไม่ต้องต่อเน็ต และเป็นเหตุผลที่ข้อมูลนั้นอาจล้าสมัย (ส่วนตัวเลือกที่สามคือนิยามของ <code>origin</code> เฉยๆ ซึ่งเป็นคนละอย่าง)"
+  },
+  {
+    q: "<code>import graphviz</code> ผ่านปกติ แต่พังตอน render ด้วย <code>ExecutableNotFound</code> — เพราะอะไร?",
+    opts: [
+      "package Python เป็นแค่คนสั่ง ต้องมี <code>dot.exe</code> ในเครื่องแยกต่างหาก",
+      "ต้องติดตั้ง package ซ้ำอีกรอบหนึ่ง เพราะรอบแรกลงไฟล์มาไม่ครบทุกตัว",
+      "ต้อง import ด้วยชื่อ <code>pygraphviz</code> แทน เพราะชื่อ module เปลี่ยนไปแล้ว"
+    ],
+    a: 0,
+    why: "package กับ binary เป็นคนละอย่างกัน — <code>graphviz</code> ใน pip แค่สร้างไฟล์ DOT แล้วเรียกโปรแกรมข้างนอก และ installer ของ Graphviz <b>ไม่ได้ติ๊ก “Add to PATH” มาให้</b> ต้องใส่เอง แล้วปิด VS Code เปิดใหม่ทั้งโปรแกรม เพราะ process ที่เปิดอยู่ถือ PATH เดิมค้างไว้"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>

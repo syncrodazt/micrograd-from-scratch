@@ -86,7 +86,7 @@
 
   <div class="tw">
   <table>
-    <thead><tr><th></th><th>วิธี</th><th>ค่าไหลทางไหน</th><th>แต่ละ call คืนอะไร</th></tr></thead>
+    <thead><tr><th>แบบ</th><th>วิธี</th><th>ค่าไหลทางไหน</th><th>แต่ละ call คืนอะไร</th></tr></thead>
     <tbody>
       <tr><td><strong>A</strong></td><td>คืนค่าขึ้นไป พ่อแม่เอามารวม</td><td>ขึ้น</td><td>คำตอบสมบูรณ์ของกิ่งตัวเอง</td></tr>
       <tr><td><strong>B</strong></td><td>ส่งตะกร้าลงไปเป็น argument</td><td>ลง</td><td><code>None</code></td></tr>
@@ -273,11 +273,7 @@ g                                            # บรรทัดสุดท้
 
   <h2>ตรวจตัวเอง</h2>
 
-  <ol>
-    <li>ทำไม <code>nodes.add(n)</code> ไม่ต้องใช้ <code>nonlocal</code> แต่ <code>count += 1</code> ต้อง?</li>
-    <li>สัญญาของ <code>trace(root)</code> คืออะไร เขียนเป็นประโยคเดียว</li>
-    <li>ถ้าใช้ <code>hash()</code> แทน <code>id()</code> เป็นชื่อ node — กราฟจะพังในสถานการณ์ไหนบ้าง?</li>
-  </ol>
+  <div id="quiz"></div>
 
   <div class="src">
     <span class="src-label">แหล่งอ้างอิงหลัก</span>
@@ -305,3 +301,60 @@ g                                            # บรรทัดสุดท้
 
 <script src="../assets/glossary-data.js"></script>
 <script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "ทำไม <code>nodes.add(n)</code> ไม่ต้องใช้ <code>nonlocal</code> แต่ <code>count += 1</code> ต้องใช้?",
+    opts: [
+      "<code>.add()</code> แก้ของในกล่องเดิม ส่วน <code>+=</code> คือชี้ไปค่าใหม่",
+      "<code>.add()</code> เป็นเมธอดของ set ซึ่ง Python ยกเว้นให้เป็นพิเศษ",
+      "<code>.add()</code> ใช้กับ closure ได้ แต่ <code>+=</code> ต้องใช้ global แทน"
+    ],
+    a: 0,
+    why: "เส้นแบ่งคือ <b>mutate กับ rebind</b> — <code>.add()</code> / <code>.append()</code> ไม่ได้เปลี่ยนว่าชื่อนั้นชี้ไปที่ไหน แค่แก้ของข้างใน ส่วน <code>=</code> และ <code>+=</code> คือการผูกชื่อใหม่ ซึ่ง Python จะถือว่าเป็นตัวแปร local ของฟังก์ชันในทันที ถ้าไม่ประกาศ <code>nonlocal</code>"
+  },
+  {
+    q: "base case เขียน <code>return []</code> ทั้งที่เพิ่ง <code>append(node)</code> ไป — เกิดอะไรขึ้น?",
+    opts: [
+      "leaf ทั้งหมดหายจากผลลัพธ์ เพราะ list ที่คืนขึ้นไปถูกทิ้ง",
+      "โปรแกรม error ทันทีที่เดินไปถึง node ที่ไม่มีลูกเลยสักตัว",
+      "ผลลัพธ์ยังถูกครบ แต่ลำดับของ node จะสลับที่กันไปมาเอง"
+    ],
+    a: 0,
+    why: "อาการจริงคือ <code>[Value(4.0), [Value(-6.0), [], []], []]</code> — <code>a</code>, <code>b</code>, <code>c</code> กลายเป็น <code>[]</code> ทั้งหมด <b>รากของบั๊กคือ base case กับ recursive case คืนของคนละชนิดกัน</b> ซึ่งเกิดจากการไม่เขียน “สัญญา” ไว้ก่อนเริ่มพิมพ์"
+  },
+  {
+    q: "ทำไมฟังก์ชันซ้อนฟังก์ชันถึงถูกเรียกว่า “closure”?",
+    opts: [
+      "เพราะ Python “ปิด” ตัวแปรลอยของมัน ด้วยการผูกเข้ากับ scope ข้างนอก",
+      "เพราะมันปิดกั้นไม่ให้ฟังก์ชันข้างนอกมองเห็นตัวแปรที่อยู่ข้างในได้",
+      "เพราะมันต้องถูกปิดด้วยคำสั่ง <code>return</code> ก่อน จึงจะเรียกใช้งานได้"
+    ],
+    a: 0,
+    why: "ฟังก์ชันที่ใช้ชื่อซึ่งไม่ได้นิยามเองและไม่ได้รับมาเป็น argument (<b>free variable</b>) เรียกว่า “เปิด” เพราะรันเดี่ยวๆ ไม่ได้ Python จึงแนบกล่องชี้ไปยัง scope ข้างนอกติดตัวไปให้ = “ปิด” มันซะ ดูของจริงได้ที่ <code>f.__closure__</code> และ <code>f.__code__.co_freevars</code>"
+  },
+  {
+    q: "ถ้าใช้ <code>hash()</code> แทน <code>id()</code> เป็นชื่อ node ของ graphviz — จะพังเมื่อไหร่?",
+    opts: [
+      "วันที่เขียน <code>__eq__</code> — node ที่ค่าเท่ากันจะยุบเป็นตัวเดียว",
+      "พังตั้งแต่ตอนนี้เลย เพราะ <code>hash</code> คืนค่าซ้ำกันบ่อยมากอยู่แล้ว",
+      "ไม่พังเลย เพราะ <code>hash</code> กับ <code>id</code> ให้ผลตรงกันเสมอทุกกรณี"
+    ],
+    a: 0,
+    why: "ตอนนี้ใช้ได้จริง เพราะ CPython คำนวณ <code>hash</code> จาก <code>id</code> ตรงๆ (<code>id(a) >> 4 == hash(a)</code>) <b>แต่สองอันนี้สัญญาคนละเรื่อง</b> — <code>id</code> สัญญาเรื่องตัวตน <code>hash</code> สัญญาเรื่องความเท่ากัน พอนิยามความเท่ากันใหม่ กราฟจะผิดโดยไม่มี error ให้เห็น"
+  },
+  {
+    q: "สำหรับ <code>d = a*b + c</code> — <code>trace()</code> ควรคืน edge กี่เส้น?",
+    opts: [
+      "4 เพราะ op node เป็นเรื่องของการวาด ไม่ใช่ของโครงสร้างข้อมูล",
+      "6 เพราะรูปที่วาดออกมามีลูกศรหกเส้น ต้องตรงกันเสมอทุกกรณี",
+      "2 เพราะนับเฉพาะลูกศรที่ออกจาก node ซึ่งมี operation อยู่จริง"
+    ],
+    a: 0,
+    why: "<code>Value</code> ไม่มี object แทน operation อยู่จริง — <code>_op</code> เป็นแค่ string ติดกับ node ผลลัพธ์ <b>op node เกิดขึ้นตอน render เท่านั้น</b> ตัววาดจะแตก 4 เส้นเป็น 6 เส้นเอง และตอนเขียน <code>backward()</code> จะต้องการ 4 ไม่ใช่ 6 เพราะ gradient ไหลจาก Value ไป Value"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
