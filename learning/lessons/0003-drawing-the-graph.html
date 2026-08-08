@@ -1,0 +1,307 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 03 — Recursion, closure และการเดินกราฟ</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 03 · micrograd</div>
+    <h1>Recursion, closure และการเดินกราฟ</h1>
+    <p class="standfirst">
+      วิธีคิดกับ recursion ที่ไม่ต้องไล่การทำงานในหัว — บวกกับกลไก closure
+      ที่จะกลับมาอีกครั้งตอนเขียน <code>_backward</code>
+    </p>
+    <div class="meta">2026-08-08 · Day 2 · M1 micrograd</div>
+  </header>
+
+  <h2>ทำไม while loop ใช้ไม่ได้</h2>
+
+  <p>ความพยายามแรกคือเดินกราฟด้วย <code>while</code>:</p>
+
+<pre><code>while root._prev != []:
+    ...  # ไม่มีบรรทัดไหนเปลี่ยนค่า root</code></pre>
+
+  <p>
+    ผลคือลูปไม่มีวันจบ — และมันชี้ไปที่ปัญหาที่ลึกกว่านั้น:
+    <strong>ไม่รู้ล่วงหน้าว่ากราฟลึกกี่ชั้น</strong> เพราะฉะนั้นเขียนลูปตายตัวไม่ได้
+  </p>
+
+  <p>
+    แต่มีสิ่งหนึ่งที่รู้แน่: <em>ทุก node ทำงานเหมือนกันหมด ไม่ว่าจะอยู่ชั้นไหน</em> —
+    นั่นคือสัญญาณว่าต้องใช้ <span class="g" data-t="recursion">recursion</span>
+  </p>
+
+  <h2>กรอบคิด 4 ข้อ</h2>
+
+  <p>
+    ความรู้สึกว่า recursion “ยาก” มาจากการพยายามไล่การทำงานในหัว
+    ซึ่งเกินความจำระยะสั้นของมนุษย์ ใช้กรอบนี้แทน:
+  </p>
+
+  <ol>
+    <li><strong>สัญญา (contract)</strong> — เขียนเป็นประโยคก่อนแตะคีย์บอร์ด:
+      “<code>f(x)</code> คืน ______ ของกิ่งที่มี x เป็นยอด”</li>
+    <li><strong><span class="g" data-t="basecase">Base case</span></strong> — เคสไหนตอบได้ทันทีโดยไม่ต้องถามใคร</li>
+    <li><strong>Recursive case</strong> — <em>สมมติว่า <code>f(ลูก)</code> ทำงานถูกต้องสมบูรณ์แล้ว</em> ฉันต้องเพิ่มอะไร</li>
+    <li><strong>รวม</strong> — ผลจากลูกหลายตัว + ของตัวเอง = คำตอบที่ตรงกับสัญญาข้อ 1</li>
+  </ol>
+
+  <div class="note bad">
+    <span class="note-label">ข้ามข้อ 1 = บั๊กที่หายาก</span>
+    <p>
+      บั๊กสองตัวแรกที่เจอวันนี้มาจากการไม่เขียนสัญญาไว้ก่อน:
+      base case คืน <code>[]</code> (ทิ้ง node ตัวเองไป) ส่วน recursive case
+      เอา list ทั้งก้อนไป <code>append</code> เป็นสมาชิกเดียว (ได้ list ซ้อน list)
+      — <strong>base case กับ recursive case คืนของคนละชนิดกัน</strong>
+    </p>
+  </div>
+
+  <h3>การกระโดดด้วยศรัทธา</h3>
+
+  <p>
+    ตอนเขียนข้อ 3 ให้<strong>เชื่อว่า <code>f(ลูก)</code> ทำงานถูกแล้ว</strong> ห้ามไล่เข้าไปดูข้างใน
+    ฟังดูเหมือนโกง แต่ไม่โกง เพราะพิสูจน์แค่สองอย่าง: base case ถูก และ ถ้าลูกถูกแล้วพ่อถูก
+  </p>
+
+  <p>
+    <strong>นี่คือ induction เป๊ะๆ</strong> — เหมือนพิสูจน์ stability ด้วยการแสดง
+    initial condition แล้วแสดง step โดยไม่ต้องไล่ทีละ <em>k</em>
+  </p>
+
+  <p>
+    และมันคือรูปเดียวกับ Bellman equation: <code>V(s) = r(s) + Σ V(s′)</code> —
+    ไม่มีใครไล่คำนวณ <em>V</em> ทุก state ในหัว ทุกคนเชื่อสมการ
+    <span class="g" data-t="dfs">การเดินกราฟ</span>ก็อ่านแบบเดียวกัน
+  </p>
+
+  <h2>สะสมผลลัพธ์ได้ 3 แบบ — ไม่มีแบบไหนต้องใช้ global</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>วิธี</th><th>ค่าไหลทางไหน</th><th>แต่ละ call คืนอะไร</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A</strong></td><td>คืนค่าขึ้นไป พ่อแม่เอามารวม</td><td>ขึ้น</td><td>คำตอบสมบูรณ์ของกิ่งตัวเอง</td></tr>
+      <tr><td><strong>B</strong></td><td>ส่งตะกร้าลงไปเป็น argument</td><td>ลง</td><td><code>None</code></td></tr>
+      <tr><td><strong>C</strong></td><td>ฟังก์ชันซ้อนฟังก์ชัน + <span class="g" data-t="closure">closure</span></td><td>ลง</td><td><code>None</code> (<span class="g" data-t="sideeffect">side effect</span>)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>factorial ที่ทุกคนรู้จักคือแบบ A อยู่แล้ว</strong> — ทุก call คืนคำตอบของตัวเองขึ้นไป
+    ไม่มีตะกร้ากลาง:
+  </p>
+
+<pre><code>def fact(n):
+    if n &lt;= 1:
+        return 1                 # base: ตอบเองได้
+    return n * fact(n - 1)       # รวม: ของฉัน × ของลูก</code></pre>
+
+  <p>ตัวเดียวกันเขียนแบบ C:</p>
+
+<pre><code>def fact(n):
+    result = 1                   # ตะกร้า
+
+    def go(k):
+        nonlocal result          # ต้องใส่! เพราะ result *= k คือ assign ทับ
+        if k &lt;= 1:
+            return
+        result *= k
+        go(k - 1)
+
+    go(n)
+    return result</code></pre>
+
+  <div class="note good">
+    <span class="note-label">ทำไมเลือก C สำหรับกราฟ</span>
+    <p>
+      แบบ A ต้อง “รวม” ผลของลูกทุกครั้ง ซึ่งเป็นจุดที่พลาดง่าย (บั๊ก list ซ้อน list)
+      ส่วนแบบ C ทุกคน <code>add</code> ทีละตัวลงตะกร้าเดียวกัน จึงไม่มีปัญหานั้นเลย —
+      นี่คือเหตุผลที่ Karpathy ใช้แบบ C
+    </p>
+  </div>
+
+  <h2>ทำไมเรียกว่า “closure”</h2>
+
+  <p>
+    <span class="g" data-t="freevar">Free variable</span> คือชื่อที่ฟังก์ชันใช้
+    แต่ไม่ได้นิยามเองและไม่ได้รับมาเป็น argument
+  </p>
+
+  <p>
+    ฟังก์ชันที่มีตัวแปรลอยแบบนี้เรียกว่า <em>“เปิด” (open)</em> เพราะเอาไปรันเดี่ยวๆ ไม่ได้
+    Python จึง <strong>“ปิด” (close over)</strong> มันให้ — แนบกล่องที่ชี้ไปตัวแปรของ scope ข้างนอกติดตัวไปด้วย
+    ฟังก์ชันที่ถูกปิดแล้วเรียกว่า <strong>closure</strong>
+  </p>
+
+  <p>ดูของจริงได้ ไม่ใช่คำเปรียบเปรย:</p>
+
+<pre><code>free variables ที่ f ใช้แต่ไม่ได้นิยามเอง : ('nodes',)
+กล่องที่ f แบกติดตัวไป                    : (&lt;cell at 0x...: list object at 0x...&gt;,)
+ข้างในกล่องคือ                            : []
+
+ฟังก์ชันธรรมดาไม่มี closure               : None | freevars: ()</code></pre>
+  <p class="cap"><code>f.__closure__</code> และ <code>f.__code__.co_freevars</code></p>
+
+  <h3>เส้นแบ่งของ <code>nonlocal</code></h3>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>เขียนอะไร</th><th>คืออะไร</th><th>ต้อง <code>nonlocal</code> ไหม</th></tr></thead>
+    <tbody>
+      <tr><td><code>bucket.append(x)</code></td><td>แก้ของ<em>ใน</em>กล่องเดิม</td><td>ไม่ต้อง</td></tr>
+      <tr><td><code>nodes.add(x)</code></td><td>แก้ของ<em>ใน</em>กล่องเดิม</td><td>ไม่ต้อง</td></tr>
+      <tr><td><code>total += 1</code></td><td>ชี้ไปค่าใหม่</td><td><span class="g" data-t="nonlocal">ต้อง</span></td></tr>
+      <tr><td><code>bucket = []</code></td><td>ชี้ไปกล่องใหม่</td><td>ต้อง</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <span class="note-label">ทำไมต้องเข้าใจตอนนี้</span>
+    <p>
+      อีกไม่กี่วัน <code>_backward</code> ของแต่ละ operation จะเป็น closure
+      ที่แบก <code>self</code>, <code>other</code> และ <code>out</code> ติดตัวไปในกล่องแบบเดียวกันเป๊ะ —
+      <strong>เจอ closure ครั้งแรกตอนเขียน viz ดีกว่าเจอครั้งแรกตอนเขียน backward</strong>
+      เพราะตอนนี้ถ้าพังจะเห็นด้วยตา ตอนนั้นถ้าพังจะเห็นแค่ตัวเลข gradient ผิด
+    </p>
+  </div>
+
+  <h2>ตั้งชื่อ node ให้ graphviz: <code>id()</code> ไม่ใช่ <code>hash()</code></h2>
+
+  <p>
+    graphviz ต้องการ <em>ชื่อภายในที่ไม่ซ้ำ</em> (ผูกลูกศร) แยกจาก <em>ป้ายที่คนเห็น</em>
+    ใช้ค่า <code>data</code> เป็นชื่อไม่ได้ เพราะสอง node อาจมีค่าเท่ากันพอดี
+    แล้วกราฟจะยุบมันเป็นตัวเดียว
+  </p>
+
+  <p>
+    คำตอบคือ <span class="g" data-t="identity">id()</span> ซึ่งการันตีว่าไม่ซ้ำ
+    ในบรรดา object ที่ยังมีชีวิตอยู่พร้อมกัน (แปลงเป็น string ก่อน)
+  </p>
+
+  <h3>แล้วทำไมไม่ใช้ <code>hash()</code></h3>
+
+  <p>ตอนนี้ <code>hash()</code> ใช้ได้จริง เพราะ CPython คำนวณมันจาก id ตรงๆ:</p>
+
+<pre><code>id(a)     = 1415573106912
+hash(a)   = 88473319182
+id(a) &gt;&gt; 4 == hash(a)   → True</code></pre>
+
+  <p>
+    <strong>แต่สองฟังก์ชันนี้สัญญาคนละเรื่อง</strong> — <code>id</code> สัญญาเรื่อง<em>ตัวตน</em>
+    (“นี่คือ object ก้อนไหน”) ส่วน <code>hash</code> สัญญาเรื่อง<em>ความเท่ากัน</em>
+    (“อะไรที่เท่ากันต้องได้ค่าเท่ากัน”)
+  </p>
+
+  <p>
+    วันที่เขียน <code>__eq__</code> ให้เทียบด้วย <code>data</code> — ซึ่งเป็นเรื่องปกติมาก —
+    <code>Value(2.0)</code> สองตัวคนละที่จะกลายเป็น “ตัวเดียวกัน” ในสายตา hash
+    แล้วกราฟจะผิดโดยไม่มี error ให้เห็น
+  </p>
+
+  <h2>graphviz: API เล็กมาก</h2>
+
+<pre><code>from graphviz import Digraph
+
+g = Digraph(format="svg", graph_attr={"rankdir": "LR"})
+g.node(name="n1", label="alpha")            # name = id ภายใน / label = ที่คนเห็น
+g.node(name="op1", label="+", shape="circle")
+g.edge("n1", "op1")                          # ลูกศรอ้างด้วย name
+g                                            # บรรทัดสุดท้าย → รูปโผล่ในโน้ตบุ๊ก</code></pre>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>เขียน</th><th>ได้อะไร</th><th>ใช้ตอนไหน</th></tr></thead>
+    <tbody>
+      <tr><td><code>g</code> บรรทัดสุดท้าย</td><td>รูปในโน้ตบุ๊ก</td><td>ตลอดเวลา</td></tr>
+      <tr><td><code>print(g)</code></td><td>DOT source เป็นข้อความ</td><td>ดีบัก — ใช้ได้แม้ <code>dot.exe</code> พัง</td></tr>
+      <tr><td><code>g.render("graph")</code></td><td>ไฟล์ <code>.svg</code></td><td>ใส่ README</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>กลไกเบื้องหลัง: ต่อยอดจาก <code>__repr__</code></h3>
+
+  <p>
+    Jupyter ถาม object ก่อนว่า “มีวิธีแสดงผลแบบสวยกว่าข้อความไหม” ผ่านเมธอดตระกูล
+    <code>_repr_svg_</code>, <code>_repr_html_</code> — <code>Digraph</code> เขียนไว้
+    ข้างในไปเรียก <code>dot.exe</code> แปลงเป็น SVG
+    นี่คือกลไกเดียวกับที่ทำให้ DataFrame ของ pandas ออกมาเป็นตาราง:
+    <strong>object เป็นคนตัดสินใจเองว่าจะให้คนเห็นตัวเองยังไง</strong>
+  </p>
+
+  <h2>แยกงาน: เดินกราฟ ≠ วาดกราฟ</h2>
+
+  <p>
+    ทางเลือกดีไซน์: operation จะโชว์เป็น label บนลูกศร หรือเป็น node แยกของตัวเอง?
+    Karpathy เลือกอย่างหลัง สำหรับ <code>d = a*b + c</code>:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ใคร</th><th>ทำอะไร</th><th>ได้อะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>trace()</code></td><td>เดินกราฟ</td><td>5 node, <strong>4 edge</strong></td></tr>
+      <tr><td>ตัววาด</td><td>แทรก op node ตอน render</td><td>7 กล่อง, <strong>6 ลูกศร</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    op node <strong>ไม่มีอยู่จริงในโครงสร้างข้อมูล</strong> — <code>_op</code> เป็นแค่ string
+    ติดอยู่กับ node ผลลัพธ์ มันเกิดขึ้นตอนวาดเท่านั้น
+  </p>
+
+  <div class="note">
+    <span class="note-label">เหตุผลจริงที่ต้องแยกสองฟังก์ชัน</span>
+    <p>
+      <code>backward()</code> ต้องเดินกราฟเหมือนกันเป๊ะ แต่ไม่ต้องการ <code>Digraph</code> เลย
+      ถ้าเขียนรวมกัน จะต้องก๊อปโค้ดเดินกราฟไปวางใหม่ แล้วมีสองที่ให้แก้เวลาเจอบั๊ก —
+      และมันต้องการ 4 edge ไม่ใช่ 6 เพราะ gradient ไหลจาก Value ไป Value
+      ไม่ได้ไหลผ่าน op node ที่ไม่มีตัวตน
+    </p>
+  </div>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <ol>
+    <li>ทำไม <code>nodes.add(n)</code> ไม่ต้องใช้ <code>nonlocal</code> แต่ <code>count += 1</code> ต้อง?</li>
+    <li>สัญญาของ <code>trace(root)</code> คืออะไร เขียนเป็นประโยคเดียว</li>
+    <li>ถ้าใช้ <code>hash()</code> แทน <code>id()</code> เป็นชื่อ node — กราฟจะพังในสถานการณ์ไหนบ้าง?</li>
+  </ol>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    Andrej Karpathy — <a href="https://www.youtube.com/watch?v=VMj-3S1tku0">building micrograd</a>
+    · <a href="https://docs.python.org/3/reference/executionmodel.html#binding-of-names">Python Reference — binding of names และ scope</a>
+    · <a href="https://graphviz.readthedocs.io/">graphviz Python package docs</a>
+    · <a href="https://ipython.readthedocs.io/en/stable/config/integrating.html">IPython — integrating your objects with the rich display system</a>
+  </div>
+
+  <div class="ask">
+    งานที่ยังค้าง: การ์ดกันเดินซ้ำ (ดู <a href="0002-dag-not-tree.html">Lesson 02</a>) แล้วค่อยวาดกราฟจริง
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0002-dag-not-tree.html">← Lesson 02</a>
+      <a href="0004-toolchain.html">Lesson 04 · Toolchain →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>

@@ -1,0 +1,250 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 04 — Toolchain: Python ที่ถูกตัว และ Git ที่ย้อนได้</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 04 · toolchain</div>
+    <h1>Python ที่ถูกตัว และ Git ที่ย้อนได้</h1>
+    <p class="standfirst">
+      บทเรียนที่ไม่มีในวิดีโอ แต่กินเวลาจริงมากที่สุดในวันแรก —
+      และจะกินเวลาซ้ำทุกเดือนถ้าไม่เข้าใจตอนนี้
+    </p>
+    <div class="meta">2026-08-08 · Day 2 · M1 micrograd</div>
+  </header>
+
+  <h2>เครื่องหนึ่งเครื่องมี Python ได้หลายตัว</h2>
+
+  <p>ผลการตรวจเครื่องจริงในวันแรก:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Python</th><th>เวอร์ชัน</th><th>มีอะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>.venv</code> ของโปรเจกต์</td><td>3.13.13</td><td><strong>pip ตัวเดียว</strong> ← Jupyter ใช้ตัวนี้</td></tr>
+      <tr><td>system</td><td>3.14.3</td><td>pytest, numpy, pandas</td></tr>
+      <tr><td>conda base</td><td>—</td><td><strong>package ที่เพิ่งลงไปทั้งหมด</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    อาการ: ลง <code>ipykernel</code> สำเร็จ แต่ VS Code ยังบอกว่าหาไม่เจอ
+    เพราะมันไปลงที่ conda base ไม่ใช่ <span class="g" data-t="venv">venv</span> ของโปรเจกต์
+  </p>
+
+  <p>
+    สาเหตุ: Anaconda ติดตั้ง hook ที่ <strong>auto-activate <code>base</code> ทุกครั้งที่เปิดเทอร์มินัลใหม่</strong>
+    conda จึงแย่ง <span class="g" data-t="path">PATH</span> ไปก่อน แล้ว <code>pip</code> ที่เรียกก็คือ pip ของ conda
+  </p>
+
+  <h3>เครื่องมือวินิจฉัย</h3>
+
+<pre><code>python -c "import sys; print(sys.executable)"</code></pre>
+
+  <p>ถ้ามีคำว่า <code>conda</code> / <code>anaconda3</code> / <code>miniforge</code> ในเส้นทาง — นั่นคือสาเหตุ</p>
+
+  <h2><code>python -m</code> และวิธีที่กันพลาด 100%</h2>
+
+  <p>
+    <span class="g" data-t="pythonm">python -m NAME</span> แปลว่า
+    “หา module ชื่อ NAME ด้วยกลไก import ปกติ แล้วรันมันในฐานะ <code>__main__</code>”
+  </p>
+
+  <p>ผลที่วัดได้จริงจากไฟล์เดียวกัน เรียกสองแบบ:</p>
+
+<pre><code>python demo/sub/probe.py    →  sys.path[0] = ...\demo\sub    (โฟลเดอร์ของไฟล์)
+python -m demo.sub.probe    →  sys.path[0] = ...\           (โฟลเดอร์ปัจจุบัน)</code></pre>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>คำสั่ง</th><th>ทำไมต้องเป็นแบบนี้</th></tr></thead>
+    <tbody>
+      <tr><td><code>python -m pip install X</code></td><td><code>pip</code> เฉยๆ คือ .exe บน PATH ไม่รู้ว่าผูกกับ Python ตัวไหน — <code>-m</code> การันตีว่าเป็น pip ของ Python ตัวที่รันคำสั่งนี้</td></tr>
+      <tr><td><code>python -m pytest</code></td><td>ใส่ cwd ลง <code>sys.path</code> ทำให้ <code>from micrograd import ...</code> ในเทสต์หาเจอ — <code>pytest</code> เฉยๆ ไม่ใส่</td></tr>
+      <tr><td><code>python -m venv .venv</code></td><td>สร้าง venv ด้วย Python ตัวที่เจาะจง</td></tr>
+      <tr><td><code>python -m timeit "..."</code></td><td>จับเวลาโค้ดสั้นๆ อย่างน่าเชื่อถือ</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note good">
+    <span class="note-label">กฎที่กันพลาดที่สุด</span>
+    <p>
+      เลิกพึ่ง activate ไปเลย — <strong>ระบุ path ของ interpreter ตรงๆ</strong>
+      แล้วใช้ <code>-m</code>: <code>.venv\Scripts\python.exe -m pip install ...</code>
+      ไม่ว่า PATH จะเละแค่ไหนก็ไม่มีทางผิดตัว
+    </p>
+  </div>
+
+  <h2><code>requirements.txt</code> ที่ดูปกติแต่ใช้ไม่ได้</h2>
+
+  <p>รัน <code>pip freeze</code> ผิดตัว แล้วได้ไฟล์หน้าตาแบบนี้:</p>
+
+<pre><code>Brotli @ file:///D:/bld/brotli-split_1764017006836/work
+certifi @ file:///home/conda/feedstock_root/build_artifacts/...
+torch==2.13.0</code></pre>
+
+  <p>
+    บรรทัด <code>@ file:///</code> ชี้ไปที่ path บนดิสก์ของ<em>เครื่องที่ build conda package</em>
+    ซึ่งไม่มีอยู่บนเครื่องใครเลยในโลก ใครก็ตามที่ clone repo แล้วรัน
+    <code>pip install -r requirements.txt</code> จะพังทันที —
+    ทำลายเหตุผลทั้งหมดที่มีไฟล์นี้
+  </p>
+
+  <p>
+    <strong><code>pip freeze</code> ให้ผลตาม Python ตัวที่รันมัน</strong> —
+    freeze ผิดตัว ได้ไฟล์ผิดทั้งไฟล์
+  </p>
+
+  <h2>Graphviz: ลงแล้วแต่ยังใช้ไม่ได้</h2>
+
+  <p>
+    <code>graphviz</code> ใน pip เป็นแค่คนเขียนใบสั่ง คนวาดจริงคือโปรแกรม <code>dot.exe</code>
+    ที่ต้องลงแยก และ installer <strong>ไม่ได้ติ๊ก “Add to PATH” มาให้</strong>:
+  </p>
+
+<pre><code>C:\Program Files\Graphviz\bin\dot.exe    ← ไฟล์อยู่ครบ
+MACHINE PATH: no Graphviz                 ← แต่ไม่มีใน PATH
+USER PATH:    no Graphviz</code></pre>
+
+  <p>
+    เปิดเทอร์มินัลใหม่กี่ครั้งก็ไม่ช่วย เพราะปัญหาไม่ใช่ PATH ค้าง แต่คือไม่เคยถูกใส่เลย
+    และเมื่อแก้ PATH แล้วต้อง<strong>ปิด VS Code เปิดใหม่ทั้งโปรแกรม</strong>
+    ไม่ใช่แค่ restart kernel — เพราะ kernel รับ PATH ต่อมาจาก VS Code อีกที
+  </p>
+
+  <div class="note">
+    <span class="note-label">อาการที่ควรจำ</span>
+    <p>
+      <code>import graphviz</code> ผ่านปกติ แต่พังตอน render ด้วย
+      <code>ExecutableNotFound</code> — เพราะ package กับ binary เป็นคนละอย่างกัน
+    </p>
+  </div>
+
+  <h2>Git: กราฟของ snapshot ไม่ใช่กองไฟล์</h2>
+
+  <p>Git เก็บ snapshot ทั้ง tree แล้วผูกกันเป็น DAG — commit แต่ละตัวมี pointer ชี้ไป parent</p>
+
+  <h3>สามพื้นที่</h3>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>พื้นที่</th><th>คืออะไร</th><th>ย้ายเข้าด้วย</th></tr></thead>
+    <tbody>
+      <tr><td>Working directory</td><td>ไฟล์จริงบนดิสก์</td><td>(แก้ไฟล์)</td></tr>
+      <tr><td><span class="g" data-t="staging">Staging area</span></td><td>สำเนาที่จะเข้า commit ถัดไป</td><td><code>git add</code></td></tr>
+      <tr><td>Repository</td><td>ประวัติถาวร</td><td><code>git commit</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <code>git add</code> <strong>คัดลอกเนื้อไฟล์ ณ วินาทีนั้น</strong> ไม่ใช่แค่จดชื่อไฟล์ไว้ —
+    ถ้าแก้ต่อโดยไม่ add ซ้ำ commit จะได้เวอร์ชันเก่า และไฟล์เดียวกันจะโผล่สองที่พร้อมกันใน <code>git status</code>
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>คำสั่ง</th><th>เทียบอะไรกับอะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>git diff</code></td><td>ดิสก์ ↔ staging — สิ่งที่แก้แล้วแต่ <strong>จะไม่</strong> เข้า commit</td></tr>
+      <tr><td><code>git diff --staged</code></td><td>staging ↔ commit ล่าสุด — สิ่งที่ <strong>จะ</strong> เข้า commit จริง</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>พิมพ์ <code>git diff --staged</code> ก่อน commit ทุกครั้ง = ไม่มีวัน commit ผิดเวอร์ชัน</strong></p>
+
+  <h3>กฎข้อเดียวของการแก้ประวัติ</h3>
+
+  <div class="note good">
+    <p>
+      <strong>แก้ประวัติที่ยังไม่ push ได้อย่างอิสระ — ห้ามแก้ประวัติที่ push ไปแล้วและมีคนดึงไปแล้ว</strong>
+    </p>
+  </div>
+
+  <p>
+    <span class="g" data-t="amend">git commit --amend</span> ไม่ได้แก้ commit เดิม —
+    commit ใน Git แก้ไม่ได้ เพราะ hash คำนวณจากเนื้อหา
+    สิ่งที่เกิดจริงคือ Git สร้าง commit ใหม่ที่มี parent เดียวกัน แล้วเลื่อน pointer ของ branch มาชี้ตัวใหม่:
+  </p>
+
+<pre><code>ก่อน:   8e827df ──── fc688b6  ← main   (requirements เสีย)
+
+หลัง:   8e827df ──── fc688b6           (ลอยอยู่ ไม่มีใครชี้ถึง)
+             └────── 2a23c41  ← main   (requirements ถูก)</code></pre>
+
+  <p>
+    เกือบทุกคำสั่งของ Git คือ “สร้าง node ใหม่ + เลื่อน pointer” ไม่ใช่ “แก้ของเดิม” —
+    รูปเดียวกับ computation graph พอดี
+  </p>
+
+  <p>
+    ตาข่ายนิรภัย: <code>git reflog</code> จดทุกการเคลื่อนไหวของ pointer ไว้ราว 90 วัน
+    กู้ commit ที่ “หายไป” กลับมาได้เสมอ
+  </p>
+
+  <h3><span class="g" data-t="origin">origin</span> กับ <code>origin/main</code> เป็นคนละอย่าง</h3>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>pointer</th><th>อยู่ที่ไหน</th><th>คืออะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>main</code></td><td>เครื่องเรา</td><td>commit ล่าสุดของเราจริงๆ</td></tr>
+      <tr><td><code>origin/main</code></td><td><strong>เครื่องเรา</strong></td><td>ค่าที่จำไว้ว่าตอนคุยกับ GitHub ครั้งล่าสุด main ฝั่งโน้นอยู่ตรงไหน</td></tr>
+      <tr><td><code>main</code> บน GitHub</td><td>เซิร์ฟเวอร์</td><td>ของจริงฝั่งโน้น</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <code>origin/main</code> คือ <strong>estimate ของ state ฝั่ง remote ที่อัปเดตเฉพาะตอน
+    fetch / pull / push</strong> — ระหว่างนั้นมันคือค่าค้าง ไม่มี continuous observation
+    นี่คือเหตุผลที่ <code>git status</code> บอก ahead/behind ได้โดยไม่ต้องต่อเน็ต
+    และเป็นเหตุผลที่ข้อมูลนั้นอาจล้าสมัย
+  </p>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <ol>
+    <li>แก้ไฟล์ → <code>git add</code> → แก้ต่อ → <code>git commit</code> โดยไม่ add ซ้ำ — commit เก็บเวอร์ชันไหน?</li>
+    <li>ทำไม <code>pip install X</code> ถึงอันตรายกว่า <code>python -m pip install X</code>?</li>
+    <li><code>--force</code> กับ <code>--force-with-lease</code> ต่างกันยังไง และทำไมควรใช้อย่างหลังเสมอ?</li>
+  </ol>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    <a href="https://snarky.ca/why-you-should-use-python-m-pip/">Brett Cannon (CPython core dev) — Why you should use <code>python -m pip</code></a>
+    · <a href="https://docs.python.org/3/using/cmdline.html#cmdoption-m">Python docs — <code>-m</code></a>
+    · <a href="https://docs.pytest.org/en/stable/how-to/usage.html#calling-pytest-through-python-m-pytest">pytest — calling through <code>python -m pytest</code></a>
+    · <a href="https://git-scm.com/book/en/v2/Git-Internals-Git-Objects">Pro Git — Git Internals: Git Objects</a>
+  </div>
+
+  <div class="ask">
+    บทเรียนที่ควรจำที่สุด: <strong>ก่อนลง package ทุกครั้ง เช็คก่อนว่ากำลังคุยกับ Python ตัวไหน</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0003-drawing-the-graph.html">← Lesson 03</a>
+      <a href="../reference/glossary.html">Glossary →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>

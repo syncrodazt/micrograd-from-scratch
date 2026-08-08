@@ -1,0 +1,226 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 01 — Value ที่จำที่มาของตัวเองได้</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 01 · micrograd</div>
+    <h1>Value ที่จำที่มาของตัวเองได้</h1>
+    <p class="standfirst">
+      หัวใจของ autograd ไม่ใช่แคลคูลัส แต่เป็นการตัดสินใจว่า
+      “ตัวเลขหนึ่งตัวต้องจำอะไรไว้บ้าง” — และคำตอบนั้นเปลี่ยนเลขให้กลายเป็นกราฟ
+    </p>
+    <div class="meta">2026-08-08 · Day 2 · M1 micrograd</div>
+  </header>
+
+  <h2>ปัญหาที่ทำให้ต้องมี Value</h2>
+
+  <p>
+    เริ่มจากสิ่งที่ทำได้อยู่แล้ว — หาความชันด้วยนิยามตรงๆ ของอนุพันธ์:
+  </p>
+
+<pre><code>h = 0.001
+a = 2.0; b = -3.0; c = 10.0
+d1 = a * b + c
+
+a = 2.0 + h
+d2 = a * b + c
+
+(d2 - d1) / h        # -3.0000000000001137</code></pre>
+  <p class="cap">นี่คือ <span class="g" data-t="numgrad">numerical gradient</span> — ถูกต้อง แต่ใช้จริงไม่ได้</p>
+
+  <p>
+    มันได้คำตอบ แต่มีปัญหาสองข้อที่ฆ่ามันทิ้ง:
+  </p>
+
+  <ul>
+    <li><strong>ต้องคำนวณใหม่ทั้งเครือข่ายหนึ่งรอบต่อพารามิเตอร์หนึ่งตัว</strong> — โมเดลที่มีพารามิเตอร์ล้านตัวก็ต้องคำนวณล้านรอบ</li>
+    <li><strong>ค่าที่ได้ไม่แม่น</strong> — <code>-3.0000000000001137</code> ไม่ใช่ <code>-3.0</code> เพราะการลบเลขทศนิยมสองตัวที่ใกล้กันมากทำให้เสียนัยสำคัญ (catastrophic cancellation)</li>
+  </ul>
+
+  <p>
+    สิ่งที่ต้องการคือ <span class="g" data-t="autodiff">reverse-mode autodiff</span>:
+    เดินย้อนกลับ <em>ครั้งเดียว</em> แล้วได้ gradient ของทุกตัวพร้อมกัน
+    แต่การจะเดินย้อนกลับได้ ต้องมีอะไรให้เดิน — และ <code>float</code> ธรรมดาไม่มี
+  </p>
+
+  <h2>float ลืมทุกอย่างทันทีที่คำนวณเสร็จ</h2>
+
+  <p>
+    ทดลองในหัว: ถ้ามีคนยื่นตัวเลข <code>-1.0</code> มาให้ แล้วถามว่ามันเกิดจากอะไร —
+    ตอบไม่ได้ อาจเป็น <code>2 - 3</code> หรือ <code>-0.5 × 2</code> หรืออะไรก็ได้
+  </p>
+
+  <p>
+    ผลลัพธ์ของ <code>a + b</code> ในภาษาโปรแกรมทั่วไป <strong>เก็บแค่ค่า ไม่เก็บที่มา</strong>
+    ประวัติถูกทิ้งไปตอนที่ฟังก์ชัน return
+  </p>
+
+  <div class="note">
+    <span class="note-label">แนวคิดหลัก</span>
+    <p>
+      งานของ autograd engine คือ <strong>ไม่ทิ้งประวัตินั้น</strong> —
+      ทำให้ผลลัพธ์ทุกตัวแบกข้อมูลว่า “ฉันเกิดจากใคร ด้วยวิธีอะไร” ติดตัวไปด้วย
+      ผลรวมของการไม่ทิ้งนี้คือ <span class="g" data-t="compgraph">computation graph</span>
+    </p>
+  </div>
+
+  <h2>node หนึ่งตัวต้องจำอะไรบ้าง</h2>
+
+  <p>
+    หาคำตอบด้วยการทำงานย้อนกลับจากเป้าหมาย — ถ้าให้ <code>d</code> มาตัวเดียว
+    แล้วสั่งให้วาดรูปนี้ให้ได้ ต้องมีข้อมูลอะไรติดอยู่ใน <code>d</code>?
+  </p>
+
+<pre><code>  a ─┐
+     ├─[ + ]─→ d
+  b ─┘</code></pre>
+
+  <p>ไล่ทีละอย่างในรูป: มีกล่อง มีลูกศร มีป้ายกำกับตรงกลาง — ได้คำตอบสี่ช่อง</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ช่อง</th><th>เก็บอะไร</th><th>ตอบคำถามในรูปว่า</th></tr></thead>
+    <tbody>
+      <tr><td><code>data</code></td><td>ค่าตัวเลข</td><td>ในกล่องเขียนว่าอะไร</td></tr>
+      <tr><td><code>_prev</code></td><td><span class="g" data-t="node">node</span> ที่ทำให้เกิดตัวนี้</td><td>ลูกศรมาจากไหนบ้าง</td></tr>
+      <tr><td><code>_op</code></td><td>operation ที่ใช้สร้าง</td><td>ป้ายตรงกลางเขียนว่าอะไร</td></tr>
+      <tr><td><code>label</code></td><td>ชื่อไว้อ่าน</td><td>กล่องนี้ชื่ออะไร</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <code>_prev</code> และ <code>_op</code> ขึ้นต้นด้วย <code>_</code> ตามธรรมเนียม Python
+    ที่แปลว่า “ของภายใน ไม่ใช่ API ที่คนใช้ควรไปยุ่ง” — Python ไม่ได้บังคับอะไร
+    มันแค่ส่งสัญญาณให้คนอ่าน
+  </p>
+
+  <h2>กราฟถูกสร้างขึ้นระหว่างที่คำนวณ ไม่ใช่หลังจากนั้น</h2>
+
+  <p>
+    จุดที่สวยที่สุดของ micrograd อยู่ตรงนี้:
+    เราไม่ได้เขียนโค้ดสร้างกราฟแยกต่างหาก — กราฟ<strong>โผล่ขึ้นมาเป็นผลพลอยได้ของการบวกลบคูณหาร</strong>
+  </p>
+
+  <p>
+    กลไกคือ <span class="g" data-t="opoverload">operator overloading</span>:
+    เขียน <span class="g" data-t="dunder">dunder method</span> ชื่อ <code>__add__</code> ไว้
+    แล้ว Python จะเรียกให้เองทุกครั้งที่เจอเครื่องหมาย <code>+</code>
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>เราเขียน</th><th>Python เรียก</th></tr></thead>
+    <tbody>
+      <tr><td><code>a + b</code></td><td><code>a.__add__(b)</code></td></tr>
+      <tr><td><code>a * b</code></td><td><code>a.__mul__(b)</code></td></tr>
+      <tr><td><code>-a</code></td><td><code>a.__neg__()</code></td></tr>
+      <tr><td><code>a ** b</code></td><td><code>a.__pow__(b)</code></td></tr>
+      <tr><td><code>a</code> เฉยๆ ใน notebook</td><td><code>a.__repr__()</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ใน <code>__add__</code> คือ<strong>นาทีเดียวเท่านั้น</strong>ที่โค้ดรู้ว่า
+    “ตัวใหม่นี้เกิดจาก <code>self</code> กับ <code>other</code> ด้วยวิธี <code>+</code>”
+    ถ้าไม่แนบข้อมูลนั้นติดไปกับตัวที่ return ความรู้จะหายทันที
+  </p>
+
+  <div class="note good">
+    <span class="note-label">ผลลัพธ์</span>
+    <p>
+      โค้ดที่คนเขียนยังหน้าตาเหมือนเลขคณิตธรรมดา — <code>d = a * b + c</code> —
+      แต่ข้างในมีกราฟ 5 node ถูกประกอบขึ้นเรียบร้อยแล้ว นี่คือเหตุผลที่ PyTorch
+      เขียนโมเดลได้เหมือนเขียนสมการ
+    </p>
+  </div>
+
+  <h2>สองกับดักที่เจอจริงระหว่างเขียน</h2>
+
+  <h3>1. ค่า default ที่แก้ได้ จะถูกแชร์กันทั้งโปรแกรม</h3>
+
+  <p>
+    <code>_prev</code> ต้องมีค่าเริ่มต้นเป็น “ว่าง” เพราะ <span class="g" data-t="leaf">leaf</span>
+    ไม่ได้เกิดจากการคำนวณ แต่เขียนแบบนี้ไม่ได้:
+  </p>
+
+<pre><code>def __init__(self, data, _prev=[]):   # ระเบิด</code></pre>
+
+  <p>
+    <span class="g" data-t="mutdefault">Mutable default argument</span> —
+    <code>[]</code> ถูกสร้างครั้งเดียวตอน Python อ่านบรรทัด <code>def</code>
+    ทุก object ที่ไม่ส่ง <code>_prev</code> มาจะแชร์ list ก้อนเดียวกัน
+    พิสูจน์ได้ใน 20 วินาที:
+  </p>
+
+<pre><code>def add_item(x, bucket=[]):
+    bucket.append(x)
+    return bucket
+
+add_item(1)   # [1]
+add_item(2)   # [1, 2]   ← ไม่ใช่ [2]
+add_item(3)   # [1, 2, 3]</code></pre>
+
+  <p>ทางแก้: ใช้ tuple ว่าง <code>()</code> ซึ่งแก้ไม่ได้จึงแชร์ได้ปลอดภัย แล้วแปลงเป็น list ข้างใน</p>
+
+  <h3>2. ถ้าไม่มี <code>__repr__</code> จะดีบักไม่ได้เลย</h3>
+
+  <p>
+    ไม่เขียนแล้วได้ <code>&lt;__main__.Value object at 0x000001A2...&gt;</code>
+    ซึ่งไม่บอกอะไรเลย <span class="g" data-t="repr">__repr__</span>
+    ไม่ใช่ของประดับ — มันคือเครื่องมือดีบักหลักตลอดทั้งเดือน
+  </p>
+
+  <div class="note">
+    <span class="note-label">เกร็ดที่ได้ใช้ทันที</span>
+    <p>
+      เลข <code>0x000001A2...</code> ในข้อความนั้นคือ <span class="g" data-t="identity">id()</span> ของ object —
+      และมันจะกลายเป็นคำตอบของอีกปัญหาหนึ่งใน
+      <a href="0003-drawing-the-graph.html">Lesson 03</a> พอดี
+    </p>
+  </div>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <ol>
+    <li>ทำไม <code>__add__</code> ต้อง <em>คืน object ใหม่</em> แทนที่จะแก้ <code>self</code>?</li>
+    <li><code>3 * a</code> จะพังทั้งที่ <code>a * 3</code> ทำงานได้ — เพราะอะไร และแก้ด้วยเมธอดชื่ออะไร? (<span class="g" data-t="reflected">reflected operator</span>)</li>
+    <li>ถ้าลบ <code>_op</code> ออกจาก <code>Value</code> จะยังคำนวณ forward ได้ไหม? แล้วอะไรจะพัง?</li>
+  </ol>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    Andrej Karpathy — <a href="https://www.youtube.com/watch?v=VMj-3S1tku0">The spelled-out intro to neural networks and backpropagation: building micrograd</a>
+    · โค้ดต้นฉบับ <a href="https://github.com/karpathy/micrograd">karpathy/micrograd</a>
+    · <a href="https://docs.python.org/3/reference/datamodel.html#special-method-names">Python Data Model — special method names</a>
+  </div>
+
+  <div class="ask">
+    ติดตรงไหนถามได้ — ถามว่า <em>“ทำไม”</em> ดีกว่าถามว่า <em>“โค้ดอะไร”</em>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <span></span>
+      <a href="0002-dag-not-tree.html">Lesson 02 · DAG ไม่ใช่ tree →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>

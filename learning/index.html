@@ -1,0 +1,109 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning log — micrograd from scratch</title>
+<link rel="stylesheet" href="assets/style.css">
+
+<body data-glossary-href="reference/glossary.html">
+<div class="shell">
+<main>
+
+  <header class="masthead">
+    <div class="kicker">micrograd-from-scratch · M1</div>
+    <h1>Learning log</h1>
+    <p class="standfirst">
+      บันทึกสิ่งที่เข้าใจระหว่างสร้าง autograd engine ขึ้นมาเองทีละบรรทัด
+      — เขียนไว้เพื่อให้รื้อสร้างใหม่ได้จากหน้าเปล่า ไม่ใช่เพื่อให้ก๊อป
+    </p>
+    <div class="meta">Andrej Karpathy · Neural Networks: Zero to Hero #1</div>
+  </header>
+
+  <h2>บทเรียน</h2>
+
+  <div class="cards">
+
+    <a class="card" href="lessons/0001-value-remembers-its-past.html">
+      <div class="c-num">Lesson 01 · 2026-08-08</div>
+      <div class="c-title">Value ที่จำที่มาของตัวเองได้</div>
+      <p class="c-desc">
+        ทำไม <code>float</code> ธรรมดาถึงใช้ทำ autograd ไม่ได้ · node หนึ่งตัวต้องเก็บอะไรบ้าง ·
+        operator overloading ที่ทำให้กราฟโผล่มาเองระหว่างคำนวณ
+      </p>
+    </a>
+
+    <a class="card" href="lessons/0002-dag-not-tree.html">
+      <div class="c-num">Lesson 02 · 2026-08-08</div>
+      <div class="c-title">DAG ไม่ใช่ tree</div>
+      <p class="c-desc">
+        <code>x*y + x</code> มี <code>x</code> กี่ node · การมาบรรจบกันคือใจกลางของ backprop ·
+        การเดินซ้ำที่ระเบิดแบบ exponential · <code>set</code> ที่ไม่มีลำดับ
+      </p>
+    </a>
+
+    <a class="card" href="lessons/0003-drawing-the-graph.html">
+      <div class="c-num">Lesson 03 · 2026-08-08</div>
+      <div class="c-title">Recursion, closure และการเดินกราฟ</div>
+      <p class="c-desc">
+        กรอบคิด 4 ข้อที่ไม่ต้องไล่การทำงานในหัว · ทำไมเรียกว่า closure ·
+        <code>id()</code> ไม่ใช่ <code>hash()</code> · แยกการเดินกราฟออกจากการวาด
+      </p>
+    </a>
+
+    <a class="card" href="lessons/0004-toolchain.html">
+      <div class="c-num">Lesson 04 · 2026-08-08</div>
+      <div class="c-title">Python ที่ถูกตัว และ Git ที่ย้อนได้</div>
+      <p class="c-desc">
+        Python สามตัวในเครื่องเดียว · <code>python -m</code> · <code>requirements.txt</code> ที่ใช้ไม่ได้ ·
+        staging area · <code>--amend</code> และกฎการแก้ประวัติ
+      </p>
+    </a>
+
+    <a class="card" href="reference/glossary.html">
+      <div class="c-num">Reference</div>
+      <div class="c-title">Glossary</div>
+      <p class="c-desc">
+        คำศัพท์ทุกคำที่ใช้ในบทเรียน นิยามเดียว ที่เดียว
+      </p>
+    </a>
+
+  </div>
+
+  <h2>อยู่ตรงไหนแล้ว</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ชิ้นงาน</th><th>สถานะ</th></tr></thead>
+    <tbody>
+      <tr><td><code>Value</code> · <code>__init__</code> <code>__repr__</code> <code>__add__</code> <code>__mul__</code></td><td>✅ ทำงานได้</td></tr>
+      <tr><td>graphviz ต่อเข้ากับ Jupyter</td><td>✅ วาดรูปออกแล้ว</td></tr>
+      <tr><td><code>trace()</code> — เดินกราฟเก็บ nodes + edges</td><td>🟡 ได้ผลถูก แต่ยังเดินซ้ำ</td></tr>
+      <tr><td>วาดกราฟจากผลของ <code>trace()</code></td><td>⬜ ต่อไป</td></tr>
+      <tr><td><code>grad</code> · <code>_backward</code> · topological sort · <code>backward()</code></td><td>⬜ ยังไม่เริ่ม</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>คำถามที่ยังเปิดอยู่</h2>
+
+  <ul>
+    <li>การ์ดกันเดินซ้ำควรอยู่บรรทัดไหนของ recursion และควรเช็คว่าอะไร</li>
+    <li>เจอ node ซ้ำแล้วควร <code>return</code> ทันที หรือไม่เก็บแต่เดินลึกต่อ — สองอย่างนี้ให้ผลไม่เหมือนกัน</li>
+    <li>ถ้า node หนึ่งโผล่สองครั้งในลำดับที่ใช้เรียก <code>_backward()</code> gradient จะผิดไปกี่เท่า</li>
+    <li>label ของ node กลางควรตั้งมือ หรือให้สร้างอัตโนมัติจาก <code>data</code></li>
+  </ul>
+
+  <div class="ask">
+    หน้าเหล่านี้เขียนไว้เพื่อทบทวน — ไม่ใช่เพื่อก๊อปโค้ดกลับมา
+    มาตรวัดจริงคือ <strong>rebuild ได้จากไฟล์เปล่า · อธิบายได้โดยไม่เปิดโน้ต · ดีบักได้เมื่อมันพัง</strong>
+  </div>
+
+  <div class="footer">
+    ส่วนหนึ่งของ <a href="https://github.com/syncrodazt/micrograd-from-scratch">micrograd-from-scratch</a>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="assets/glossary-data.js"></script>
+<script src="assets/lesson.js"></script>

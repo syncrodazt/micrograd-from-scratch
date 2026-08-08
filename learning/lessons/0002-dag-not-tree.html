@@ -1,0 +1,232 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 02 — DAG ไม่ใช่ tree</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 02 · micrograd</div>
+    <h1>DAG ไม่ใช่ tree</h1>
+    <p class="standfirst">
+      คำเดียวที่ใช้ผิดตั้งแต่ต้น แล้วทำให้เข้าใจ backpropagation ผิดไปทั้งหมด —
+      และเหตุผลว่าทำไม “node ที่ถูกใช้ซ้ำ” คือใจกลางของเรื่องนี้
+    </p>
+    <div class="meta">2026-08-08 · Day 2 · M1 micrograd</div>
+  </header>
+
+  <h2>คำถามที่ดูเล็กแต่ไม่เล็ก</h2>
+
+  <p>เขียนนิพจน์ที่ตัวแปรตัวหนึ่งถูกใช้สองที่:</p>
+
+<pre><code>x = Value(2.0)
+y = Value(-3.0)
+z = x * y + x        # x โผล่สองครั้ง</code></pre>
+
+  <p>
+    กราฟของ <code>z</code> มี <code>x</code> <strong>สองกล่อง</strong> หรือ
+    <strong>กล่องเดียวที่มีลูกศรออกสองเส้น</strong>?
+  </p>
+
+  <h2>คำตอบ: กล่องเดียว — และพิสูจน์ได้</h2>
+
+<pre><code>left_x  = z._prev[0]._prev[0]   # x ที่อยู่ใต้ (x*y)
+right_x = z._prev[1]            # x ที่ถูกบวกตรงๆ
+
+left_x is right_x     # True
+id(left_x) == id(right_x)   # True</code></pre>
+
+  <p>
+    <code>x</code> ถูกสร้างครั้งเดียวด้วย <code>Value(2.0)</code>
+    แล้วชื่อ <code>x</code> ถูกใช้อ้างถึงมันสองที่ —
+    <strong>Python ไม่ได้ก๊อป object ให้</strong> มันคือก้อนเดิม
+  </p>
+
+  <p>กราฟจริงคือ <strong>4 node / 4 <span class="g" data-t="edge">edge</span></strong>:</p>
+
+<pre><code>nodes:  x, y, (x*y), z
+
+edges:  x     → (x*y)      ← x เส้นที่ 1
+        y     → (x*y)
+        (x*y) → z
+        x     → z          ← x เส้นที่ 2</code></pre>
+
+  <h2>นิยามที่ทำให้ทุกอย่างชัด</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>เงื่อนไข</th><th>ตรงนี้เป็นไหม</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="g" data-t="tree">Tree</span></td>
+        <td>ทุก node มีพ่อแม่ได้ไม่เกิน 1 ตัว</td>
+        <td>❌ <code>x</code> มีพ่อแม่ 2 ตัว</td>
+      </tr>
+      <tr>
+        <td><span class="g" data-t="dag">DAG</span></td>
+        <td>มีทิศทาง ไม่มีวงจร แต่<strong>มาบรรจบกันได้</strong></td>
+        <td>✅ ใช่</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <span class="note-label">ทำไมต้องแยกให้ออก</span>
+    <p>
+      “การมาบรรจบกัน” ไม่ใช่รายละเอียดปลีกย่อย — มัน<strong>คือ</strong>เรื่องทั้งหมดของ micrograd
+      ในโครงข่ายจริง น้ำหนักทุกตัวถูกใช้ซ้ำหลายที่เสมอ ถ้ายังคิดว่าเป็น tree อยู่
+      จะเข้าใจ backpropagation ผิดตั้งแต่ฐาน
+    </p>
+  </div>
+
+  <h2>เพราะฉะนั้น “เดินซ้ำ” จึงต้องแก้ — สามเหตุผล</h2>
+
+  <h3>1. เพราะมันไม่ตรงกับความจริง</h3>
+
+  <p>
+    ถ้าถามว่า “กราฟนี้มี node อะไรบ้าง” แล้ว <code>x</code> โผล่สองครั้ง
+    คำตอบก็ผิดตั้งแต่ต้น ไม่ต้องรอให้เกิดผลเสียอะไร
+  </p>
+
+  <p>
+    ข้อควรระวัง: <strong>รูปที่วาดออกมาจะยังสวยอยู่</strong> เพราะ graphviz ใช้ชื่อ node
+    เป็นตัวระบุ สั่งซ้ำชื่อเดิมมันแค่เขียนทับ — <em>รูปถูกไม่ได้แปลว่าโครงสร้างข้อมูลถูก</em>
+  </p>
+
+  <h3>2. เพราะมันระเบิดแบบ exponential</h3>
+
+  <p>วัดจริงกับกราฟที่แต่ละชั้นใช้ node ก่อนหน้าซ้ำสองครั้ง (<code>v = v + v</code>):</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ความลึก</th><th>node จริง</th><th>ครั้งที่โค้ดเดินจริง</th><th>เวลา</th></tr></thead>
+    <tbody>
+      <tr><td>5</td><td>6</td><td>63</td><td>0.000 s</td></tr>
+      <tr><td>10</td><td>11</td><td>2,047</td><td>0.000 s</td></tr>
+      <tr><td>15</td><td>16</td><td>65,535</td><td>0.004 s</td></tr>
+      <tr><td>18</td><td>19</td><td>524,287</td><td>0.036 s</td></tr>
+      <tr><td>20</td><td><strong>21</strong></td><td><strong>2,097,151</strong></td><td>0.143 s</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    21 node แต่เดิน 2 ล้านครั้ง — ทุกชั้นที่เพิ่ม งานเพิ่มเป็นสองเท่า
+    ที่ความลึก 40 จะรอจนแก่
+  </p>
+
+  <h3>3. เพราะ backprop — เก็บไว้ค้นพบเอง</h3>
+
+  <div class="note bad">
+    <span class="note-label">คำทำนายที่จดไว้ ยังไม่เฉลย</span>
+    <p>
+      ถ้า <code>x</code> โผล่สองครั้งในลิสต์ที่ใช้ไล่เรียก <code>_backward()</code>
+      แล้วเราวนตามลิสต์นั้น —
+    </p>
+    <ul>
+      <li><code>_backward</code> ของ <code>x</code> จะถูกเรียกกี่ครั้ง?</li>
+      <li>gradient ของ <code>x</code> จะออกมากี่เท่าของค่าที่ถูกต้อง?</li>
+      <li>ถ้าโผล่สามครั้งล่ะ?</li>
+    </ul>
+    <p>
+      บั๊กแบบนี้<strong>ไม่ crash ไม่ช้า ไม่มีอะไรผิดปกติให้เห็น</strong> —
+      มันแค่ให้ตัวเลขที่ผิดแบบเงียบๆ ซึ่งอันตรายกว่าสองข้อบนมาก
+    </p>
+  </div>
+
+  <h2>เก็บ node ด้วยอะไร: <code>list</code> หรือ <code>set</code></h2>
+
+  <p>
+    ถ้าคำถามคือ “มี node อะไรบ้าง” และห้ามซ้ำ →
+    <span class="g" data-t="setpy">set</span> ตรงกับความหมายพอดี
+    (เพิ่มด้วย <code>.add()</code> ไม่ใช่ <code>.append()</code>)
+  </p>
+
+  <p>
+    ทำงานได้เพราะ <code>Value</code> เป็น <span class="g" data-t="hashable">hashable</span> โดยอัตโนมัติ —
+    Python ใช้ identity เป็น hash ให้ แต่<strong>เมื่อไหร่ที่เขียน <code>__eq__</code>
+    Python จะถอด <code>__hash__</code> ออกทันที</strong> แล้วทั้งระบบจะพังด้วย
+    <code>TypeError: unhashable type</code>
+  </p>
+
+  <h3>set ไม่มีลำดับ — และตอนนี้ยังไม่เป็นไร</h3>
+
+  <p>ใส่ตามลำดับ <code>a, b, c, d, e</code> เป๊ะๆ แล้ววนออกมา:</p>
+
+<pre><code>set  : [e, a, d, c, b]      ← เรียงตาม hash ทำนายไม่ได้
+list : [a, b, c, d, e]
+dict : [a, b, c, d, e]      ← dict รับประกันลำดับตั้งแต่ Python 3.7</code></pre>
+
+  <p>
+    งานตอนนี้คือตอบว่า “มีอะไรอยู่ในถุงบ้าง” ไม่ใช่ “เรียงยังไง”
+    วาดกราฟจะสั่ง node ตัวไหนก่อนก็ได้ รูปออกมาเหมือนกัน →
+    <strong>set ถูกต้องแล้วสำหรับตอนนี้</strong>
+  </p>
+
+  <div class="note">
+    <span class="note-label">หลักการที่ต้องเก็บไว้</span>
+    <p>
+      <strong>“เคยเจอยัง?” กับ “ลำดับที่เท่าไหร่?” เป็นคำถามคนละข้อ
+      และมักต้องใช้ที่เก็บคนละอัน</strong> — <code>set</code> ตอบข้อแรกได้เร็วมากแต่ตอบข้อสองไม่ได้เลย
+      ส่วน <code>list</code> ตรงกันข้าม ตอน backward จะต้องการคำตอบทั้งสองข้อพร้อมกัน
+      และนั่นคือเหตุผลที่ <span class="g" data-t="toposort">topological sort</span> มีอยู่บนโลก
+    </p>
+  </div>
+
+  <h2>บทเรียนที่ใหญ่ที่สุดของหน้านี้</h2>
+
+  <p>
+    การใส่ <code>set</code> ให้ที่เก็บ <strong>ไม่ได้</strong> แก้เรื่องเดินซ้ำ —
+    มันแก้แค่ “การเก็บ” ส่วน “การเดิน” ยังลงไปที่ node เดิมซ้ำอยู่ดี
+    งานวัดผลยืนยัน: 19 node แต่ยังเดิน 524,287 ครั้ง และ edge ออกมาซ้ำ
+  </p>
+
+  <div class="note bad">
+    <span class="note-label">แยกให้ออก</span>
+    <p>
+      <strong>dedup ที่ตัวเก็บ ≠ dedup ที่การเดิน</strong> —
+      การ์ดกันเดินซ้ำต้องอยู่ที่ตัว recursion ไม่ใช่ที่ container
+    </p>
+  </div>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <ol>
+    <li>ทำไม <code>Value(2.0)</code> สองตัวที่คนละที่ในกราฟ <em>ต้อง</em> เป็นคนละ node?</li>
+    <li>สำหรับ <code>w = (p*q) + (p*q)</code> โดยที่ <code>e = p*q; w = e + e</code> — กราฟมีกี่ node และกี่ edge ที่ไม่ซ้ำ?</li>
+    <li>ถ้ากราฟเป็น tree จริงๆ (ไม่มี node ถูกใช้ซ้ำเลย) เรื่อง gradient accumulation จะยังจำเป็นไหม?</li>
+  </ol>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    Andrej Karpathy — <a href="https://www.youtube.com/watch?v=VMj-3S1tku0">building micrograd</a>
+    · <a href="https://docs.python.org/3/reference/datamodel.html#object.__hash__">Python Data Model — <code>__hash__</code> และผลของการเขียน <code>__eq__</code></a>
+    · <a href="https://docs.python.org/3/tutorial/datastructures.html#sets">Python Tutorial — sets</a>
+  </div>
+
+  <div class="ask">
+    คำถามที่ยังเปิดอยู่: การ์ดกันเดินซ้ำควรอยู่บรรทัดไหน และควรเช็คว่าอะไร
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0001-value-remembers-its-past.html">← Lesson 01</a>
+      <a href="0003-drawing-the-graph.html">Lesson 03 · Recursion, closure, และการวาดกราฟ →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
