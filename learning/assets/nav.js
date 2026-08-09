@@ -1,14 +1,17 @@
 /* Site navigation, injected on every page so there is exactly one copy to edit.
 
-   Depth is derived from the page's data-glossary-href:
-     "reference/glossary.html"     -> page sits at learning/      -> base "./"
-     "../reference/glossary.html"  -> page sits one level down    -> base "../"
-   Pages therefore need no extra attribute.
+   Depth is derived from the page's own URL: every content page lives either at
+   learning/ or exactly one level down in a known subdirectory. Deriving it from
+   the path (rather than from a content attribute like data-glossary-href) keeps
+   the nav correct no matter how a page writes its own glossary link.
 
    The current section is highlighted by matching the URL path. */
 
 (function () {
   "use strict";
+
+  /* subdirectories of learning/ that hold pages loading this nav */
+  var SUBDIRS = /\/(lessons|reference|retrieval)\/$/;
 
   var LINKS = [
     { href: "index.html",                    label: "หน้าแรก",   match: /\/index\.html$|\/learning\/?$/ },
@@ -21,10 +24,9 @@
   ];
 
   function build() {
-    var gh = document.body.dataset.glossaryHref || "../reference/glossary.html";
-    var base = gh.indexOf("../") === 0 ? "../" : "";
-
     var path = location.pathname;
+    var dir = path.replace(/[^/]*$/, "");
+    var base = SUBDIRS.test(dir) ? "../" : "";
 
     var nav = document.createElement("nav");
     nav.className = "sitenav";
