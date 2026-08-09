@@ -917,3 +917,9 @@ td code { font-size: 0.82em; }
   .t-timer { display: none; }
   .task.running { box-shadow: none; background: none; }
 }
+
+/* A table row carrying the point of the whole table. */
+tr.row-key > td {
+  background: var(--accent-bg);
+  box-shadow: inset 2px 0 0 var(--accent);
+}

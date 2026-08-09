@@ -93,6 +93,14 @@
       <div class="finder-q">ต้องเรียน CS เพิ่มแค่ไหนถึงจะพอ</div>
       <div class="finder-a"><a href="reference/data-structures.html">Reference · Data structures</a></div>
     </div>
+    <div class="finder-row">
+      <div class="finder-q">pre-order กับ post-order ต่างกันตรงไหน</div>
+      <div class="finder-a"><a href="lessons/0006-topological-order.html">Lesson 06</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">visited set ต่างจาก <code>set</code> ที่เก็บผลลัพธ์ยังไง</div>
+      <div class="finder-a"><a href="lessons/0006-topological-order.html">Lesson 06</a></div>
+    </div>
   </div>
 
   <!-- ============ LESSONS ============ -->
@@ -149,6 +157,15 @@
       </p>
     </a>
 
+    <a class="card" href="lessons/0006-topological-order.html">
+      <div class="c-num">Lesson 06 · 2026-08-09 · 7 ข้อ</div>
+      <div class="c-title">ลำดับที่ถูกต้อง และ visited set ที่ไม่ใช่ที่เก็บของ</div>
+      <p class="c-desc">
+        กราฟที่ pre-order พัง · post-order + <code>reversed()</code> ·
+        ตาราง 4 ช่องที่พิสูจน์ว่าเป็นคนละปัญหา · O(n²) ที่วัดได้จริง · CLRS 3 สี
+      </p>
+    </a>
+
   </div>
 
   <!-- ============ REFERENCE ============ -->
@@ -165,7 +182,7 @@
       <div class="c-title">Roadmap — อยู่ตรงไหนแล้ว</div>
       <p class="c-desc">
         แผนทั้งเดือนในหน้าเดียว 5 เฟส ติ๊กได้และจำสถานะให้ ·
-        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · เฟส 1 เหลือ topological sort กับ <code>backward()</code>
+        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · เฟส 1 เหลือขั้นเดียว — <code>backward()</code> เต็มรูป
       </p>
     </a>
 
@@ -257,7 +274,7 @@
 
   <div class="sec" id="status">
     <h2>อยู่ตรงไหนแล้ว</h2>
-    <span class="sec-note">Day 3 · 2026-08-09</span>
+    <span class="sec-note">Day 3 · 2026-08-09 · เฟส 1 เหลือขั้นเดียว</span>
   </div>
 
   <div class="tw">
@@ -271,7 +288,8 @@
       <tr><td><code>grad</code> · คำนวณ gradient ด้วยมือ · ตรวจกับ numerical</td><td>✅ ตรงทุกตัว</td></tr>
       <tr><td><code>_backward</code> closure ของ <code>+</code> และ <code>*</code></td><td>✅ <code>z = x + x</code> → <code>2.0</code></td></tr>
       <tr><td>เรียก <code>_backward()</code> ด้วยมือ · พิสูจน์ว่าลำดับสำคัญ</td><td>✅ สลับลำดับแล้วได้ 0 เงียบๆ</td></tr>
-      <tr><td>topological sort · <code>backward()</code></td><td>🔵 ต่อไป</td></tr>
+      <tr><td><code>topo()</code> — post-order + <code>reversed()</code></td><td>✅ ผ่าน property assert</td></tr>
+      <tr><td><code>backward()</code> เต็มรูป</td><td>🔵 ต่อไป — ปิดเฟส 1</td></tr>
       <tr><td><code>tanh</code> · reflected operators</td><td>⬜ D5</td></tr>
       <tr><td>Neuron → Layer → MLP → training loop</td><td>⬜ D6–D7</td></tr>
     </tbody>

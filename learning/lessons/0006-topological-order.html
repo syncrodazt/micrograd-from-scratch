@@ -1,0 +1,400 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 06 — ลำดับที่ถูกต้อง และ visited set ที่ไม่ใช่ที่เก็บของ</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a> &nbsp;·&nbsp;
+    <a href="../reference/roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 06 · topological order</div>
+    <h1>ลำดับที่ถูกต้อง<br>และ visited set ที่ไม่ใช่ที่เก็บของ</h1>
+    <p class="standfirst">
+      บรรทัดเดียวที่ย้ายตำแหน่งแล้วเปลี่ยนทุกอย่าง — กับความสับสนที่กินเวลาเป็นชั่วโมง
+      แต่กลายเป็นว่ามันมีชื่อจริงในตำรา CS อยู่แล้ว
+    </p>
+    <div class="meta">2026-08-09 · Day 3 (ช่วงค่ำ) · เฟส 1 ขั้น 7</div>
+  </header>
+
+  <h2>โจทย์: หาลำดับที่ทำให้ invariant เป็นจริง</h2>
+
+  <div class="note good">
+    <span class="note-label">Invariant ที่นิยามคำว่า “ลำดับที่ถูก”</span>
+    <p style="margin-bottom:0">
+      node จะเรียก <code>_backward()</code> ได้ ก็ต่อเมื่อ <code>grad</code> ของมันครบแล้ว
+      = <strong>พ่อแม่ทุกตัวเรียกไปหมดแล้ว</strong><br>
+      พูดสั้นที่สุด: <strong>พ่อต้องมาก่อนลูกเสมอ</strong> ไม่มีเงื่อนไขอื่น
+    </p>
+  </div>
+
+  <p>
+    <span class="g" data-t="toposort">Topological sort</span> ไม่ใช่อัลกอริทึมลึกลับ —
+    มันคือคำตอบของคำถามเดียวว่า “แล้วใครควรทำงานก่อนใคร”
+    บนกราฟ 5 node เรียงเองได้ในหัว บนกราฟหมื่น node เรียงเองไม่ได้ จบแค่นั้น
+  </p>
+
+  <h2>ทำไมกราฟที่ใช้มาตลอดถึงไม่เคยพัง</h2>
+
+  <p>
+    กราฟ <code>d = a*b + c</code> สลับลำดับยังไงก็เห็นปัญหาไม่ชัด และ <code>z = x*y + x</code> ก็เกือบไม่เห็น
+    เหตุผลคือกับดักที่ต้องรู้ไว้:
+  </p>
+
+  <div class="note bad">
+    <span class="note-label">กับดักในการออกแบบเทสต์</span>
+    <p style="margin-bottom:0">
+      ในกราฟเหล่านั้น node ที่ถูกใช้ซ้ำเป็น <span class="g" data-t="leaf">leaf</span> เสมอ —
+      และ leaf ไม่มี <code>_backward</code> ที่ทำอะไรเลย
+      <strong>การเรียกมันผิดลำดับจึงไม่ทำให้อะไรผิด</strong><br>
+      จะเห็นบั๊กได้ ต้องให้ <strong>node กลาง</strong> (ที่มี <code>_backward</code> จริง) เป็นตัวที่ถูกใช้ซ้ำ
+    </p>
+  </div>
+
+  <p>กราฟที่ออกแบบมาให้พังโดยเฉพาะ:</p>
+
+<pre><code>x = 2.0   y = 3.0   p = 5.0   q = 7.0
+
+m = x * y      →    6.0      ← node กลาง ที่มีพ่อแม่สองตัว
+a = m * p      →   30.0
+b = m * q      →   42.0
+d = a * b      → 1260.0</code></pre>
+
+  <p>
+    <code>m</code> มีพ่อแม่คือ <code>a</code> และ <code>b</code> — ทั้งคู่ต้องทำงานเสร็จก่อน
+    <code>m</code> ถึงจะเรียก <code>_backward()</code> ได้
+  </p>
+
+  <h2>บันทึก node ที่ต้นลูป = pre-order = ผิด</h2>
+
+  <p>ลำดับที่ได้จาก <code>trace()</code> เดิม (บันทึก node <strong>ก่อน</strong> เข้าลูป):</p>
+
+<pre><code>d,  a,  m,  x,  y,  p,  b,  q
+        ↑                   ↑
+        m อยู่ตำแหน่ง 2      b อยู่ตำแหน่ง 6</code></pre>
+
+  <p>
+    <code>b</code> เป็นพ่อของ <code>m</code> แต่ <code>b</code> มาทีหลัง — <strong>ละเมิด invariant</strong>
+    สาเหตุตรงไปตรงมา: DFS ดิ่งลงกิ่งของ <code>a</code> จนสุดก่อน
+    ระหว่างทางเจอ <code>m</code> ก็บันทึกทันที ทั้งที่ <code>b</code> ยังไม่ได้แตะเลย
+  </p>
+
+  <h3>ผลลัพธ์เมื่อเรียกตามลำดับนั้น</h3>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>node</th><th>ค่าที่ถูก</th><th>ค่าที่ได้</th><th></th></tr></thead>
+    <tbody>
+      <tr><td><code>m.grad</code></td><td>420</td><td>420</td><td>ถูก — เพราะสุดท้าย <code>b</code> ก็ได้ทำงาน</td></tr>
+      <tr><td><code>x.grad</code></td><td>1260</td><td><strong>630</strong></td><td><strong>ครึ่งเดียว</strong></td></tr>
+      <tr><td><code>y.grad</code></td><td>840</td><td><strong>420</strong></td><td><strong>ครึ่งเดียว</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    อาการที่ต้องจำ: <strong>node ที่ถูกใช้ซ้ำเองกลับได้ค่าถูก แต่ลูกของมันได้ครึ่งเดียว</strong>
+    เพราะตอน <code>m._backward()</code> ทำงาน <code>m.grad</code> เก็บมาแค่เส้นทางเดียว
+    ส่วนอีกเส้นมาถึงทีหลัง — สายเกินไป
+  </p>
+
+  <p>และเหมือนเดิม: <strong>ไม่มี error ไม่มี warning</strong></p>
+
+  <h2>บันทึก node ที่ท้ายลูป = post-order = กลับด้านแล้วได้คำตอบ</h2>
+
+  <p>ย้ายบรรทัดบันทึกไปไว้<strong>หลัง</strong>ลูป — node จะถูกบันทึกตอนที่ลูกของมันเสร็จหมดแล้ว:</p>
+
+<pre><code>x,  y,  m,  p,  a,  q,  b,  d      ← ลูกมาก่อนพ่อ ทุกคู่</code></pre>
+
+  <p>
+    นี่คือด้าน<em>ตรงข้าม</em>ของที่ต้องการพอดี — ซึ่งแปลว่าใกล้แล้ว
+    <code>reversed()</code> ทีเดียวจบ และมันเป็น O(1) เพราะคืน iterator ไม่ได้ copy
+  </p>
+
+  <div class="note good">
+    <span class="note-label">สองจุดในฟังก์ชันเดียว ที่ทำคนละหน้าที่</span>
+<pre style="margin:.6rem 0 0"><code>def f(node):
+    ┌── จุดที่ 1 ──┐   "ฉันเริ่มทำ node นี้แล้ว อย่าเข้ามาอีก"    → visited set
+
+    for n in node._prev:
+        f(n)
+
+    └── จุดที่ 2 ──┘   "ลูกฉันเสร็จหมดแล้ว จองที่ในลำดับได้"     → order</code></pre>
+    <p style="margin-bottom:0">
+      เหตุผลที่ต้องมีสองโครงสร้าง ไม่ใช่เพราะอยากได้ที่เก็บสองที่ —
+      แต่เพราะต้องบันทึก<strong>สองช่วงเวลาที่ต่างกัน</strong>
+      โครงสร้างเดียวเลือกเวลาได้เวลาเดียว แล้วจะเสียงานอีกอย่างเสมอ
+    </p>
+  </div>
+
+  <h2>ลำดับที่ถูกต้อง มีได้หลายอัน</h2>
+
+  <p>
+    คำถามที่โผล่มาระหว่างทาง: ทำไม DFS ถึงเดินเข้า <code>m</code> ก่อน <code>p</code>?
+    คำตอบอยู่ใน <code>_prev</code> — มันคือ <code>[self, other]</code>
+    เขียน <code>a = m * p</code> ก็ได้ <code>[m, p]</code> · เขียน <code>a = p * m</code> ก็ได้ <code>[p, m]</code>
+  </p>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      สลับแล้ว<strong>ได้ลำดับคนละอัน แต่ assert ยังผ่านทั้งคู่</strong> —
+      เพราะ topological order ไม่ได้มีคำตอบเดียว มันคือ<em>เซตของลำดับ</em>ที่ทุกอันถูกต้องเท่ากัน
+      ขอแค่ “พ่อมาก่อนลูก” ครบทุกเส้น
+    </p>
+  </div>
+
+  <p>
+    ผลข้างเคียงที่สำคัญกว่า: <strong>เทสต์ต้องเช็ค<em>คุณสมบัติ</em> ไม่ใช่เช็คว่าตรงกับลำดับที่คิดไว้</strong>
+    เทสต์ที่ hard-code ลำดับเดียวจะพังทันทีที่สลับ <code>m * p</code> เป็น <code>p * m</code>
+    ทั้งที่โค้ดยังถูกอยู่
+  </p>
+
+<pre><code>pos = {id(n): i for i, n in enumerate(order)}
+for child, parent in edges:
+    assert pos[id(parent)] &lt; pos[id(child)]</code></pre>
+
+  <h2>visited set ไม่ใช่ที่เก็บของ — หลักฐานที่วัดได้</h2>
+
+  <p>
+    ความสับสนที่กินเวลานานที่สุดของวัน: <code>set</code> ที่ใช้กันของซ้ำในผลลัพธ์
+    กับ <code>set</code> ที่ใช้กันเดินซ้ำ — มัน<strong>คนละปัญหากัน</strong>
+  </p>
+
+  <p>วัดบนกราฟ <code>v = v + v</code> ซ้ำ 16 ชั้น — มี node จริงแค่ <strong>17 ตัว</strong>:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>guard</th><th>container</th><th><code>f()</code> calls</th><th>เก็บได้</th><th>ซ้ำไหม</th><th>เวลา</th></tr></thead>
+    <tbody>
+      <tr><td>ไม่มี</td><td><code>list</code></td><td>131,071</td><td>131,071</td><td><strong>ซ้ำ</strong></td><td>13.2 ms</td></tr>
+      <tr class="row-key"><td>ไม่มี</td><td><code>set</code></td><td><strong>131,071</strong></td><td>17</td><td>ไม่ซ้ำ</td><td><strong>13.2 ms</strong></td></tr>
+      <tr><td>มี</td><td><code>list</code></td><td>33</td><td>17</td><td>ไม่ซ้ำ</td><td>0.0 ms</td></tr>
+      <tr><td>มี</td><td><code>set</code></td><td>33</td><td>17</td><td>ไม่ซ้ำ</td><td>0.0 ms</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>แถวที่ 2 คือหลักฐานทั้งหมด</strong> — เปลี่ยน <code>list</code> เป็น <code>set</code> แล้ว:</p>
+
+  <ul>
+    <li>ของที่เก็บ 131,071 → 17 ✅ <strong>ข้อมูลถูกทันที</strong></li>
+    <li>จำนวน call 131,071 → 131,071 ❌ <strong>ไม่ลดลงแม้แต่ call เดียว</strong></li>
+    <li>เวลา 13.2 ms → 13.2 ms ❌ <strong>เท่าเดิมเป๊ะ</strong></li>
+  </ul>
+
+  <p>
+    <code>set</code> ยืนอยู่ปลายทาง แล้วโยนของซ้ำทิ้งตอนจะเก็บ —
+    โปรแกรมยังเดินเข้าไปทุกกิ่งเหมือนเดิม <strong>มันไม่ได้ลดงานเลย</strong>
+    ส่วน guard ลด call จาก 131,071 เหลือ 33 = <strong>4,000 เท่า</strong> ซึ่ง <code>set</code> ทำให้ไม่ได้
+  </p>
+
+  <div class="note bad">
+    <span class="note-label">เรื่องคำศัพท์</span>
+    <p style="margin-bottom:0">
+      “dedup ที่ container” กับ “dedup ที่ traversal” เป็นคำที่<strong>ใช้สอนกันเองในโปรเจกต์นี้เท่านั้น</strong>
+      ไม่ใช่ศัพท์จริง อย่าเอาไปใช้ตอนสัมภาษณ์<br>
+      ศัพท์สากลของอันหลังคือ <strong>visited set</strong> — ส่วนอันแรกไม่มีชื่อพิเศษ แค่บอกว่า “ใช้ <code>set</code>”
+    </p>
+  </div>
+
+  <h2>ใช้ <code>order</code> เป็น guard เลยได้ไหม</h2>
+
+  <p><strong>ได้ ผลลัพธ์ถูกต้อง</strong> — แต่ราคาต่างกันมาก วัดบนกราฟรูปทรงเหมือน MLP:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>nodes</th><th>edges</th><th>guard เป็น <code>set</code></th><th>guard เป็น <code>list</code></th><th>ช้ากว่า</th></tr></thead>
+    <tbody>
+      <tr><td>61</td><td>588</td><td>0.03 ms</td><td>0.11 ms</td><td>4×</td></tr>
+      <tr><td>121</td><td>1,308</td><td>0.05 ms</td><td>0.46 ms</td><td>8×</td></tr>
+      <tr><td>241</td><td>2,748</td><td>0.11 ms</td><td>1.70 ms</td><td>15×</td></tr>
+      <tr><td>481</td><td>5,628</td><td>0.23 ms</td><td>7.38 ms</td><td>32×</td></tr>
+      <tr><td>961</td><td>11,388</td><td>0.55 ms</td><td>27.63 ms</td><td><strong>50×</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    คอลัมน์ขวาสุดคือลายเซ็นของ <strong>O(n²) เทียบกับ O(n)</strong> —
+    node เพิ่มเท่าตัว ช้ากว่าเดิมเท่าตัว
+    <span class="g" data-t="bigo">Big-O</span> ไม่ได้บอกว่าเร็วกี่วินาที มันบอกว่าช้าลงเท่าไหร่เมื่อของเยอะขึ้น
+  </p>
+
+  <p>
+    MLP ที่จะเขียนสัปดาห์หน้าอยู่ประมาณช่อง 481–961
+    และ training loop เรียกใหม่ทุก step × 1000 step → <strong>27 ms กลายเป็น 27 วินาที ต่อการเทรนหนึ่งรอบ</strong>
+  </p>
+
+  <div class="note">
+    <span class="note-label">บทเรียนแถมเรื่องการวัดผล</span>
+    <p style="margin-bottom:0">
+      เบนช์มาร์กรอบแรกของหัวข้อนี้<strong>ไม่เห็นความต่างเลย</strong> เพราะสร้างกราฟเป็นเส้นยาว
+      ทำให้ <code>order</code> ว่างเกือบตลอดตอน scan —
+      <strong>รูปทรงของข้อมูลเปลี่ยนคำตอบของคำถาม “อันไหนเร็วกว่า” ได้</strong>
+      ต้องวัดบนรูปทรงที่จะใช้จริงเสมอ
+    </p>
+  </div>
+
+  <h2>ใส่ visited set ก่อนลูป หรือหลังลูป?</h2>
+
+  <p>วัดแล้ว บนกราฟทุกแบบ:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>กราฟ</th><th>add ก่อนลูป</th><th>add หลังลูป</th><th>ลำดับเหมือนกันไหม</th></tr></thead>
+    <tbody>
+      <tr><td>doubling depth 16</td><td>33 calls</td><td>33 calls</td><td>เหมือน</td></tr>
+      <tr><td>doubling depth 20</td><td>41 calls</td><td>41 calls</td><td>เหมือน</td></tr>
+      <tr><td>layered 20×12</td><td>2,749 calls</td><td>2,749 calls</td><td>เหมือน</td></tr>
+      <tr><td>layered 40×12</td><td>5,629 calls</td><td>5,629 calls</td><td>เหมือน</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>ไม่ต่างกันเลยบน DAG</strong> เหตุผลหนึ่งประโยค:
+    จะเจอ node ซ้ำ<em>ตอนที่มันยังทำงานไม่เสร็จ</em>ได้ ต้องมีทางเดินจากมันวนกลับมาที่ตัวเอง = <strong>cycle</strong>
+    ซึ่ง <span class="g" data-t="dag">DAG</span> ไม่มีตามนิยาม
+    พอเดินมาเจอ <code>m</code> รอบสอง รอบแรกของ <code>m</code> <code>return</code> ไปเรียบร้อยแล้ว
+  </p>
+
+  <p>เคสเดียวที่ตำแหน่งสำคัญ — ถ้ากราฟมี cycle:</p>
+
+<pre><code>visited set ใส่ก่อนลูป    →  จบได้
+order append หลังลูป      →  RecursionError วนไม่จบ</code></pre>
+
+  <h3>และมันมีชื่อจริงในตำรา</h3>
+
+  <p>CLRS ทำ DFS ด้วยการระบายสี node <strong>3 สี ไม่ใช่ 2</strong>:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>สี</th><th>แปลว่า</th><th>ตรงกับ</th></tr></thead>
+    <tbody>
+      <tr><td>ขาว</td><td>ยังไม่เคยไป</td><td>ยังไม่ผ่านจุดไหนเลย</td></tr>
+      <tr><td><strong>เทา</strong></td><td>เริ่มแล้ว แต่ลูกยังไม่เสร็จ</td><td>ผ่านจุดที่ 1</td></tr>
+      <tr><td><strong>ดำ</strong></td><td>ลูกเสร็จหมดแล้ว</td><td>ผ่านจุดที่ 2</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    เหตุผลที่ต้องมี 3 สีไม่ใช่ 2 <strong>คือความต่างระหว่างจุดที่ 1 กับจุดที่ 2 นั่นเอง</strong> —
+    และการเจอ node สีเทาซ้ำ คือวิธีตรวจว่ากราฟมี cycle
+    ความสับสนของวันนี้ไม่ได้คิดมากไปเอง มันชี้ไปที่เรื่องที่มีอยู่จริง
+  </p>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <div id="quiz"></div>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    Andrej Karpathy — <a href="https://www.youtube.com/watch?v=VMj-3S1tku0">building micrograd</a>
+    · <a href="https://wiki.python.org/moin/TimeComplexity">Python Wiki — TimeComplexity</a>
+    (ที่มาของ <code>in list</code> = O(n) และ <code>in set</code> = O(1))
+    · CLRS, <em>Introduction to Algorithms</em> — DFS และการระบายสี node
+  </div>
+
+  <div class="ask">
+    ประโยคเดียวที่ควรจำ: <strong>guard บันทึกตอนลงไป · ลำดับบันทึกตอนขึ้นมา ·
+    สองงานคนละเวลา จึงต้องมีสองโครงสร้าง</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0005-gradient-flows-backward.html">← Lesson 05</a>
+      <a href="../reference/data-structures.html">Data structures →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "ทำไมกราฟ <code>d = a*b + c</code> ถึงไม่เคยเผยบั๊กเรื่องลำดับเลย?",
+    opts: [
+      "node ที่ถูกใช้ซ้ำในกราฟนั้นเป็น leaf ซึ่ง <code>_backward</code> ไม่ได้ทำอะไรอยู่แล้ว",
+      "กราฟมี node น้อยเกินไป ความคลาดเคลื่อนจึงเล็กจนมองไม่เห็นด้วยตาเปล่า",
+      "การบวกเป็น operation ที่สลับที่ได้ ลำดับการเรียกจึงไม่มีผลต่อผลลัพธ์"
+    ],
+    a: 0,
+    why: "จะเห็นบั๊กได้ ต้องให้ <b>node กลาง</b> ที่มี <code>_backward</code> จริงเป็นตัวที่ถูกใช้ซ้ำ — เช่น <code>m = x*y</code> ที่ถูกใช้ทั้งใน <code>a = m*p</code> และ <code>b = m*q</code> การออกแบบเทสต์ให้กระทบจุดที่ต้องการทดสอบจริงๆ เป็นทักษะแยกต่างหากจากการเขียนโค้ด"
+  },
+  {
+    q: "บันทึก node ที่<b>ต้น</b>ฟังก์ชัน (ก่อนลูป) แล้วใช้ลำดับนั้นเรียก <code>_backward()</code> — <code>m.grad</code> กับ <code>x.grad</code> จะเป็นยังไง?",
+    opts: [
+      "<code>m.grad</code> ถูก แต่ <code>x.grad</code> ได้ครึ่งเดียว เพราะ <code>m</code> ทำงานตอนที่ grad ยังไม่ครบ",
+      "ผิดทั้งคู่ เพราะเมื่อลำดับผิด gradient ทั้งสายก็ผิดตามกันไปหมดตั้งแต่ต้น",
+      "ถูกทั้งคู่ เพราะสุดท้ายทุก node ก็ได้เรียก <code>_backward()</code> ครบทุกตัวอยู่ดี"
+    ],
+    a: 0,
+    why: "อาการที่ต้องจำ: <b>node ที่ถูกใช้ซ้ำได้ค่าถูก แต่ลูกของมันได้ครึ่งเดียว</b> — ตอน <code>m._backward()</code> ทำงาน <code>m.grad</code> เก็บมาแค่เส้นทางเดียว (210 จาก 420) อีกเส้นมาถึงทีหลัง สายเกินไปสำหรับ <code>x</code> และ <code>y</code> ที่รับค่าไปแล้ว"
+  },
+  {
+    q: "ย้ายบรรทัดบันทึก node ไปไว้<b>หลัง</b>ลูป จะได้ลำดับแบบไหน?",
+    opts: [
+      "ลูกมาก่อนพ่อ — ตรงข้ามกับที่ต้องการพอดี จึงกลับด้านด้วย <code>reversed()</code> แล้วจบ",
+      "พ่อมาก่อนลูก — ได้ลำดับที่ถูกต้องทันที ไม่ต้องทำอะไรเพิ่มอีกเลย",
+      "ลำดับสุ่มขึ้นกับว่า node ไหนถูกสร้างก่อน จึงต้องเรียงใหม่ด้วย <code>sort()</code>"
+    ],
+    a: 0,
+    why: "บันทึกหลังลูป = บันทึกตอนที่ลูกเสร็จหมดแล้ว = post-order = <b>ลูกก่อนพ่อ</b> ซึ่งเป็นด้านตรงข้ามของที่ต้องการ <code>reversed()</code> เป็น O(1) ด้วยเพราะคืน iterator ไม่ได้ copy list ใหม่"
+  },
+  {
+    q: "ถ้าเปลี่ยน <code>a = m * p</code> เป็น <code>a = p * m</code> ลำดับที่ได้จะเปลี่ยน — assert ที่เช็คลำดับจะยังผ่านไหม?",
+    opts: [
+      "ผ่าน เพราะ topological order ไม่ได้มีคำตอบเดียว ขอแค่พ่อมาก่อนลูกครบทุกเส้น",
+      "ไม่ผ่าน เพราะลำดับที่ถูกต้องของกราฟหนึ่งกราฟมีอยู่เพียงลำดับเดียวเท่านั้น",
+      "ผ่านบ้างไม่ผ่านบ้าง ขึ้นกับว่ารันแล้ว hash ของ object ตกลงมาที่ตำแหน่งไหน"
+    ],
+    a: 0,
+    why: "<code>_prev</code> คือ <code>[self, other]</code> สลับที่คูณก็สลับลำดับการเดิน แต่ได้ลำดับที่<i>ถูกต้องเท่ากัน</i>คนละอัน — บทเรียนที่ตามมาคือ <b>เทสต์ต้องเช็คคุณสมบัติ ไม่ใช่เช็คว่าตรงกับลำดับที่คิดไว้</b> เทสต์ที่ hard-code ลำดับจะพังทั้งที่โค้ดยังถูก"
+  },
+  {
+    q: "เปลี่ยนที่เก็บผลลัพธ์จาก <code>list</code> เป็น <code>set</code> โดยยัง<b>ไม่มี</b> guard — อะไรเปลี่ยน?",
+    opts: [
+      "ข้อมูลถูกทันที (131,071 → 17) แต่จำนวน <code>f()</code> calls และเวลาเท่าเดิมเป๊ะ",
+      "ทั้งข้อมูลและความเร็วดีขึ้นพร้อมกัน เพราะ <code>set</code> ข้ามตัวซ้ำไปเลยไม่เดินต่อ",
+      "ข้อมูลยังซ้ำเหมือนเดิม แต่เร็วขึ้นมาก เพราะ <code>set</code> จัดการหน่วยความจำดีกว่า"
+    ],
+    a: 0,
+    why: "นี่คือหลักฐานว่าเป็น<b>คนละปัญหา</b> — <code>set</code> ยืนอยู่ปลายทางแล้วโยนของซ้ำทิ้งตอนจะเก็บ โปรแกรมยังเดินเข้าไปทุกกิ่งเหมือนเดิม 13.2 ms เท่าเดิม ส่วน guard ลด call จาก 131,071 เหลือ 33 (4,000 เท่า) ซึ่ง <code>set</code> ทำให้ไม่ได้"
+  },
+  {
+    q: "ใช้ <code>if node in order</code> (list) เป็น guard แทนที่จะมี set แยก — ผลเป็นยังไง?",
+    opts: [
+      "ผลลัพธ์ถูกต้อง แต่กลายเป็น O(n²) — ที่ 961 node ช้ากว่า 50 เท่า",
+      "ผลลัพธ์ผิด เพราะ <code>in</code> บน list เทียบด้วยค่า ไม่ได้เทียบว่าเป็น object เดียวกัน",
+      "ผลลัพธ์ถูกและเร็วเท่ากัน เพราะ Python ทำ index ให้ list อัตโนมัติอยู่แล้ว"
+    ],
+    a: 0,
+    why: "<code>in list</code> เป็น O(n) ต้องไล่ทีละตัว · <code>in set</code> เป็น O(1) เพราะใช้ hash table · n node × scan O(n) = <b>O(n²)</b> MLP ที่จะเขียนอยู่ประมาณ 481–961 node และ training loop เรียกใหม่ทุก step → 27 ms กลายเป็น 27 วินาทีต่อการเทรนหนึ่งรอบ"
+  },
+  {
+    q: "ใส่ node เข้า visited set <b>ก่อน</b>ลูป กับ <b>หลัง</b>ลูป — ต่างกันตรงไหนบน computation graph?",
+    opts: [
+      "ไม่ต่างเลย เพราะ DAG ไม่มี cycle จะเจอ node ซ้ำได้ก็ต่อเมื่อรอบแรก return ไปแล้ว",
+      "ใส่หลังลูปจะช้ากว่ามาก เพราะ guard กันไม่ทันในระหว่างที่กำลังดิ่งลงไป",
+      "ใส่หลังลูปจะได้ลำดับที่ต่างออกไป จึงต้องใช้ <code>reversed()</code> สองครั้งแทน"
+    ],
+    a: 0,
+    why: "วัดแล้วทุกกราฟ: จำนวน calls และลำดับเหมือนกันเป๊ะ — จะเจอ node ซ้ำตอนที่มันยัง<i>ทำงานไม่เสร็จ</i>ได้ ต้องมีทางเดินวนกลับมาที่ตัวเอง = cycle ซึ่ง DAG ไม่มีตามนิยาม ตำแหน่งจะสำคัญก็ต่อเมื่อกราฟมี cycle: ใส่ก่อนลูปยังจบได้ ใส่หลังลูปจะ <code>RecursionError</code>"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
