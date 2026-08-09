@@ -1,0 +1,342 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data structures ที่ Zero to Hero ใช้จริง</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="glossary.html">Glossary</a> &nbsp;·&nbsp;
+    <a href="roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Reference · แผนเก็บ CS ระหว่างทาง</div>
+    <h1>Data structures ที่ Zero to Hero ใช้จริง</h1>
+    <p class="standfirst">
+      รายการที่<strong>ปิดจบได้</strong> — ไม่ใช่หลักสูตร CS ทั้งใบ
+      แต่คือของที่จะโผล่มาจริงในวิดีโอทั้งแปดตอน พร้อมบอกว่าโผล่ตอนไหน
+      เพื่อให้เก็บได้ตอนที่มันมีบริบทแล้ว ไม่ใช่เรียนล่วงหน้าแล้วลืม
+    </p>
+    <div class="meta">2026-08-09 · เขียนขึ้นตอนจบเฟส 1 ขั้น 6</div>
+  </header>
+
+  <h2>ก่อนอื่น — สิ่งที่รู้สึกว่าขาด กับสิ่งที่ขาดจริง ไม่ใช่อันเดียวกัน</h2>
+
+  <p>
+    ความรู้สึกคือ “ไม่ได้เรียน CS มา เลยคิด data structure ไม่ออก”
+    แต่ลองดูสิ่งที่เกิดขึ้นจริงในสามวันที่ผ่านมา:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>สิ่งที่ทำได้เอง</th><th>ปกติเรียนในวิชาไหน</th></tr></thead>
+    <tbody>
+      <tr><td>รู้ว่ากราฟนี้เป็น <span class="g" data-t="dag">DAG</span> ไม่ใช่ <span class="g" data-t="tree">tree</span> เพราะตัวแปรถูกใช้ซ้ำได้</td><td>Graph theory</td></tr>
+      <tr><td>เขียน <span class="g" data-t="dfs">DFS</span> แบบ recursive ได้ พร้อม base case ที่ถูก</td><td>Algorithms</td></tr>
+      <tr><td>ตัดสินใจว่า nodes ต้องเป็น <code>set</code> เพราะห้ามซ้ำ</td><td>Data structures</td></tr>
+      <tr><td>เห็นว่า guard กับ dedup-ที่-container เป็นคนละปัญหา แล้วต้องมีทั้งคู่</td><td>—</td></tr>
+      <tr><td>วัดได้ว่า 13.4 µs → 1.77 µs และอธิบายที่มาของส่วนต่างได้</td><td>Complexity analysis</td></tr>
+      <tr><td>เห็นว่าเดินซ้ำแบบไม่มี guard โตแบบ exponential (depth 18 → 524,287 calls)</td><td>Complexity analysis</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note good">
+    <span class="note-label">ข้อสรุปที่ตรงกับหลักฐาน</span>
+    <p style="margin-bottom:0">
+      ช่องว่างไม่ใช่ <em>ความรู้</em> เรื่อง data structure — เพราะพวกนั้น derive เองไปแล้วทุกข้อ
+      ช่องว่างคือ <strong>ชั่วโมงบินในการ<em>เลือก</em></strong> โครงสร้างจากคุณสมบัติของมัน
+      ซึ่งเป็นทักษะที่ได้จากการทำซ้ำอย่างเดียว ไม่มีทางลัด และวิดีโอไม่ได้แสดงส่วนนี้ให้ดู
+      เพราะคนในวิดีโอ<strong>เลือกเสร็จไปตั้งแต่ก่อนกดอัด</strong>
+    </p>
+  </div>
+
+  <h2>กรอบตัดสินใจ 4 คำถาม — ครอบคลุม 95% ของโค้ดทั้งซีรีส์</h2>
+
+  <p>
+    ทุกครั้งที่ต้องเลือกว่าจะเก็บของใน <code>list</code> / <code>set</code> / <code>dict</code> / <code>tuple</code>
+    ถามสี่ข้อนี้ตามลำดับ แล้วคำตอบจะบังคับตัวเอง:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>#</th><th>คำถาม</th><th>ถ้าใช่</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><strong>ลำดับสำคัญไหม</strong> — ต้องรู้ว่าอันไหนมาก่อนมาหลัง</td><td><code>list</code> / <code>tuple</code> เท่านั้น</td></tr>
+      <tr><td>2</td><td><strong>ต้องถามว่า “มีอันนี้อยู่แล้วหรือยัง” บ่อยไหม</strong></td><td><code>set</code> / <code>dict</code> — เพราะ <code>in</code> เป็น O(1)</td></tr>
+      <tr><td>3</td><td><strong>ของซ้ำสำคัญไหม</strong> — เก็บ 2 อันที่เหมือนกันแล้วต้องเห็นทั้งคู่</td><td><code>list</code> · ถ้าไม่สำคัญ <code>set</code> ตัดให้ฟรี</td></tr>
+      <tr><td>4</td><td><strong>ต้องเอาไปเป็น key ของ dict หรือสมาชิกของ set ไหม</strong></td><td>ต้อง <span class="g" data-t="hashable">hashable</span> = ต้อง immutable → <code>tuple</code> ไม่ใช่ <code>list</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ลองย้อนดู <code>trace()</code> ที่เขียนเอง — ทุกการตัดสินใจในนั้นตกลงมาจากตารางนี้พอดี:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ของ</th><th>เลือกอะไร</th><th>ข้อไหนบังคับ</th></tr></thead>
+    <tbody>
+      <tr><td><code>nodes</code></td><td><code>set</code></td><td>ข้อ 3 — node เดียวกันห้ามโผล่สองครั้ง</td></tr>
+      <tr><td><code>visited</code> guard</td><td><code>set</code> (ตัวเดียวกับ <code>nodes</code>)</td><td>ข้อ 2 — ถามว่า “เคยไปหรือยัง” ทุกครั้งที่เรียก</td></tr>
+      <tr><td><code>edges</code></td><td><code>set</code> ของ <code>tuple</code></td><td>ข้อ 3 + ข้อ 4 — เส้นซ้ำห้ามมี และ <code>list</code> เป็นสมาชิกของ set ไม่ได้</td></tr>
+      <tr><td><code>_prev</code></td><td><code>list</code> / <code>tuple</code></td><td>ข้อ 1 + ข้อ 3 — <code>x - y</code> สลับข้างแล้วคนละความหมาย และ <code>x + x</code> ต้องเห็น <code>x</code> สองครั้ง</td></tr>
+      <tr><td>ลำดับ topological</td><td><code>list</code></td><td>ข้อ 1 — ทั้งหมดของมันคือลำดับ</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <span class="note-label">จุดที่พลาดได้ง่ายและเจ็บ</span>
+    <p style="margin-bottom:0">
+      <code>_prev</code> ต้องเป็น <code>list</code> <strong>ไม่ใช่ <code>set</code></strong> ทั้งที่ <code>nodes</code> เป็น <code>set</code> —
+      สองที่นี้ตอบคนละคำถามกัน <code>nodes</code> ถามว่า “กราฟนี้มี node อะไรบ้าง” (ห้ามซ้ำ)
+      ส่วน <code>_prev</code> ถามว่า “ฉันเกิดจากอะไรบวกอะไร” (ซ้ำได้ และเรียงสำคัญ)
+      ถ้าเผลอทำ <code>_prev</code> เป็น set แล้วเขียน <code>x + x</code> จะเหลือ <code>x</code> ตัวเดียว
+      แล้ว gradient จะผิดเป็น 1 แทนที่จะเป็น 2 — เงียบๆ
+    </p>
+  </div>
+
+  <h2>ราคาของแต่ละ operation — ตารางที่ควรจำ</h2>
+
+  <p>
+    <span class="g" data-t="bigo">Big-O</span> ไม่ได้บอกว่าเร็วกี่วินาที
+    มันบอกว่า<strong>ช้าลงเท่าไหร่เมื่อของเยอะขึ้น</strong> — ซึ่งเป็นคำถามที่ถูกต้องกว่า
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>operation</th><th><code>list</code></th><th><code>set</code></th><th><code>dict</code></th><th>หมายเหตุ</th></tr></thead>
+    <tbody>
+      <tr><td><code>x in c</code></td><td><strong>O(n)</strong></td><td>O(1)</td><td>O(1)</td><td>ตัวที่ทำให้ guard เร็วขึ้น 7 เท่า</td></tr>
+      <tr><td>เพิ่มท้าย</td><td>O(1)*</td><td>O(1)</td><td>O(1)</td><td>* <span class="g" data-t="amortized">amortized</span> — บางครั้งขยายหน่วยความจำ</td></tr>
+      <tr><td>เข้าถึงด้วย index / key</td><td>O(1)</td><td>—</td><td>O(1)</td><td>set ไม่มี index เลย</td></tr>
+      <tr><td>แทรกหน้าสุด <code>insert(0, x)</code></td><td>O(n)</td><td>—</td><td>—</td><td>ต้องเลื่อนทุกตัว — ระวังตอนสร้างลำดับย้อนกลับ</td></tr>
+      <tr><td>กลับด้าน <code>reversed()</code></td><td>O(1)</td><td>—</td><td>—</td><td>คืน iterator ไม่ได้ copy</td></tr>
+      <tr><td>รักษาลำดับที่ใส่</td><td>ใช่</td><td><strong>ไม่</strong></td><td>ใช่ (Python 3.7+)</td><td>เป็นการรับประกันของภาษาแล้ว ไม่ใช่ผลข้างเคียง</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    แถวแรกคือที่มาของตัวเลข <strong>13.4 µs → 1.77 µs</strong> ที่วัดได้เอง
+    ถ้า guard ใช้ <code>list</code> แทน <code>set</code> ตัวเลขนั้นจะกลับมาแย่อีกครั้ง
+    และแย่ลงเรื่อยๆ ตามขนาดกราฟ — ซึ่งใน MLP จริงคือหลักหมื่น node
+  </p>
+
+  <h3>ทำไม <code>set</code> ถึงตอบ <code>in</code> ได้ O(1)</h3>
+
+  <p>
+    ข้างใต้ <code>set</code> และ <code>dict</code> คือ <span class="g" data-t="hashtable">hash table</span> เหมือนกัน
+    หลักการมีบรรทัดเดียว: <strong>เอาค่าไปคำนวณเป็นตัวเลขก่อน แล้วใช้ตัวเลขนั้นเป็นที่อยู่</strong>
+    จึงกระโดดไปดูตรงจุดเดียวได้เลย ไม่ต้องไล่ทีละตัว
+  </p>
+
+  <p>ผลที่ตามมาสามข้อ — และทั้งสามข้อเคยเจอมาแล้ววันแรก:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ผลที่ตามมา</th><th>เจอตอนไหน</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>ของที่เปลี่ยนค่าได้ (<code>list</code>, <code>dict</code>) เป็น key ไม่ได้ — เพราะเปลี่ยนค่าแล้วที่อยู่จะเพี้ยน</td>
+        <td>ตอน <code>edges</code> ต้องเป็น <code>tuple</code> ไม่ใช่ <code>list</code></td>
+      </tr>
+      <tr>
+        <td>ไม่มีลำดับ เพราะที่อยู่มาจาก hash ไม่ได้มาจากเวลาที่ใส่</td>
+        <td>ตอนถามว่า “แล้วเราจะรู้ลำดับไหม” — คำตอบคือไม่ และนั่นคือเหตุผลที่ต้องมี topological order แยกต่างหาก</td>
+      </tr>
+      <tr>
+        <td>เขียน <code>__eq__</code> เองเมื่อไหร่ <code>__hash__</code> หายทันที object นั้นใส่ set ไม่ได้อีก</td>
+        <td>เหตุผลที่ <code>Value</code> ยัง<strong>ไม่มี</strong> <code>__eq__</code> และควรเป็นแบบนั้นไปตลอดเดือนนี้</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note bad">
+    <span class="note-label">ทำไม <code>Value</code> ถึงใส่ set ได้ทั้งที่ไม่ได้เขียนอะไรเพิ่ม</span>
+    <p style="margin-bottom:0">
+      Python ให้ <code>__hash__</code> เริ่มต้นมาจาก <span class="g" data-t="identity">identity</span> ของ object
+      (ประมาณ <code>id()</code>) — แปลว่า <code>Value(2.0)</code> สองตัวที่ค่าเท่ากันเป๊ะ
+      ยังนับเป็นคนละตัวใน set ซึ่ง<strong>ถูกต้องแล้ว</strong>สำหรับ computation graph
+      เพราะเราสนใจว่า “เป็น node เดียวกันไหม” ไม่ใช่ “ค่าเท่ากันไหม”
+    </p>
+  </div>
+
+  <h2>ระดับที่ 2 — อัลกอริทึมบนกราฟ (เดือนนี้ปิดจบได้เลย)</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>เรื่อง</th><th>สถานะ</th><th>ทำไมต้องรู้</th></tr></thead>
+    <tbody>
+      <tr><td><span class="g" data-t="dag">DAG</span> · node · edge</td><td>✅ ทำแล้ว</td><td>รูปทรงของทุกโมเดลตั้งแต่ micrograd ถึง GPT</td></tr>
+      <tr><td><span class="g" data-t="dfs">DFS</span> แบบ recursive + visited set</td><td>✅ ทำแล้ว</td><td>โครงหลักของ <code>trace()</code> และของ topological sort</td></tr>
+      <tr><td><span class="g" data-t="toposort">Topological sort</span></td><td>⏳ กำลังทำ</td><td>ลำดับที่ทำให้ backward pass ถูกต้อง</td></tr>
+      <tr><td><span class="g" data-t="stack">Stack</span> — และ call stack คือ stack</td><td>รู้ครึ่งเดียว</td><td>DFS แบบไม่ recursive คือ DFS + stack ที่ถือเอง · <code>RecursionError</code> คือ stack เต็ม</td></tr>
+      <tr><td><span class="g" data-t="bfs">BFS</span> + <span class="g" data-t="queue">queue</span></td><td>ยังไม่ได้ทำ</td><td>คู่แฝดของ DFS ต่างกันแค่ “เอาตัวถัดไปจากหัวหรือจากท้าย” — ใช้เวลา 20 นาที</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <span class="note-label">อันนี้คุ้มที่สุดในตาราง</span>
+    <p style="margin-bottom:0">
+      <strong>DFS กับ BFS คือโค้ดเดียวกัน</strong> ต่างกันที่โครงสร้างที่ใช้เก็บ “ยังไม่ได้ไป” —
+      ถ้าเป็น stack (เอาตัวหลังสุดออกก่อน) ได้ DFS · ถ้าเป็น queue (เอาตัวแรกสุดออกก่อน) ได้ BFS
+      เข้าใจประโยคนี้ประโยคเดียว = ปิดหัวข้อ “graph traversal” ทั้งหัวข้อ
+      และเป็นตัวอย่างที่ชัดที่สุดว่า <em>การเลือกโครงสร้างข้อมูลเปลี่ยนพฤติกรรมของอัลกอริทึม</em>
+    </p>
+  </div>
+
+  <h2>ระดับที่ 3 — array กับ strides (จุดที่คุ้มที่สุดสำหรับ ML)</h2>
+
+  <p>
+    พอถึง <code>makemore</code> โครงสร้างจะเปลี่ยนจากกราฟเป็น <strong>array</strong>
+    และนี่คือจุดที่การคิดแบบ data structure ให้ผลตอบแทนสูงที่สุดในทั้งซีรีส์
+    เพราะมันอธิบายพฤติกรรมของ PyTorch ที่คนส่วนใหญ่ท่องจำเอา
+  </p>
+
+  <div class="note good">
+    <span class="note-label">นิยามของ tensor ที่ทำให้ทุกอย่างเข้าที่</span>
+    <p style="margin-bottom:0">
+      tensor = <strong>บล็อกหน่วยความจำเรียงติดกันเป็นเส้นเดียว</strong> + <code>shape</code>
+      + <span class="g" data-t="strides">strides</span> (ต้องกระโดดกี่ช่องเพื่อขยับ 1 ก้าวในแต่ละแกน)<br>
+      ตัวเลขไม่เคยถูกจัดเป็นตารางจริงเลย — ความเป็น 2 มิติทั้งหมดอยู่ใน strides
+    </p>
+  </div>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>คำสั่ง</th><th>เกิดอะไรขึ้นจริง</th><th>copy ไหม</th></tr></thead>
+    <tbody>
+      <tr><td><code>x.view(...)</code> / <code>reshape</code></td><td>แก้แค่ <code>shape</code> กับ <code>strides</code> ข้อมูลไม่ขยับ</td><td><strong>ไม่</strong> — จึงฟรี</td></tr>
+      <tr><td><code>x.T</code> / <code>transpose</code></td><td>สลับตัวเลขใน <code>strides</code> เฉยๆ</td><td><strong>ไม่</strong></td></tr>
+      <tr><td><code>x.contiguous()</code></td><td>เขียนหน่วยความจำใหม่ให้เรียงตรงกับ shape</td><td>ใช่ — จึงมีอยู่เพราะ transpose ไม่ copy</td></tr>
+      <tr><td><span class="g" data-t="broadcast">broadcasting</span></td><td>แกล้งทำเป็นว่าแกนนั้นมี stride = 0 (ก้าวแล้วอยู่ที่เดิม)</td><td><strong>ไม่</strong></td></tr>
+      <tr><td><code>C[X]</code> — <span class="g" data-t="gather">gather</span> / embedding lookup</td><td>ไล่หยิบทีละแถวตาม index ไปวางในบล็อกใหม่</td><td>ใช่</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    แถวสุดท้ายคือ embedding table ของ <code>makemore</code> ตอนที่ 2 ทั้งดุ้น —
+    <code>C[X]</code> ไม่ใช่การคูณเมทริกซ์ มันคือ<strong>การหยิบแถว</strong> เฉยๆ
+  </p>
+
+  <div class="note good">
+    <span class="note-label">เส้นเชื่อมตรงจากบทเรียนวันนี้</span>
+    <p style="margin-bottom:0">
+      backward ของ <code>C[X]</code> คือ <strong>scatter-add</strong> — และเหตุผลที่ต้องเป็น
+      <em>add</em> ไม่ใช่ <em>set</em> คือเหตุผลเดียวกันเป๊ะกับที่ <code>_backward</code> ต้องใช้ <code>+=</code>:
+      ตัวอักษรเดียวกันถูกหยิบหลายครั้งใน batch เดียว = node เดียวมีพ่อแม่หลายตัว = <strong>ต้องบวกสะสมทุกเส้นทาง</strong><br>
+      สิ่งที่กำลังทำอยู่ตอนนี้ไม่ใช่ของเล่นสำหรับกราฟเล็กๆ — มันคือกฎเดียวกันที่ PyTorch ใช้จริง
+    </p>
+  </div>
+
+  <h2>ระดับที่ 4 — ไว้ทีหลัง (M3 ขึ้นไป ยังไม่ต้องแตะ)</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>เรื่อง</th><th>โผล่ตอนไหน</th><th>ใช้ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>Counter</code> / frequency dict</td><td>makemore #1, tokenizer</td><td>นับ bigram · นับคู่ไบต์ที่พบบ่อย</td></tr>
+      <tr><td>Prefix sum + binary search</td><td>makemore #1</td><td>สุ่มตามความน่าจะเป็น (<code>multinomial</code> ข้างในทำแบบนี้)</td></tr>
+      <tr><td>Priority queue / heap</td><td>tokenizer (BPE)</td><td>เลือกคู่ที่ควร merge ก่อน</td></tr>
+      <tr><td>Trie</td><td>tokenizer (ถ้าอยากลึก)</td><td>จับคู่ token ที่ยาวที่สุดได้เร็ว — ข้ามได้ ไม่จำเป็น</td></tr>
+      <tr><td>Ring buffer</td><td>nanoGPT</td><td>สุ่ม chunk จากข้อความยาวๆ</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>สิ่งที่ <em>ไม่</em> ต้องเรียน — และควรตัดใจตอนนี้เลย</h2>
+
+  <div class="note bad">
+    <span class="note-label">ไม่โผล่ใน Zero to Hero เลยแม้แต่ครั้งเดียว</span>
+    <ul style="margin-bottom:0">
+      <li>Linked list (Python มี <code>list</code> ที่เป็น dynamic array อยู่แล้ว)</li>
+      <li>Balanced BST — AVL, red-black tree</li>
+      <li>Union-find, segment tree, Fenwick tree</li>
+      <li>เขียน sorting algorithm เอง (quicksort / mergesort)</li>
+      <li>โจทย์ DP แบบแข่งขัน</li>
+      <li>การพิสูจน์ complexity แบบเป็นทางการ</li>
+    </ul>
+  </div>
+
+  <p>
+    พวกนี้เป็นทักษะสำหรับ<strong>สัมภาษณ์แบบ LeetCode</strong> ซึ่งเป็นคนละเรื่องกับ ML engineering
+    ถ้าถึงเดือนที่ต้องเตรียมสัมภาษณ์ CADDi / Woven / NVIDIA จริงๆ ค่อยกลับมาเก็บทีเดียว
+    ตอนนี้แตะแล้วเสียเวลาของ M1 เปล่าๆ และตามกฎของ roadmap เอง:
+    <strong>ถ้าตามหลัง ให้ตัด scope ไม่ใช่ยืดเวลา</strong>
+  </p>
+
+  <h2>ตารางว่าอะไรโผล่ตอนไหน — เก็บตอนที่มีบริบท</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>วิดีโอ</th><th>โครงสร้างที่โผล่</th><th>ควรใช้เวลาเพิ่มแค่ไหน</th></tr></thead>
+    <tbody>
+      <tr><td><strong>#1 micrograd</strong> (M1)</td><td>DAG · DFS · visited set · topological sort · closure · tuple/set/list</td><td>เยอะที่สุดในซีรีส์ — และผ่านมาเกือบหมดแล้ว</td></tr>
+      <tr><td><strong>#2 makemore</strong> bigram (M1)</td><td>dict <code>stoi</code>/<code>itos</code> · array 2 มิติ · prefix sum</td><td>~1 ชม.</td></tr>
+      <tr><td><strong>#3 makemore</strong> MLP (M1–M2)</td><td>embedding = gather · <code>view</code> · minibatch index</td><td>~2 ชม. — คุ้มที่สุด อ่านเรื่อง strides ตรงนี้</td></tr>
+      <tr><td><strong>#4–5</strong> batchnorm / backprop ninja (M2)</td><td>broadcasting · running buffer</td><td>~1 ชม. เน้นกฎ broadcasting</td></tr>
+      <tr><td><strong>#6</strong> WaveNet (M2)</td><td>โครงสร้างแบบลำดับชั้น · container <code>Sequential</code></td><td>~30 นาที</td></tr>
+      <tr><td><strong>#7</strong> nanoGPT (M3)</td><td>attention matrix · causal mask (สามเหลี่ยมล่าง) · ring buffer</td><td>~2 ชม.</td></tr>
+      <tr><td><strong>#8</strong> tokenizer (M3)</td><td>merge table · Counter · heap</td><td>~2 ชม.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    รวมทั้งซีรีส์คือ <strong>ประมาณ 10 ชั่วโมง</strong> กระจายข้าม 3 เดือน
+    ไม่ใช่คอร์ส 40 ชั่วโมงที่ต้องเรียนให้จบก่อนเริ่ม
+  </p>
+
+  <h2>วิธีเก็บระหว่างทาง — กฎ 3 ข้อ</h2>
+
+  <div class="note good">
+    <ol style="margin-bottom:0">
+      <li><strong>ห้ามเรียนล่วงหน้า</strong> — รอให้โครงสร้างนั้นโผล่มาในโค้ดที่กำลังเขียนจริงก่อน
+        ความรู้ที่ไม่มีที่ให้เกาะจะหายไปภายในหนึ่งสัปดาห์</li>
+      <li><strong>เจอแล้วหยุด 30 นาที</strong> — ถามสามข้อ: มันรับประกันอะไร? อะไรที่มันทำไม่ได้?
+        ทางเลือกอื่นคืออะไร แล้วทำไมถึงแพ้? จบแล้วกลับไปเขียนโค้ดต่อ</li>
+      <li><strong>จดลง <code>learning-records/</code></strong> เป็น “ตอนแรกคิดว่า X แต่จริงๆ คือ Y”
+        รูปแบบนี้จำได้ทนกว่านิยาม เพราะมันผูกกับความประหลาดใจ</li>
+    </ol>
+  </div>
+
+  <div class="src">
+    <span class="src-label">อ้างอิงเท่าที่จำเป็น — ไม่ต้องอ่านตอนนี้</span>
+    <a href="https://wiki.python.org/moin/TimeComplexity">Python Wiki — TimeComplexity</a>
+    (ตารางเดียว พิมพ์แปะไว้ได้เลย)
+    · <a href="https://docs.python.org/3/tutorial/datastructures.html">Python docs — Data Structures</a>
+    · <a href="https://numpy.org/doc/stable/reference/arrays.ndarray.html#internal-memory-layout-of-an-ndarray">NumPy — internal memory layout</a>
+    (ที่มาของเรื่อง strides อ่านตอนถึง makemore #3)
+  </div>
+
+  <div class="ask">
+    ประโยคที่ควรกลับมาอ่านตอนรู้สึกว่าตัวเองช้า:
+    <strong>สามวันที่ผ่านมา ไม่มีข้อไหนเลยที่ติดเพราะไม่รู้จักโครงสร้างข้อมูล —
+    ติดเพราะกำลัง<em>เลือก</em> ซึ่งเป็นงานที่วิดีโอตัดออกไปแล้ว</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="../lessons/0005-gradient-flows-backward.html">← Lesson 05</a>
+      <a href="roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
