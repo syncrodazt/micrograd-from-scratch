@@ -73,6 +73,26 @@
       <div class="finder-q">คำศัพท์เฉพาะทั้งหมด</div>
       <div class="finder-a"><a href="reference/glossary.html">Glossary</a></div>
     </div>
+    <div class="finder-row">
+      <div class="finder-q"><code>grad</code> คือของใคร เทียบกับอะไร</div>
+      <div class="finder-a"><a href="lessons/0005-gradient-flows-backward.html">Lesson 05</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">ทำไม <code>+=</code> ไม่ใช่ <code>=</code></div>
+      <div class="finder-a"><a href="lessons/0005-gradient-flows-backward.html">Lesson 05</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">สลับลำดับ <code>_backward()</code> แล้วพังยังไง</div>
+      <div class="finder-a"><a href="lessons/0005-gradient-flows-backward.html">Lesson 05</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">ควรใช้ <code>list</code> / <code>set</code> / <code>dict</code> ตอนไหน</div>
+      <div class="finder-a"><a href="reference/data-structures.html">Reference · Data structures</a></div>
+    </div>
+    <div class="finder-row">
+      <div class="finder-q">ต้องเรียน CS เพิ่มแค่ไหนถึงจะพอ</div>
+      <div class="finder-a"><a href="reference/data-structures.html">Reference · Data structures</a></div>
+    </div>
   </div>
 
   <!-- ============ LESSONS ============ -->
@@ -120,6 +140,15 @@
       </p>
     </a>
 
+    <a class="card" href="lessons/0005-gradient-flows-backward.html">
+      <div class="c-num">Lesson 05 · 2026-08-09 · 7 ข้อ</div>
+      <div class="c-title">grad ที่ไหลย้อนกลับ และเหตุผลที่ลำดับสำคัญ</div>
+      <p class="c-desc">
+        <code>grad</code> อ้างถึง node สองตัวเสมอ · node คำนวณ grad ให้<em>ลูก</em> ไม่ใช่ให้ตัวเอง ·
+        <code>+=</code> คือเครื่องหมายบวกใน chain rule · การทดลองที่ผิดแบบเงียบๆ
+      </p>
+    </a>
+
   </div>
 
   <!-- ============ REFERENCE ============ -->
@@ -136,16 +165,25 @@
       <div class="c-title">Roadmap — อยู่ตรงไหนแล้ว</div>
       <p class="c-desc">
         แผนทั้งเดือนในหน้าเดียว 5 เฟส ติ๊กได้และจำสถานะให้ ·
-        เฟส 0 (โครงสร้างข้อมูล) เสร็จแล้ว · ตอนนี้อยู่เฟส 1 (gradient)
+        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · เฟส 1 เหลือ topological sort กับ <code>backward()</code>
       </p>
     </a>
 
     <a class="card" href="reference/glossary.html">
-      <div class="c-num">Reference · 32 คำ</div>
+      <div class="c-num">Reference · 43 คำ</div>
       <div class="c-title">Glossary</div>
       <p class="c-desc">
         คำศัพท์ทุกคำที่ใช้ในบทเรียน นิยามเดียว ที่เดียว —
         คำที่ขีดเส้นประในทุกหน้าลิงก์กลับมาที่นี่
+      </p>
+    </a>
+
+    <a class="card" href="reference/data-structures.html">
+      <div class="c-num">Reference · แผนเก็บ CS ระหว่างทาง</div>
+      <div class="c-title">Data structures ที่ Zero to Hero ใช้จริง</div>
+      <p class="c-desc">
+        รายการที่ปิดจบได้ ไม่ใช่หลักสูตรทั้งใบ · กรอบตัดสินใจ 4 คำถาม ·
+        ตาราง Big-O · strides กับ broadcasting · และรายการที่<strong>ไม่</strong>ต้องเรียน
       </p>
     </a>
 
@@ -230,8 +268,10 @@
       <tr><td>graphviz ต่อเข้ากับ Jupyter</td><td>✅ วาดรูปออกแล้ว</td></tr>
       <tr><td><code>trace()</code> — guard + <code>edges</code> เป็น set</td><td>✅ 13.4 µs → 1.77 µs</td></tr>
       <tr><td><code>plot_graph()</code> แยกจาก <code>trace()</code></td><td>✅ วาดถูกทุกเคส</td></tr>
-      <tr><td><code>grad</code> · คำนวณ gradient ด้วยมือ</td><td>🔵 วันนี้</td></tr>
-      <tr><td><code>_backward</code> · topological sort · <code>backward()</code></td><td>⬜ พรุ่งนี้</td></tr>
+      <tr><td><code>grad</code> · คำนวณ gradient ด้วยมือ · ตรวจกับ numerical</td><td>✅ ตรงทุกตัว</td></tr>
+      <tr><td><code>_backward</code> closure ของ <code>+</code> และ <code>*</code></td><td>✅ <code>z = x + x</code> → <code>2.0</code></td></tr>
+      <tr><td>เรียก <code>_backward()</code> ด้วยมือ · พิสูจน์ว่าลำดับสำคัญ</td><td>✅ สลับลำดับแล้วได้ 0 เงียบๆ</td></tr>
+      <tr><td>topological sort · <code>backward()</code></td><td>🔵 ต่อไป</td></tr>
       <tr><td><code>tanh</code> · reflected operators</td><td>⬜ D5</td></tr>
       <tr><td>Neuron → Layer → MLP → training loop</td><td>⬜ D6–D7</td></tr>
     </tbody>
@@ -244,14 +284,15 @@
 
   <ul>
     <li>ถ้า node หนึ่งโผล่สองครั้งในลำดับที่ใช้เรียก <code>_backward()</code> gradient จะผิดไปกี่เท่า</li>
-    <li><code>w = e + e</code> ต้องได้ <code>dw/de = 2</code> — โค้ดจะรู้เรื่องนั้นได้ยังไง ในเมื่อลูกศรในกราฟเหลือเส้นเดียว</li>
     <li>label ของ node กลางควรตั้งมือ หรือให้สร้างอัตโนมัติจาก <code>data</code></li>
+    <li>ตอน <code>tanh</code> มาถึง node จะมี <code>_prev</code> แค่ตัวเดียว — <code>plot_graph</code> ที่อ่าน <code>_prev[1]</code> จะพังไหม</li>
   </ul>
 
   <p class="cap">
     ✅ ปิดไปแล้ว: การ์ดกันเดินซ้ำควรอยู่ตรงไหน (ต้นทางของ <code>f</code>) ·
     เจอซ้ำแล้วควรทำอะไร (<code>return</code> ทันที) ·
-    <code>edges</code> ต้องเป็น set ด้วยไหม (ต้อง — แก้คนละเคสกับ guard)
+    <code>edges</code> ต้องเป็น set ด้วยไหม (ต้อง — แก้คนละเคสกับ guard) ·
+    <code>w = e + e</code> รู้ได้ยังไงว่า <code>dw/de = 2</code> (<code>+=</code> — เส้นทางสองเส้นมาถึงคนละเวลา แล้วบวกสะสมที่ node)
   </p>
 
   <!-- ============ PROJECT DOCS ============ -->

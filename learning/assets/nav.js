@@ -14,6 +14,8 @@
     { href: "index.html",                    label: "หน้าแรก",   match: /\/index\.html$|\/learning\/?$/ },
     { href: "index.html#lessons",            label: "บทเรียน",   match: /\/lessons\// },
     { href: "reference/glossary.html",       label: "Glossary",  match: /glossary\.html$/ },
+    { href: "reference/roadmap.html",        label: "Roadmap",   match: /roadmap\.html$/ },
+    { href: "reference/data-structures.html", label: "Data structures", match: /data-structures\.html$/ },
     { href: "reference/python-scope.html",   label: "Python scope", match: /python-scope\.html$/ },
     { href: "index.html#retrieval",          label: "Retrieval", match: /\/retrieval\// }
   ];

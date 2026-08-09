@@ -19,13 +19,36 @@
       แผนทั้งเดือนในหน้าเดียว ติ๊กได้ และจำสถานะไว้ในเบราว์เซอร์ —
       เปิดหน้านี้ตอนเริ่มทุกเซสชัน เพื่อไม่ต้องถามว่า “แล้วต่อไปทำอะไร”
     </p>
-    <div class="meta">อัปเดตล่าสุด 2026-08-09 · Day 3</div>
+    <div class="meta">อัปเดตล่าสุด 2026-08-09 · Day 3 · เฟส 1 เหลือ 2 ขั้น</div>
   </header>
 
   <div class="track" data-track="micrograd-m1">
     <div class="track-label">ความคืบหน้า M1</div>
     <div class="track-bar"><span></span></div>
     <div class="track-count"></div>
+  </div>
+
+  <div class="note">
+    <span class="note-label">นาฬิกาจับเวลารายขั้น</span>
+    <p style="margin-top:.4rem">
+      กด <code>▶ จับเวลา</code> ที่ขั้นที่กำลังทำ · กด <code>⏸ พัก</code> ตอนไปกินข้าวหรือหยุดจริงๆ
+      (ช่วงที่พักไม่ถูกนับ) · พอ<strong>ติ๊กช่องเสร็จ</strong> นาฬิกาจะหยุดเอง บันทึกเวลาจบ
+      แล้ว<strong>เริ่มจับเวลาขั้นถัดไปให้อัตโนมัติ</strong>
+    </p>
+    <p style="margin-bottom:0">
+      แต่ละขั้นจะโชว์ <code>18:34 → 19:12 · รวม 38 นาที</code> · ปุ่ม
+      <em>คัดลอกสรุปเวลา</em> ท้ายหน้าจะคัดตารางเวลาทั้งหมดเป็น markdown
+      ไว้แปะลง <code>LEARNING-LOG.md</code> ได้ทันที
+    </p>
+  </div>
+
+  <div class="note bad">
+    <span class="note-label">อ่านตัวเลขนี้ให้ถูก</span>
+    <p style="margin-bottom:0">
+      เวลาที่จับได้มีไว้<strong>เทียบกับตัวเองข้ามสัปดาห์</strong> — ขั้นแบบเดียวกันเดือนหน้าควรเร็วขึ้น
+      ไม่ได้มีไว้เทียบกับวิดีโอ ในวิดีโอ Karpathy กำลัง <em>แสดง</em> คำตอบที่รู้อยู่แล้ว
+      ส่วนเรากำลัง <em>หา</em> คำตอบ — คนละกิจกรรมกัน ตัวเลขจึงเทียบกันไม่ได้ตั้งแต่ต้น
+    </p>
   </div>
 
   <h2>มาตรวัดจริง — ผ่านครบสามข้อเท่านั้นถึงนับว่าจบ</h2>
@@ -91,32 +114,32 @@
       หัวใจจริงของเดือนนี้ — ★ คือขั้นที่<strong>ห้ามข้าม</strong>
     </p>
 
-    <label class="task crit" data-id="g1"><input type="checkbox"><span class="t-body">
+    <label class="task crit" data-id="g1"><input type="checkbox" checked><span class="t-body">
       <span class="t-title">เพิ่มช่อง <code>grad</code> ใน <code>Value</code> เริ่มที่ <code>0.0</code></span>
       <span class="t-why">แล้วโชว์เป็นช่องที่สามในกล่อง graphviz — <code>{ label | data | grad }</code></span>
     </span></label>
 
-    <label class="task crit" data-id="g2"><input type="checkbox"><span class="t-body">
+    <label class="task crit" data-id="g2"><input type="checkbox" checked><span class="t-body">
       <span class="t-title">คำนวณ gradient <strong>ด้วยมือบนกระดาษ</strong> สำหรับ <code>d = a*b + c</code></span>
       <span class="t-why">ขั้นที่สำคัญที่สุดทั้งเฟส — เขียนโค้ดก่อนคิด แล้ว <code>_backward</code> จะกลายเป็นคาถาที่ derive ไม่ได้</span>
     </span></label>
 
-    <label class="task" data-id="g3"><input type="checkbox"><span class="t-body">
+    <label class="task" data-id="g3"><input type="checkbox" checked><span class="t-body">
       <span class="t-title">ใส่ค่าที่คำนวณเองลงไปด้วยมือ (<code>a.grad = ...</code>) แล้วดูกราฟ</span>
       <span class="t-why">ยืนยันว่าเข้าใจ ก่อนจะให้โค้ดคิดแทน</span>
     </span></label>
 
-    <label class="task" data-id="g4"><input type="checkbox"><span class="t-body">
+    <label class="task" data-id="g4"><input type="checkbox" checked><span class="t-body">
       <span class="t-title">ตรวจคำตอบด้วย <span class="g" data-t="numgrad">numerical gradient</span></span>
       <span class="t-why">โค้ด <code>(f(x+h) - f(x)) / h</code> จากวันแรกได้ใช้แล้ว</span>
     </span></label>
 
-    <label class="task" data-id="g5"><input type="checkbox"><span class="t-body">
+    <label class="task" data-id="g5"><input type="checkbox" checked><span class="t-body">
       <span class="t-title">เขียน <code>_backward</code> เป็น <span class="g" data-t="closure">closure</span> — เริ่มที่ <code>+</code> แล้วค่อย <code>*</code></span>
       <span class="t-why">closure ที่ซ้อมมาตอนเขียน <code>trace()</code> จะได้ใช้จริงตรงนี้</span>
     </span></label>
 
-    <label class="task crit" data-id="g6"><input type="checkbox"><span class="t-body">
+    <label class="task crit" data-id="g6"><input type="checkbox" checked><span class="t-body">
       <span class="t-title">เรียก <code>_backward()</code> <strong>ด้วยมือ</strong> ทีละ node โดยเรียงลำดับเอง</span>
       <span class="t-why">ถ้าไม่เคยเรียงเอง จะไม่รู้ว่า topological sort กำลังแก้ปัญหาอะไร</span>
     </span></label>
@@ -271,7 +294,9 @@
 
   <div class="legend">
     ★ = ขั้นที่ห้ามข้าม &nbsp;·&nbsp; สถานะเก็บไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น ไม่ได้ส่งไปไหน
+    &nbsp;·&nbsp; <button class="quiz-reset" data-track-export type="button">คัดลอกสรุปเวลา</button>
     &nbsp;·&nbsp; <button class="quiz-reset" data-track-reset type="button">ล้างสถานะทั้งหมด</button>
+    &nbsp;·&nbsp; <button class="quiz-reset" data-time-reset type="button">ล้างเวลา</button>
   </div>
 
   <div class="src">
@@ -299,4 +324,6 @@
 
 <script src="../assets/glossary-data.js"></script>
 <script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
 <script src="../assets/progress.js"></script>
+<script src="../assets/timer.js"></script>

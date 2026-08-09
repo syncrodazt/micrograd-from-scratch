@@ -851,3 +851,69 @@ td code { font-size: 0.82em; }
   .task input { appearance: auto; }
   .task.done { opacity: 1; }
 }
+
+/* ============================================================
+   PER-TASK STOPWATCH  (assets/timer.js)
+   ============================================================ */
+
+.track-time {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+  margin-top: 0.35rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed var(--rule);
+}
+
+.t-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.3rem;
+}
+
+.t-timer {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  padding: 0.1rem 0.55rem;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.t-timer:hover { border-color: var(--accent); color: var(--accent); }
+.t-timer.on {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.t-time-text {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+/* A step whose clock is running stays fully legible even once ticked,
+   and gets a left edge so it is findable when scanning the page. */
+.task.running {
+  background: var(--accent-bg);
+  box-shadow: inset 2px 0 0 var(--accent);
+  opacity: 1;
+}
+.task.running .t-time-text {
+  color: var(--accent);
+  font-weight: 700;
+}
+.task.done.running { opacity: 1; }
+
+@media print {
+  .t-timer { display: none; }
+  .task.running { box-shadow: none; background: none; }
+}
