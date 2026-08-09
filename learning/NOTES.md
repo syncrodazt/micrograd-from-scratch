@@ -37,3 +37,19 @@
 
 บทเรียนอยู่ใน `learning/` แยกจากโครงสร้างหลักของ repo (`micrograd/`, `tests/`, `README.md`)
 เพื่อให้ root สะอาดตามที่ CLAUDE.md กำหนดไว้
+
+## แก้ความเข้าใจผิดเรื่องพื้นฐาน (2026-08-09)
+
+CLAUDE.md เขียนไว้ว่าให้ใช้ **adjoint / costate equation** เป็นสะพานจาก control theory
+ไปหา backprop และบอกว่าเป็น "fastest path in"
+
+**ไม่จริง** — เจ้าตัวยืนยันเองว่าไม่รู้จัก adjoint/costate
+
+→ **อย่าใช้เป็นสะพานหลัก** ใช้สิ่งที่ยืนยันแล้วว่าได้ผลแทน:
+
+- **recursion ≈ induction** (พิสูจน์ base + step) — ใช้ได้ผลจริง
+- **Bellman equation** `V(s) = r(s) + Σ V(s')` — ใช้ได้ผลจริง
+- **`origin/main` ≈ state estimate ที่อัปเดตเฉพาะตอน sampling** — ใช้ได้ผลจริง
+- **partial vs total derivative** — ตรงนี้แคลคูลัสหลายตัวแปรล้วนๆ ไม่ต้องมีสะพาน
+
+ถ้าจะพูดถึง adjoint ให้กรอบว่าเป็น "ของแถม ไม่จำเป็นต้องรู้" เท่านั้น

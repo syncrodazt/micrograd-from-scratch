@@ -165,6 +165,67 @@ window.GLOSSARY = {
     en: "amend",
     def: "สร้าง commit ใหม่แทนที่ตัวล่าสุด แล้วเลื่อน pointer ของ branch มาชี้ตัวใหม่ — commit เก่าไม่ได้ถูกแก้ (commit แก้ไม่ได้) แค่ไม่มีใครชี้ถึงแล้ว ปลอดภัยเฉพาะกับ commit ที่<strong>ยังไม่ push</strong>"
   },
+
+  /* ---- calculus ---- */
+  "chainrule": {
+    term: "Chain rule",
+    en: "chain rule (multivariable)",
+    def: "กฎลูกโซ่ในรูปที่ backprop ใช้จริง: ถ้าตัวแปรหนึ่งส่งผลถึงปลายทางได้<strong>หลายเส้นทาง</strong> อนุพันธ์รวมคือ<strong>ผลบวกของทุกเส้นทาง</strong> — <code>dz/dx = ∂z/∂x + ∂z/∂w · dw/dx</code> เครื่องหมายบวกในสูตรนี้คือเหตุผลที่โค้ดต้องใช้ <code>+=</code> ไม่ใช่ <code>=</code>"
+  },
+  "gradaccum": {
+    term: "Gradient accumulation",
+    en: "gradient accumulation",
+    def: "การบวกสะสม gradient ที่ node แทนการเขียนทับ จำเป็นเมื่อ node มีพ่อแม่มากกว่าหนึ่งตัว เพราะ backward pass เดินทีละ operation จึงเห็นทีละเส้นทาง แต่ละเส้นมาถึงคนละเวลา — ใช้ <code>=</code> แล้วเส้นทางหลังจะเขียนทับเส้นทางแรก โดย<strong>ไม่มี error ใดๆ</strong>"
+  },
+
+  /* ---- data structures ---- */
+  "hashtable": {
+    term: "Hash table",
+    en: "hash table",
+    def: "กลไกใต้ <code>set</code> และ <code>dict</code> — เอาค่าไปคำนวณเป็นตัวเลขก่อน แล้วใช้ตัวเลขนั้นเป็นที่อยู่ จึงกระโดดไปดูจุดเดียวได้เลย ทำให้ <code>x in c</code> เป็น O(1) ผลข้างเคียง: ของที่เปลี่ยนค่าได้เป็น key ไม่ได้ และไม่มีลำดับ"
+  },
+  "bigo": {
+    term: "Big-O",
+    en: "big-O notation",
+    def: "ไม่ได้บอกว่าเร็วกี่วินาที แต่บอกว่า<strong>ช้าลงเท่าไหร่เมื่อของเยอะขึ้น</strong> — O(1) คือคงที่ไม่ว่าจะมีกี่ตัว O(n) คือแปรผันตรงกับจำนวน ส่วน <code>x in list</code> ที่เป็น O(n) คือเหตุผลที่ guard ต้องใช้ set"
+  },
+  "amortized": {
+    term: "Amortized O(1)",
+    en: "amortized constant time",
+    def: "เฉลี่ยแล้วคงที่ แต่บางครั้งแพง — <code>list.append</code> ปกติแค่วางของท้ายแถว แต่พอเต็มต้องขอหน่วยความจำก้อนใหม่แล้วย้ายทั้งหมด เฉลี่ยข้ามหลายครั้งจึงยังนับเป็น O(1)"
+  },
+  "stack": {
+    term: "Stack",
+    en: "stack (LIFO)",
+    def: "เอาตัวที่ใส่<strong>หลังสุด</strong>ออกก่อน · call stack ของ Python เองก็เป็น stack — <code>RecursionError</code> คืออาการที่มันเต็ม · DFS แบบไม่ recursive คือ DFS ที่ถือ stack เอง"
+  },
+  "queue": {
+    term: "Queue",
+    en: "queue (FIFO)",
+    def: "เอาตัวที่ใส่<strong>ก่อนสุด</strong>ออกก่อน — สลับกับ stack · เปลี่ยนจาก stack เป็น queue ในโค้ดเดินกราฟตัวเดียวกัน จะได้ BFS แทน DFS ทันที"
+  },
+  "bfs": {
+    term: "BFS",
+    en: "breadth-first search",
+    def: "เดินกราฟแบบไล่ทีละชั้นจากจุดเริ่ม ต่างจาก <span class=\"g\" data-t=\"dfs\">DFS</span> ที่ดิ่งลงลึกก่อน — โค้ดเหมือนกันทุกบรรทัด ต่างกันแค่ว่าใช้ queue หรือ stack เก็บ “ยังไม่ได้ไป”"
+  },
+
+  /* ---- arrays / tensors (makemore ขึ้นไป) ---- */
+  "strides": {
+    term: "Strides",
+    en: "strides",
+    def: "ตัวเลขที่บอกว่าต้องกระโดดกี่ช่องในหน่วยความจำเพื่อขยับ 1 ก้าวในแต่ละแกน — tensor คือบล็อกหน่วยความจำเส้นเดียว + shape + strides ตัวเลขไม่เคยถูกจัดเป็นตารางจริง ความเป็นหลายมิติทั้งหมดอยู่ในนี้ จึงเป็นเหตุผลที่ <code>view</code> และ <code>transpose</code> ไม่ copy อะไรเลย"
+  },
+  "broadcast": {
+    term: "Broadcasting",
+    en: "broadcasting",
+    def: "กฎที่ทำให้ array คนละ shape บวก/คูณกันได้ กลไกจริงคือ<strong>แกล้งทำเป็นว่าแกนนั้นมี stride = 0</strong> (ก้าวแล้วอยู่ที่เดิม) จึงไม่ copy ข้อมูล — และเป็นที่มาของบั๊กเงียบที่พบบ่อยที่สุดใน makemore"
+  },
+  "gather": {
+    term: "Gather / embedding lookup",
+    en: "gather",
+    def: "<code>C[X]</code> — ไล่หยิบแถวตาม index ไปวางในบล็อกใหม่ ไม่ใช่การคูณเมทริกซ์ · backward ของมันคือ <strong>scatter-add</strong> ซึ่งต้อง<em>บวก</em>เพราะแถวเดียวอาจถูกหยิบหลายครั้งใน batch เดียว — เหตุผลเดียวกับที่ <code>_backward</code> ใช้ <code>+=</code>"
+  },
   "origin": {
     term: "origin / origin/main",
     en: "remote and remote-tracking branch",

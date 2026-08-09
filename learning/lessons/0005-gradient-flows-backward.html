@@ -1,0 +1,395 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 05 — grad ที่ไหลย้อนกลับ และเหตุผลที่ลำดับสำคัญ</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a> &nbsp;·&nbsp;
+    <a href="../reference/roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 05 · gradient</div>
+    <h1>grad ที่ไหลย้อนกลับ<br>และเหตุผลที่ลำดับสำคัญ</h1>
+    <p class="standfirst">
+      วันที่กราฟหยุดเป็นแค่โครงสร้างข้อมูล แล้วเริ่มคำนวณอะไรบางอย่างได้จริง —
+      สามความคิดที่ต้องมาเรียงกัน: grad คือของใคร, ใครเป็นคนอัปเดต, และทำไมสลับลำดับแล้วพัง
+    </p>
+    <div class="meta">2026-08-09 · Day 3 · เฟส 1 ขั้น 1–6</div>
+  </header>
+
+  <h2>grad ไม่ใช่ “อนุพันธ์” เฉยๆ — มันมีเจ้าของสองฝั่ง</h2>
+
+  <p>
+    กับดักแรกของทั้งบทคือคำว่า <code>grad</code> สั้นเกินไปจนหลอก
+    <code>a.grad</code> ไม่ได้แปลว่า “อนุพันธ์ของ <code>a</code>” — อนุพันธ์เทียบกับอะไรล่ะ?
+  </p>
+
+  <div class="note good">
+    <span class="note-label">นิยามที่ต้องท่องให้ขึ้นใจ</span>
+    <p style="margin-bottom:0">
+      <code>a.grad</code> คือ <strong>∂(output ตัวสุดท้าย) / ∂a</strong><br>
+      แปลเป็นภาษาคน: “ถ้าขยับ <code>a</code> ขึ้นนิดนึง ผลลัพธ์ปลายทางจะขยับไปเท่าไหร่”
+    </p>
+  </div>
+
+  <p>
+    สังเกตว่านิยามนี้อ้างถึง node สองตัวเสมอ — ตัวที่เก็บค่า (<code>a</code>) และ
+    <strong>ตัวปลายทางที่ไม่ได้ถูกเอ่ยชื่อ</strong> (root ของกราฟ)
+    ตัวปลายทางไม่ได้ถูกเก็บไว้ใน <code>Value</code> ที่ไหนเลย มันถูก
+    <em>เลือก</em> ตอนที่เริ่ม backward pass ต่างหาก
+  </p>
+
+  <p>
+    นั่นคือเหตุผลที่ต้องตั้ง <code>root.grad = 1.0</code> ก่อนเดินย้อนกลับ —
+    ไม่ใช่ค่าที่ตั้งลอยๆ แต่คือ <code>∂root/∂root = 1</code> ซึ่งเป็นการ
+    <strong>ประกาศว่า “ปลายทางคือตัวนี้”</strong> ให้ทั้งกราฟรู้
+    เปลี่ยน root ก็เปลี่ยนความหมายของ <code>grad</code> ของทุก node ในกราฟทันที
+  </p>
+
+  <h2>คิดด้วยมือก่อน แล้วโค้ดจะตามมาเอง</h2>
+
+  <p>กราฟที่ใช้ทั้งวัน:</p>
+
+<pre><code>a = 2.0     b = -3.0     c = 10.0
+e = a * b               →  -6.0
+d = e + c               →   4.0</code></pre>
+
+  <p>ไล่จากปลายทางย้อนกลับ ทีละขั้น ขั้นละหนึ่งบรรทัด:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ถาม</th><th>ได้</th><th>มาจากไหน</th></tr></thead>
+    <tbody>
+      <tr><td><code>∂d/∂d</code></td><td>1</td><td>นิยาม — ตัวเองเทียบตัวเอง</td></tr>
+      <tr><td><code>∂d/∂c</code></td><td>1</td><td><code>d = e + c</code> → <code>+</code> ส่งต่อเท่าเดิม</td></tr>
+      <tr><td><code>∂d/∂e</code></td><td>1</td><td>เหมือนกัน</td></tr>
+      <tr><td><code>∂d/∂a</code></td><td>−3</td><td><code>∂d/∂e · ∂e/∂a</code> = <code>1 · b</code></td></tr>
+      <tr><td><code>∂d/∂b</code></td><td>2</td><td><code>∂d/∂e · ∂e/∂b</code> = <code>1 · a</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    สองแถวล่างคือ <span class="g" data-t="chainrule">chain rule</span> ล้วนๆ และมีรูปเดิมเสมอ:
+    <strong>gradient ที่ไหลมาจากข้างบน × อนุพันธ์เฉพาะที่ของ operation ตัวนี้</strong>
+  </p>
+
+  <div class="note">
+    <span class="note-label">กฎประจำ operation — derive เองได้ ไม่ต้องจำ</span>
+    <ul style="margin-bottom:0">
+      <li><code>+</code> เป็น <strong>ท่อส่งต่อ</strong> — gradient ผ่านไปเท่าเดิมทั้งสองขา (<code>∂(x+y)/∂x = 1</code>)</li>
+      <li><code>*</code> เป็น <strong>ตัวสลับ</strong> — แต่ละขาได้ gradient คูณด้วย<em>ค่าของอีกขา</em> (<code>∂(x·y)/∂x = y</code>)</li>
+    </ul>
+  </div>
+
+  <h3>บั๊กที่โผล่ตรงนี้พอดี</h3>
+
+  <p>
+    สูตรที่เขียนไว้ตอนแรกคือ <code>y.grad += x.data</code> — <strong>หายไปหนึ่งตัวคูณ</strong>
+    ตัวที่ควรอยู่คือ gradient ที่ไหลมาจากข้างบน มันผ่านเทสต์แรกได้เพราะบังเอิญ
+    <code>w.grad == 1</code> พอดี — คูณด้วย 1 ก็เหมือนไม่ได้คูณ
+  </p>
+
+  <p>เทสต์ที่จับได้ ต้องเป็นเทสต์ที่ gradient ข้างบน<strong>ไม่เท่ากับ 1</strong>:</p>
+
+<pre><code>x = 3.0   y = 2.0
+z = x * y        →  6.0
+q = z * z        → 36.0     ← gradient ที่ไหลลงมาที่ z คือ 2z = 12  ไม่ใช่ 1
+
+ของจริง (ตรงกับ numerical):   ∂q/∂x = 12·y = 24     ∂q/∂y = 12·x = 36
+สูตรที่ขาดตัวคูณ:                       y  =  2                x  =  3</code></pre>
+
+  <div class="note good">
+    <span class="note-label">บทเรียนเรื่องการทดสอบ</span>
+    <p style="margin-bottom:0">
+      เทสต์ที่ทุกตัวแปรเป็น 1 หรือ 0 คือ<strong>เทสต์ที่มองไม่เห็นบั๊กเรื่องการคูณ</strong>
+      เลือกตัวเลขที่คูณกันแล้วได้ผลต่างกันเสมอ — และเป็นเหตุผลที่
+      <span class="g" data-t="numgrad">numerical gradient</span> คุ้มค่ามาก
+      มันไม่รู้อะไรเกี่ยวกับโค้ดเลย จึงไม่ผิดพลาดตามกันไปด้วย
+    </p>
+  </div>
+
+  <h2>ใครเป็นคนอัปเดต grad ของใคร</h2>
+
+  <p>คำถามที่ตอบถูกในวันนี้ และเป็นแกนของทั้งระบบ:</p>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      node แต่ละตัว <strong>ไม่ได้คำนวณ grad ของตัวเอง</strong> —
+      มันคำนวณ grad ให้ <em>ลูกๆ ของมัน</em>
+    </p>
+  </div>
+
+  <p>
+    เพราะ node ที่รู้ว่า operation คืออะไร คือ node <em>ผลลัพธ์</em> ไม่ใช่ node input
+    <code>e</code> รู้ว่าตัวเองเกิดจาก <code>a * b</code> — <code>a</code> ไม่รู้เลยว่าถูกเอาไปทำอะไรต่อ
+    ดังนั้น <code>e._backward()</code> คือคนที่มีข้อมูลครบสำหรับกรอกค่าลงใน <code>a.grad</code> และ <code>b.grad</code>
+  </p>
+
+  <p>
+    ผลข้างเคียงสองข้อที่ตามมาทันที และตอบไปแล้ววันนี้:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>คำถาม</th><th>คำตอบ</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="g" data-t="leaf">Leaf node</span> ต้องมี <code>_backward</code> ไหม</td>
+        <td>มีได้ แต่มันต้อง<strong>ไม่ทำอะไรเลย</strong> — leaf ไม่มีลูกให้ส่งต่อ
+            (จึงตั้งเป็น <code>lambda: None</code> ไว้ใน <code>__init__</code> แล้วให้ operation ไปเขียนทับ)</td>
+      </tr>
+      <tr>
+        <td>เรียก <code>d._backward()</code> แล้วมันเดินต่อทั้งกราฟเลยไหม</td>
+        <td><strong>ไม่</strong> — มันขยับแค่<em>หนึ่งขั้น</em> คือกรอก grad ให้ <code>e</code> กับ <code>c</code> แล้วจบ
+            ที่เหลือต้องมีใครสักคนเรียก <code>e._backward()</code> ต่อ นั่นคืองานของ <code>backward()</code></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>ทำไมต้องเป็น closure ไม่ใช่ method</h3>
+
+  <p>
+    <code>_backward</code> ต้องรู้จัก <em>node สามตัว</em> พร้อมกัน: ผลลัพธ์ กับ input ทั้งสองขา
+    ซึ่งเป็นข้อมูลที่มีอยู่ครบตอน<strong>สร้าง</strong> node เท่านั้น
+  </p>
+
+  <p>
+    <span class="g" data-t="closure">Closure</span> เก็บสามตัวนั้นเอาไว้ได้ฟรี —
+    ฟังก์ชันที่ประกาศอยู่ข้างใน <code>__mul__</code> มองเห็นตัวแปรใน scope นั้นตลอดไป
+    แม้ <code>__mul__</code> จะ return ไปนานแล้ว ตรวจได้จริงด้วย
+    <code>f.__code__.co_freevars</code>
+  </p>
+
+  <div class="note">
+    <span class="note-label">Python ที่เรียนแถมมาวันนี้</span>
+    <p style="margin-bottom:0">
+      บรรทัด <code>t._backward = _backward</code> ต้องอยู่<strong>หลัง</strong> <code>def</code>
+      เพราะบรรทัดนั้นอ่านค่าชื่อ <code>_backward</code> ทันที
+      แต่ <em>เนื้อใน</em> ของฟังก์ชันอ้างชื่อที่ยังไม่มีตัวตนได้ —
+      ชื่อในเนื้อฟังก์ชันถูกหาตอน<em>เรียก</em> ไม่ใช่ตอน<em>ประกาศ</em>
+      สองอย่างนี้คนละเวลากัน และเป็นที่มาของ error งงๆ ทั้งหมดตรงนี้
+    </p>
+  </div>
+
+  <h2>ทำไมต้อง <code>+=</code> ไม่ใช่ <code>=</code></h2>
+
+  <p>
+    นี่คือความคิดที่ลึกที่สุดในทั้ง micrograd และเป็นบั๊กที่คนทำพลาดมากที่สุด
+    เหตุผลไม่ได้อยู่ใน Python — มันอยู่ในแคลคูลัส
+  </p>
+
+  <p>ดูกราฟ <code>z = x*y + x</code> — <code>x</code> ปรากฏ<strong>สองที่</strong>:</p>
+
+<pre><code>       x ──┐
+           ├──→ w = x*y ──┐
+       y ──┘              ├──→ z = w + x
+       x ─────────────────┘        ↑
+       └── เส้นทางที่สอง มาบรรจบกันที่ z</code></pre>
+
+  <p>
+    <span class="g" data-t="chainrule">Chain rule แบบหลายตัวแปร</span> บอกว่า
+    เมื่อตัวแปรหนึ่งส่งผลถึงปลายทางได้<em>หลายเส้นทาง</em> อนุพันธ์รวมคือ
+    <strong>ผลบวกของทุกเส้นทาง</strong>:
+  </p>
+
+<pre><code>dz/dx  =  ∂z/∂x  +  ∂z/∂w · dw/dx
+       =    1     +    1   ·   y</code></pre>
+
+  <p>
+    ทีนี้ backward pass เดินทีละ operation — มันไม่เคยเห็นสองเส้นทางพร้อมกัน
+    มันเห็นทีละเส้น <strong>เครื่องหมาย <code>+</code> ในสูตรข้างบนจึงต้องถูกทำให้เกิดขึ้นด้วย
+    <code>+=</code> ในโค้ด</strong> — แต่ละเส้นทางมาถึงคนละเวลา แล้วบวกสะสมไว้ที่ node
+  </p>
+
+  <div class="note bad">
+    <span class="note-label">ถ้าใช้ <code>=</code> จะเกิดอะไรขึ้น</span>
+    <p style="margin-bottom:0">
+      เส้นทางที่มาทีหลัง <strong>เขียนทับ</strong> เส้นทางที่มาก่อน
+      ผลคือได้ gradient ของเส้นทางเดียว แทนที่จะเป็นผลรวม — ค่าออกมาเป็นตัวเลขที่ดูสมเหตุสมผล
+      <strong>ไม่มี error ไม่มี crash</strong> แค่โมเดลเทรนไม่ลง แล้วหาสาเหตุไม่เจอ
+    </p>
+  </div>
+
+  <p>เทสต์ที่สั้นที่สุดที่จับเรื่องนี้ได้ — และผ่านแล้ว:</p>
+
+<pre><code>x = Value(3.0)
+z = x + x          # dz/dx = 2
+z.grad = 1.0
+z._backward()
+x.grad   →  2.0    #  ถ้าเป็น "="  จะได้ 1.0</code></pre>
+
+  <p>
+    สอง node เดียวกัน สองครั้งใน <code>_prev</code> ทั้ง <code>self</code> และ <code>other</code>
+    ชี้ไปที่ object เดียวกัน — เขียน <code>+=</code> จึงได้ 1+1 = 2 ตามที่ควรเป็น
+  </p>
+
+  <h2>การทดลองที่พิสูจน์ว่าลำดับสำคัญ</h2>
+
+  <p>
+    เรียก <code>_backward()</code> ด้วยมือทีละตัวบนกราฟ <code>d = a*b + c</code> สองรอบ:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ลำดับ</th><th><code>a.grad</code></th><th><code>b.grad</code></th><th>เกิดอะไรขึ้น</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>d</code> ก่อน แล้ว <code>e</code></td>
+        <td>−3</td><td>2</td>
+        <td>ถูก — ตอน <code>e</code> ทำงาน <code>e.grad</code> เป็น 1 แล้ว</td>
+      </tr>
+      <tr>
+        <td><code>e</code> ก่อน แล้ว <code>d</code></td>
+        <td><strong>0</strong></td><td><strong>0</strong></td>
+        <td>ผิด — ตอน <code>e</code> ทำงาน <code>e.grad</code> ยังเป็น <code>0.0</code> อยู่
+            <code>a.grad += 0 * b.data</code> จึงได้ศูนย์</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    จุดที่ต้องสังเกตให้ดี: รอบที่สอง <strong>ไม่มี exception ไม่มี warning</strong>
+    โปรแกรมรันจบสวยงาม แล้วให้คำตอบที่ผิด นี่คือรูปแบบความผิดพลาดที่แพงที่สุดใน ML
+  </p>
+
+  <div class="note good">
+    <span class="note-label">Invariant ที่นิยามคำว่า “ลำดับที่ถูก”</span>
+    <p style="margin-bottom:0">
+      node หนึ่งจะเรียก <code>_backward()</code> ได้ ก็ต่อเมื่อ <code>grad</code> ของมัน<strong>ครบแล้ว</strong> —
+      และ <code>grad</code> จะครบก็ต่อเมื่อ <strong>พ่อแม่ทุกตัว</strong> ของมันทำงานไปหมดแล้ว<br>
+      พูดสั้นๆ: <strong>พ่อต้องมาก่อนลูกเสมอ</strong> ไม่มีเงื่อนไขอื่น
+    </p>
+  </div>
+
+  <p>
+    บนกราฟ 5 node เรียงเองได้ในหัว บนกราฟ 500 node เรียงเองไม่ได้ —
+    และนั่นคือ<em>ทั้งหมด</em>ที่ <span class="g" data-t="toposort">topological sort</span> มีไว้ทำ
+    ไม่ใช่อัลกอริทึมลึกลับ แต่เป็นคำตอบของคำถามว่า “แล้วใครควรทำงานก่อนใคร”
+  </p>
+
+  <p>
+    วิธีเช็คว่าลำดับที่ได้ถูกจริงไหม ไม่ต้องดูด้วยตา — เช็คด้วย property เดียวนี้
+    ซึ่งใช้ได้กับกราฟทุกรูปทรง:
+  </p>
+
+<pre><code>pos = {id(n): i for i, n in enumerate(order)}
+for child, parent in edges:
+    assert pos[id(parent)] &lt; pos[id(child)]</code></pre>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <div id="quiz"></div>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    Andrej Karpathy — <a href="https://www.youtube.com/watch?v=VMj-3S1tku0">building micrograd</a>
+    · ช่วง manual backprop ประมาณนาทีที่ 30–60
+    · <a href="https://docs.python.org/3/reference/executionmodel.html#naming-and-binding">Python docs — naming and binding</a>
+    (ที่มาของกฎ “ชื่อในเนื้อฟังก์ชันถูกหาตอนเรียก”)
+  </div>
+
+  <div class="ask">
+    ประโยคเดียวที่ควรจำจากบทนี้: <strong>node ไม่ได้คำนวณ grad ของตัวเอง มันคำนวณให้ลูก
+    และมันทำได้ก็ต่อเมื่อพ่อของมันทำเสร็จหมดแล้ว</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0004-toolchain.html">← Lesson 04</a>
+      <a href="../reference/data-structures.html">Data structures →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "<code>a.grad</code> หมายถึงอะไรกันแน่?",
+    opts: [
+      "อนุพันธ์ของ node ที่เป็นปลายทางของ backward pass เทียบกับ <code>a</code>",
+      "อนุพันธ์ของ <code>a</code> เทียบกับ input ทั้งหมดที่อยู่ก่อนหน้ามันในกราฟ",
+      "อัตราการเปลี่ยนแปลงของ <code>a.data</code> ระหว่างการเทรนในแต่ละรอบ"
+    ],
+    a: 0,
+    why: "grad อ้างถึง node <b>สองตัว</b> เสมอ — ตัวที่เก็บค่า และตัวปลายทางที่ไม่ได้ถูกเอ่ยชื่อ ปลายทางไม่ได้ถูกเก็บไว้ใน <code>Value</code> ที่ไหนเลย แต่ถูก<i>เลือก</i>ตอนตั้ง <code>root.grad = 1.0</code> เปลี่ยน root ก็เปลี่ยนความหมายของ grad ทุกตัวในกราฟทันที"
+  },
+  {
+    q: "ทำไม <code>root.grad</code> ต้องเป็น <code>1.0</code> ไม่ใช่ค่าอื่น?",
+    opts: [
+      "เพราะมันคือ <code>∂root/∂root</code> ซึ่งเท่ากับ 1 ตามนิยาม ไม่ใช่ค่าที่ตั้งขึ้นลอยๆ",
+      "เพราะเป็นค่าเริ่มต้นที่ทำให้ gradient ไม่ระเบิดหรือหดหายไประหว่างเดินย้อนกลับ",
+      "เพราะ learning rate ตอนเริ่มต้นถูกกำหนดไว้ที่ 1.0 แล้วค่อยลดลงในภายหลัง"
+    ],
+    a: 0,
+    why: "เป็นข้อเท็จจริงทางคณิตศาสตร์ ไม่ใช่ตัวเลือกด้านวิศวกรรม — ของอะไรก็ตามเทียบกับตัวมันเองได้ 1 เสมอ chain rule ทั้งสายจึงเริ่มจากตรงนี้ และการตั้งค่านี้คือ<b>การประกาศว่าปลายทางคือ node ตัวไหน</b>"
+  },
+  {
+    q: "<code>e = a * b</code> แล้วเรียก <code>e._backward()</code> — มันไปแตะ grad ของ node ตัวไหน?",
+    opts: [
+      "<code>a.grad</code> และ <code>b.grad</code> — คือลูกของมัน ส่วน <code>e.grad</code> ถูกอ่านอย่างเดียว",
+      "<code>e.grad</code> เท่านั้น เพราะแต่ละ node รับผิดชอบคำนวณ gradient ของตัวเอง",
+      "ทั้ง <code>a</code>, <code>b</code> และ <code>e</code> พร้อมกัน เพราะทั้งสามอยู่ในกราฟย่อยเดียวกัน"
+    ],
+    a: 0,
+    why: "node ที่รู้ว่า operation คืออะไรคือ node <b>ผลลัพธ์</b> — <code>a</code> ไม่รู้เลยว่าถูกเอาไปทำอะไรต่อ ดังนั้นคนที่มีข้อมูลครบพอจะกรอก <code>a.grad</code> ได้คือ <code>e</code> ไม่ใช่ <code>a</code> ส่วน <code>e.grad</code> ต้องมีค่าที่ถูกต้อง<i>อยู่ก่อนแล้ว</i> ตอนที่ <code>_backward</code> ถูกเรียก"
+  },
+  {
+    q: "<code>z = x + x</code> ตั้ง <code>z.grad = 1.0</code> แล้วเรียก <code>z._backward()</code> — ถ้าใน <code>__add__</code> เขียน <code>self.grad = t.grad</code> (ใช้ <code>=</code>) จะได้ <code>x.grad</code> เท่าไหร่?",
+    opts: [
+      "1.0 — คำตอบที่ผิด เพราะการมอบหมายครั้งที่สองไปเขียนทับครั้งแรก",
+      "2.0 — ได้คำตอบถูกอยู่ดี เพราะ Python รวมค่าให้เองเมื่อเป็น object เดียวกัน",
+      "โปรแกรมพังทันทีด้วย <code>RuntimeError</code> เพราะ node ถูกใช้ซ้ำในกราฟ"
+    ],
+    a: 0,
+    why: "<code>self</code> กับ <code>other</code> ชี้ไป object เดียวกัน บรรทัดที่สองจึงเขียนทับบรรทัดแรก ได้ 1.0 แทนที่จะเป็น 2.0 ที่ถูกต้อง — และ<b>ไม่มี error ใดๆ</b> นี่คือเทสต์ที่สั้นที่สุดที่จับบั๊กนี้ได้ และเป็นเหตุผลที่ต้องเป็น <code>+=</code>"
+  },
+  {
+    q: "เหตุผล<b>ทางคณิตศาสตร์</b> ที่ต้องสะสม gradient คืออะไร?",
+    opts: [
+      "chain rule หลายตัวแปรบอกว่าอนุพันธ์รวมคือผลบวกของทุกเส้นทางที่ไปถึงปลายทาง",
+      "เพราะเลขทศนิยมมีความคลาดเคลื่อน การบวกสะสมช่วยเฉลี่ยความคลาดเคลื่อนออกไป",
+      "เพราะ gradient descent ต้องการค่าสะสมข้ามหลาย batch ก่อนจะอัปเดตน้ำหนักจริง"
+    ],
+    a: 0,
+    why: "<code>dz/dx = ∂z/∂x + ∂z/∂w · dw/dx</code> — เครื่องหมาย <code>+</code> ในสูตรนั้นมาก่อนโค้ด backward pass เดินทีละ operation จึงเห็นทีละเส้นทาง แต่ละเส้นมาถึงคนละเวลา <code>+=</code> คือวิธีทำให้เครื่องหมายบวกในสูตรเกิดขึ้นจริงในโค้ด"
+  },
+  {
+    q: "บนกราฟ <code>e = a*b</code>, <code>d = e+c</code> ถ้าเรียก <code>e._backward()</code> ก่อน <code>d._backward()</code> จะเกิดอะไรขึ้น?",
+    opts: [
+      "<code>a.grad</code> กับ <code>b.grad</code> เป็น 0 เงียบๆ เพราะตอนนั้น <code>e.grad</code> ยังเป็น 0",
+      "โปรแกรมโยน exception ทันที เพราะ <code>e.grad</code> ยังไม่ถูกกำหนดค่าใดๆ เลย",
+      "ได้ค่าถูกต้องอยู่ดี แค่ต้องเรียก <code>e._backward()</code> ซ้ำอีกครั้งหลังจากนั้น"
+    ],
+    a: 0,
+    why: "<code>a.grad += e.grad * b.data</code> โดยที่ <code>e.grad</code> ยังเป็น <code>0.0</code> ก็คือบวกศูนย์ — <b>ไม่มี error ไม่มี warning</b> โปรแกรมรันจบสวยงามแล้วให้คำตอบผิด นี่คือ invariant ที่นิยาม topological order: node จะทำงานได้ก็ต่อเมื่อพ่อแม่<i>ทุกตัว</i>ทำเสร็จแล้ว"
+  },
+  {
+    q: "ทำไม <code>_backward</code> ต้องเป็น closure แทนที่จะเป็น method ธรรมดาของ <code>Value</code>?",
+    opts: [
+      "เพราะมันต้องจำ node ทั้งสามตัว (ผลลัพธ์ + input สองขา) ที่รู้ครบเฉพาะตอนสร้าง node",
+      "เพราะ method ของคลาสเรียกใช้ระหว่าง backward pass ไม่ได้ ต้องเป็นฟังก์ชันอิสระเท่านั้น",
+      "เพราะ closure ทำงานเร็วกว่า method ตรงที่ไม่ต้องค้นหา attribute ผ่าน <code>self</code>"
+    ],
+    a: 0,
+    why: "ข้อมูลว่า “ฉันเกิดจาก <code>a</code> คูณ <code>b</code>” มีอยู่ครบเฉพาะใน scope ของ <code>__mul__</code> closure เก็บ free variable เหล่านั้นไว้ได้ฟรีแม้ <code>__mul__</code> return ไปแล้ว (ตรวจได้ด้วย <code>f.__code__.co_freevars</code>) — ทางเลือกอื่นคือเก็บ operation เป็น string แล้วเขียน <code>if/elif</code> ยาวๆ ตอน backward ซึ่งใช้ได้แต่ขยายยากกว่ามาก"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
