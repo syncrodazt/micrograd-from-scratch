@@ -131,6 +131,15 @@
 
   <div class="cards">
 
+    <a class="card" href="reference/roadmap.html">
+      <div class="c-num">Reference · เปิดก่อนเริ่มทุกเซสชัน</div>
+      <div class="c-title">Roadmap — อยู่ตรงไหนแล้ว</div>
+      <p class="c-desc">
+        แผนทั้งเดือนในหน้าเดียว 5 เฟส ติ๊กได้และจำสถานะให้ ·
+        เฟส 0 (โครงสร้างข้อมูล) เสร็จแล้ว · ตอนนี้อยู่เฟส 1 (gradient)
+      </p>
+    </a>
+
     <a class="card" href="reference/glossary.html">
       <div class="c-num">Reference · 32 คำ</div>
       <div class="c-title">Glossary</div>
@@ -198,7 +207,7 @@
     </li>
     <li>
       <span class="fl-name"><a href="learning-records/0003-dedup-storage-vs-dedup-traversal.md">0003</a></span>
-      <span class="fl-desc">dedup ที่ตัวเก็บ ≠ dedup ที่การเดิน — <strong>ยังแก้ไม่เสร็จ</strong></span>
+      <span class="fl-desc">dedup ที่ตัวเก็บ ≠ dedup ที่การเดิน — <strong>แก้แล้ว</strong> ต้องทั้ง guard และ <code>set</code></span>
     </li>
     <li>
       <span class="fl-name"><a href="learning-records/0004-verify-which-python-before-installing.md">0004</a></span>
@@ -219,9 +228,9 @@
     <tbody>
       <tr><td><code>Value</code> · <code>__init__</code> <code>__repr__</code> <code>__add__</code> <code>__mul__</code></td><td>✅ ทำงานได้</td></tr>
       <tr><td>graphviz ต่อเข้ากับ Jupyter</td><td>✅ วาดรูปออกแล้ว</td></tr>
-      <tr><td><code>trace()</code> — เดินกราฟเก็บ nodes + edges</td><td>🟡 ผลถูก แต่ยังเดินซ้ำ</td></tr>
-      <tr><td>วาดกราฟจากผลของ <code>trace()</code></td><td>⬜ ต่อไป</td></tr>
-      <tr><td><code>grad</code> · คำนวณ gradient ด้วยมือ</td><td>⬜ วันนี้</td></tr>
+      <tr><td><code>trace()</code> — guard + <code>edges</code> เป็น set</td><td>✅ 13.4 µs → 1.77 µs</td></tr>
+      <tr><td><code>plot_graph()</code> แยกจาก <code>trace()</code></td><td>✅ วาดถูกทุกเคส</td></tr>
+      <tr><td><code>grad</code> · คำนวณ gradient ด้วยมือ</td><td>🔵 วันนี้</td></tr>
       <tr><td><code>_backward</code> · topological sort · <code>backward()</code></td><td>⬜ พรุ่งนี้</td></tr>
       <tr><td><code>tanh</code> · reflected operators</td><td>⬜ D5</td></tr>
       <tr><td>Neuron → Layer → MLP → training loop</td><td>⬜ D6–D7</td></tr>
@@ -229,14 +238,21 @@
   </table>
   </div>
 
+  <p>รายละเอียดทุกขั้นพร้อมช่องติ๊ก อยู่ใน <a href="reference/roadmap.html"><strong>Roadmap</strong></a></p>
+
   <h3>คำถามที่ยังเปิดอยู่</h3>
 
   <ul>
-    <li>การ์ดกันเดินซ้ำควรอยู่บรรทัดไหนของ recursion และควรเช็คว่าอะไร</li>
-    <li>เจอ node ซ้ำแล้วควร <code>return</code> ทันที หรือไม่เก็บแต่เดินลึกต่อ — สองอย่างนี้ให้ผลไม่เหมือนกัน</li>
     <li>ถ้า node หนึ่งโผล่สองครั้งในลำดับที่ใช้เรียก <code>_backward()</code> gradient จะผิดไปกี่เท่า</li>
+    <li><code>w = e + e</code> ต้องได้ <code>dw/de = 2</code> — โค้ดจะรู้เรื่องนั้นได้ยังไง ในเมื่อลูกศรในกราฟเหลือเส้นเดียว</li>
     <li>label ของ node กลางควรตั้งมือ หรือให้สร้างอัตโนมัติจาก <code>data</code></li>
   </ul>
+
+  <p class="cap">
+    ✅ ปิดไปแล้ว: การ์ดกันเดินซ้ำควรอยู่ตรงไหน (ต้นทางของ <code>f</code>) ·
+    เจอซ้ำแล้วควรทำอะไร (<code>return</code> ทันที) ·
+    <code>edges</code> ต้องเป็น set ด้วยไหม (ต้อง — แก้คนละเคสกับ guard)
+  </p>
 
   <!-- ============ PROJECT DOCS ============ -->
 
