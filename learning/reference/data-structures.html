@@ -96,9 +96,14 @@
     <p style="margin-bottom:0">
       <code>_prev</code> ต้องเป็น <code>list</code> <strong>ไม่ใช่ <code>set</code></strong> ทั้งที่ <code>nodes</code> เป็น <code>set</code> —
       สองที่นี้ตอบคนละคำถามกัน <code>nodes</code> ถามว่า “กราฟนี้มี node อะไรบ้าง” (ห้ามซ้ำ)
-      ส่วน <code>_prev</code> ถามว่า “ฉันเกิดจากอะไรบวกอะไร” (ซ้ำได้ และเรียงสำคัญ)
-      ถ้าเผลอทำ <code>_prev</code> เป็น set แล้วเขียน <code>x + x</code> จะเหลือ <code>x</code> ตัวเดียว
-      แล้ว gradient จะผิดเป็น 1 แทนที่จะเป็น 2 — เงียบๆ
+      ส่วน <code>_prev</code> ถามว่า “ฉันเกิดจากอะไรบวกอะไร” (ซ้ำได้ และเรียงสำคัญ)<br><br>
+      ทำเป็น set แล้ว <code>x + x</code> จะเหลือ <code>x</code> ตัวเดียว — แต่ <strong>gradient ยังถูก</strong>
+      เพราะ <code>_backward</code> เป็น closure ที่จับ <code>self</code> กับ <code>other</code> ไว้เอง
+      ไม่เคยอ่าน <code>_prev</code> เลย สิ่งที่พังคือ <strong>รูปกราฟ</strong> (เหลือเส้นเดียว) และโค้ดที่
+      index <code>_prev[0]</code> / <code>_prev[1]</code> ซึ่งจะได้ <code>TypeError: 'set' object is not subscriptable</code><br><br>
+      ถ้าเป็น implementation อีกแบบที่ <code>_backward</code> อ่าน <code>_prev</code> แทนการใช้ closure
+      (เก็บ <code>_op</code> ไว้แล้ว <code>if/elif</code> ตอน backward) — <strong>อันนั้น gradient จะผิดจริง และเงียบด้วย</strong>
+      บั๊กตัวเดียวกันร้ายแรงไม่เท่ากันขึ้นกับว่าออกแบบไว้ยังไง
     </p>
   </div>
 
