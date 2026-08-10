@@ -175,6 +175,15 @@
       </p>
     </a>
 
+    <a class="card" href="lessons/0008-composition-and-diagnosis.html">
+      <div class="c-num">Lesson 08 · 2026-08-10 · 8 ข้อ</div>
+      <div class="c-title">ประกอบจากของที่มี และวิธีถามว่าไอ้นี่คืออะไรกันแน่</div>
+      <p class="c-desc">
+        operation 8 ตัว กฎอนุพันธ์ใหม่ 2 ตัว · <code>2 * a</code> กับดัก reflected ·
+        <code>tanh</code> = <code>exp</code> · บั๊ก 3 ตัวที่แก้ด้วยคำถามเดียวกัน · decorator สองชนิด
+      </p>
+    </a>
+
   </div>
 
   <!-- ============ REFERENCE ============ -->
@@ -191,7 +200,7 @@
       <div class="c-title">Roadmap — อยู่ตรงไหนแล้ว</div>
       <p class="c-desc">
         แผนทั้งเดือนในหน้าเดียว 5 เฟส ติ๊กได้และจำสถานะให้ ·
-        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · เฟส 0–1 ปิดแล้ว · <strong>เฟส 2 คือ rebuild test</strong> ที่ย้ายขึ้นมาจากเฟส 3
+        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · <strong>เฟส 0–3 ปิดแล้ว · engine เสร็จสมบูรณ์</strong> · ตอนนี้อยู่เฟส 4 (nn.py + training loop)
       </p>
     </a>
 
@@ -283,7 +292,7 @@
 
   <div class="sec" id="status">
     <h2>อยู่ตรงไหนแล้ว</h2>
-    <span class="sec-note">Day 4 · 2026-08-10 · rebuild ผ่านแล้ว</span>
+    <span class="sec-note">Day 4 · 2026-08-10 · ปิดเฟส 2 และ 3</span>
   </div>
 
   <div class="tw">
@@ -301,8 +310,9 @@
       <tr><td><code>backward()</code> เต็มรูป</td><td>✅ <strong>เฟส 1 ปิด</strong> — assert ผ่านครบ 8 ตัว</td></tr>
       <tr><td><code>tests/</code> — 29 ข้อ ผ่าน mutation check แล้ว</td><td>✅ เขียนไว้รอแล้ว</td></tr>
       <tr><td><code>micrograd/engine.py</code> — พิมพ์ใหม่จากความจำ</td><td>✅ <strong>29/29 เขียว</strong> — ผิดแค่ <code>reverse</code></td></tr>
-      <tr><td><code>micrograd/viz.py</code> · เขียนเทสต์เพิ่มเอง</td><td>🔵 ต่อไป — ปิดเฟส 2</td></tr>
-      <tr><td><code>tanh</code> · reflected operators · <code>__pow__</code></td><td>⬜ เฟส 3</td></tr>
+      <tr><td><code>micrograd/viz.py</code> · เขียนเทสต์เพิ่มเอง</td><td>✅ ปิดเฟส 2</td></tr>
+      <tr><td><code>tanh</code> · reflected · <code>__pow__</code> · <code>exp</code></td><td>✅ <strong>ปิดเฟส 3 · 85/85 เขียว</strong></td></tr>
+      <tr><td><code>nn.py</code> — Neuron → Layer → MLP · training loop</td><td>🔵 ต่อไป — เฟส 4</td></tr>
       <tr><td>Neuron → Layer → MLP → training loop</td><td>⬜ D6–D7</td></tr>
     </tbody>
   </table>

@@ -1,0 +1,469 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 08 — ประกอบจากของที่มี และวิธีถามว่าไอ้นี่คืออะไรกันแน่</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a> &nbsp;·&nbsp;
+    <a href="../reference/roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 08 · operations · diagnosis</div>
+    <h1>ประกอบจากของที่มี<br>และวิธีถามว่า “ไอ้นี่มันคืออะไรกันแน่”</h1>
+    <p class="standfirst">
+      วันที่ engine เสร็จสมบูรณ์ — เพิ่ม operation อีกแปดตัวโดยเขียนกฎอนุพันธ์ใหม่แค่สองตัว
+      และบั๊กสามตัวที่แก้ได้ด้วยคำถามเดียวกันทุกครั้ง
+    </p>
+    <div class="meta">2026-08-10 · Day 4 (ช่วงบ่าย–ค่ำ) · ปิดเฟส 3</div>
+  </header>
+
+  <h2>เพิ่ม operation โดยไม่เพิ่มกฎอนุพันธ์</h2>
+
+  <p>
+    เฟส 3 เพิ่ม operation แปดตัว — <code>__neg__</code>, <code>__sub__</code>,
+    <code>__pow__</code>, <code>__truediv__</code>, <code>exp</code> และ reflected อีกสี่ตัว
+    แต่ต้อง derive อนุพันธ์ใหม่จริงๆ แค่ <strong>สองตัว</strong>
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>operation</th><th>ต้องมีกฎ <code>_backward</code> ของตัวเอง?</th></tr></thead>
+    <tbody>
+      <tr><td><code>__pow__</code></td><td><strong>ต้อง</strong> — <code>k·x^(k−1)</code></td></tr>
+      <tr><td><code>exp</code></td><td><strong>ต้อง</strong> — และมันคือค่าของตัวเอง</td></tr>
+      <tr><td><code>__neg__</code></td><td>ไม่ — คือคูณด้วย <code>-1</code></td></tr>
+      <tr><td><code>__sub__</code></td><td>ไม่ — คือบวกกับตัวที่ติดลบ</td></tr>
+      <tr><td><code>__truediv__</code></td><td>ไม่ — คือคูณด้วยตัวที่ยกกำลัง <code>-1</code></td></tr>
+      <tr><td>reflected ทั้งสี่</td><td>ไม่ — เรียกตัวเดิมโดยสลับข้าง</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note good">
+    <span class="note-label">ทำไมถึงได้ฟรี</span>
+    <p style="margin-bottom:0">
+      เพราะ <code>a - b</code> ที่เขียนเป็น <code>a + (-b)</code>
+      <strong>ไม่ได้เป็นแค่การคำนวณที่เท่ากัน — มันสร้างกราฟที่ประกอบจาก node ที่มี
+      <code>_backward</code> ถูกต้องอยู่แล้ว</strong><br>
+      backward pass ไม่รู้เลยว่ามี “การลบ” อยู่ในโลก มันเห็นแค่บวกกับคูณ
+      แล้วเดินตามกฎเดิม gradient จึงถูกโดยไม่ต้องมีใครสั่ง
+    </p>
+  </div>
+
+  <p>
+    ผลที่ตามมาสำคัญกว่าความสะดวก: <strong>ยิ่ง operation พื้นฐานน้อย ยิ่งมีที่ให้ผิดน้อย</strong>
+    กฎอนุพันธ์ทุกข้อที่เขียนเองคือโอกาสพลาดหนึ่งครั้ง — สี่ตัวที่ประกอบเอาไม่มีโอกาสนั้นเลย
+  </p>
+
+  <h2><code>a * 2</code> ผ่าน ไม่ได้แปลว่า <code>2 * a</code> ผ่าน</h2>
+
+  <p>สองบรรทัดนี้ดูสมมาตร แต่เดินคนละเส้นทางในเครื่อง:</p>
+
+<pre><code>a * 2   →  Python ถามซ้ายก่อน  →  Value.__mul__(a, 2)      ✅
+2 * a   →  Python ถามซ้ายก่อน  →  int.__mul__(2, a)        ❌ int ไม่รู้จัก Value
+                                 →  ถอยไปถามขวา  →  Value.__rmul__(a, 2)</code></pre>
+
+  <p>
+    <span class="g" data-t="reflected">Reflected operator</span> คือทางถอยที่ Python เตรียมไว้ —
+    ฝั่งซ้ายตอบว่า <code>NotImplemented</code> เมื่อไหร่ มันจะไปถามฝั่งขวาด้วยเมธอดที่มี <code>r</code> นำหน้า
+  </p>
+
+  <div class="note bad">
+    <p style="margin-bottom:0">
+      กับดักคือมัน <strong>เงียบจนกว่าจะเจอ</strong> — เขียน MLP ทั้งตัวโดยใช้ <code>a * 2</code> ตลอด
+      แล้ววันหนึ่งพิมพ์ <code>2 * a</code> ครั้งเดียวก็ <code>TypeError</code> ทันที
+      เทสต์ที่ครอบคลุมจึงต้องแยกเป็นคนละข้อ ไม่ใช่ข้อเดียว
+    </p>
+  </div>
+
+  <h2>Payoff: <code>tanh</code> ที่ประกอบจาก <code>exp</code></h2>
+
+  <p>
+    <code>tanh(x) = (e^{2x} − 1) / (e^{2x} + 1)</code> — ประกอบจาก
+    scalar multiply, <code>exp</code>, scalar add, subtract และ divide ทั้งหมดที่เพิ่งเขียน
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>ค่า</th></tr></thead>
+    <tbody>
+      <tr><td><code>tanh</code> ตัวเดียวจบ</td><td>0.4621171572600<strong>0974</strong></td></tr>
+      <tr><td>ประกอบจาก <code>exp</code></td><td>0.4621171572600<strong>097</strong></td></tr>
+      <tr><td><code>math.tanh(0.5)</code></td><td>0.4621171572600<strong>0974</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ทั้งค่าและ gradient ตรงกัน — <strong>“จะแตกละเอียดแค่ไหน” เป็นทางเลือกด้านวิศวกรรม
+    ไม่ใช่กฎของคณิตศาสตร์</strong> แตกละเอียด = กฎน้อยลงแต่กราฟใหญ่ขึ้น ·
+    รวมเป็นก้อน = เร็วกว่าแต่ต้อง derive เอง PyTorch ก็เลือกแบบหลังสำหรับ operation ที่ใช้บ่อย
+  </p>
+
+  <div class="note">
+    <span class="note-label">หลักสุดท้ายที่ไม่ตรงกัน</span>
+    <p style="margin-bottom:0">
+      <code>...0974</code> กับ <code>...097</code> — <strong>ถูกต้องทางคณิตศาสตร์เท่ากัน
+      แต่ทศนิยมไม่เท่ากัน</strong> เพราะลำดับการคำนวณต่างกัน แต่ละขั้นก็ปัดคนละแบบ<br>
+      นี่คือเหตุผลที่เทสต์ทั้งไฟล์ใช้ <code>pytest.approx</code> ไม่ใช่ <code>==</code>
+      และเป็นเรื่องที่จะเจอตลอดไปใน ML
+    </p>
+  </div>
+
+  <h2>บั๊กสามตัวของวันนี้ — คำถามเดียวแก้ได้ทั้งหมด</h2>
+
+  <div class="note good">
+    <span class="note-label">คำถามนั้นคือ</span>
+    <p style="margin-bottom:0">
+      <strong>“ไอ้ตัวนี้ <em>จริงๆ</em> แล้วมันคืออะไร ไม่ใช่สิ่งที่ฉันคิดว่ามันเป็น”</strong><br>
+      แล้วพิมพ์มันออกมาดู แทนที่จะไล่อ่านโค้ดในหัว
+    </p>
+  </div>
+
+  <h3>1. <code>_backward</code> ของ <code>tanh</code> ไม่ทำงาน แม้แต่ <code>print</code> ก็ไม่ออก</h3>
+
+<pre><code>print(y._backward)
+→ &lt;function Value.__init__.&lt;locals&gt;.&lt;lambda&gt; at 0x...&gt;      ← lambda: None ตัวเดิม!
+
+print(a._backward)   # จาก a = Value(1.0) * Value(2.0)
+→ &lt;function Value.__mul__.&lt;locals&gt;._backward at 0x...&gt;      ← ของจริง</code></pre>
+
+  <p>
+    <strong>ฟังก์ชันใน Python บอกได้ว่าตัวเองเกิดที่ไหน</strong> —
+    <code>Value.__mul__.&lt;locals&gt;._backward</code> อ่านว่า “เกิดข้างใน <code>__mul__</code>”
+    พอเห็นว่า <code>tanh</code> ยังถือ <code>__init__.&lt;locals&gt;.&lt;lambda&gt;</code> อยู่
+    ก็รู้ทันทีว่า <code>print</code> ไม่ออกเพราะ <strong>มันถูกเรียกแล้ว แต่ไปโดนฟังก์ชันคนละตัว</strong>
+  </p>
+
+  <p>
+    สาเหตุ: บรรทัด <code>t._backward = _backward</code> เยื้องเกินไปหนึ่งชั้น
+    เลยไปอยู่<em>ข้างใน</em> closure ที่ไม่มีวันทำงาน — บั๊กที่กัดหางตัวเอง
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ถามอะไร</th><th>ใช้</th></tr></thead>
+    <tbody>
+      <tr><td>ฟังก์ชันนี้เกิดที่ไหน</td><td><code>f.__qualname__</code></td></tr>
+      <tr><td>มันจับตัวแปรอะไรไว้บ้าง</td><td><code>f.__code__.co_freevars</code></td></tr>
+      <tr><td>object นี้พก attribute อะไร</td><td><code>obj.__dict__</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>2. gradient ของ <code>tanh</code> ขาดตัวคูณ — แต่เทสต์ผ่าน</h3>
+
+  <p>เทสต์แรกที่เขียนคือ:</p>
+
+<pre><code>x = Value(0.0)
+y = x.tanh()     ← tanh อยู่นอกสุด → y.grad = 1.0 พอดี
+y.backward()</code></pre>
+
+  <p>
+    คูณด้วย 1 ก็เหมือนไม่ได้คูณ — <strong>เทสต์ผ่านทั้งที่โค้ดผิด</strong>
+    กับดักเดียวกับที่เจอตอน <code>q = z*z</code> ในวันที่ 2 เป๊ะ
+  </p>
+
+  <p>
+    เทสต์ที่มองเห็น ต้องให้ <code>tanh</code> <strong>ไม่ได้อยู่นอกสุด</strong> —
+    ครอบด้วย <code>y * y</code> แล้ว gradient ที่ไหลเข้ามากลายเป็น <code>2y</code> ไม่ใช่ 1
+  </p>
+
+  <div class="note bad">
+    <p style="margin-bottom:0">
+      บทเรียนที่ต้องติดตัว: <strong>เทสต์ที่ operation อยู่นอกสุด มองไม่เห็นบั๊กเรื่องตัวคูณเลย</strong>
+      ทุกครั้งที่เพิ่ม operation ใหม่ ให้เขียนอย่างน้อยหนึ่งเทสต์ที่มันถูกครอบอยู่
+    </p>
+  </div>
+
+  <h3>3. <code>_op="^{other}"</code> — ลืม <code>f</code> หน้า string</h3>
+
+<pre><code>_op ของ x**3  →  '^{other}'
+_op ของ x**7  →  '^{other}'</code></pre>
+
+  <p>
+    ไม่มีเทสต์ข้อไหน assert <code>_op</code> ของ <code>**</code> บั๊กนี้จึงรอดทั้ง 85 ข้อ —
+    <strong>จะเห็นก็ต่อเมื่อวาดกราฟออกมาดู</strong> เป็นตัวอย่างที่ดีว่าเทสต์ครอบคลุมได้เท่าที่เขียนไว้เท่านั้น
+    และ “85 เขียว” ไม่ได้แปลว่าไม่มีบั๊ก
+  </p>
+
+  <h2>Operator คือภาษากลาง method คือภาษาถิ่น</h2>
+
+  <p>
+    ตอนเขียนเทสต์เทียบกับ <span class="g" data-t="numgrad">numerical gradient</span>
+    เจอว่า <code>math.tanh(a)</code> พัง แต่ <code>a * b + c</code> ไม่พัง ทั้งที่ <code>a</code> เป็น
+    <code>Value</code> เหมือนกัน:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>นิพจน์</th><th>ต้องการ</th><th><code>float</code></th><th><code>Value</code></th></tr></thead>
+    <tbody>
+      <tr><td><code>a * b + c</code></td><td><code>__mul__</code>, <code>__add__</code></td><td>✅</td><td>✅</td></tr>
+      <tr><td><code>math.tanh(a)</code></td><td>เป็นตัวเลขจริง</td><td>✅</td><td>❌</td></tr>
+      <tr><td><code>a.tanh()</code></td><td>เมธอดชื่อ <code>tanh</code></td><td>❌</td><td>✅</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>operator overloading คือสิ่งที่ทำให้ <code>Value</code> พูดภาษาเดียวกับ <code>float</code> ได้</strong>
+    ส่วนเมธอดไม่ใช่ — เพราะงั้น harness ที่ต้องรันนิพจน์เดียวกันทั้งสองโลก
+    ต้องเก็บ callable <strong>สองตัว</strong> ต่อหนึ่งเคส ตัวหนึ่งพูดภาษา <code>Value</code>
+    อีกตัวพูดภาษา <code>float</code>
+  </p>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      ตอนออกแบบครั้งแรกพลาดเพราะตั้งชื่อว่า <code>f</code> กับ <code>v</code> ซึ่ง<strong>ไม่บอกว่าตัวไหนอยู่โลกไหน</strong>
+      พอสลับตำแหน่งกันก็ยังอ่านดูเหมือนถูก · เปลี่ยนเป็น <code>on_values</code> / <code>on_floats</code>
+      แล้วการสลับกลายเป็นเรื่องที่เห็นด้วยตาเปล่า —
+      <strong>ชื่อที่ดีกำจัดบั๊กทั้งประเภท ไม่ใช่แค่ครั้งเดียว</strong>
+    </p>
+  </div>
+
+  <h2>Decorator มีสองชนิด</h2>
+
+  <p><code>@</code> เป็นน้ำตาลของบรรทัดเดียว:</p>
+
+<pre><code>@foo
+def bar(): ...
+
+# เท่ากับ:  bar = foo(bar)</code></pre>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ชนิด</th><th>คืนอะไร</th><th>ตัวอย่าง</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ห่อ</strong></td><td>ฟังก์ชัน<em>ตัวใหม่</em>ที่เปลี่ยนพฤติกรรม</td><td><code>@functools.cache</code></td></tr>
+      <tr><td><strong>แปะป้าย</strong></td><td><em>ตัวเดิม</em> แค่ติดข้อมูลไว้</td><td><code>@pytest.mark.parametrize</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>ของจริงที่ pytest แปะไว้:</p>
+
+<pre><code>demo.pytestmark  →  [Mark(name='parametrize', args=('x', [1, 2, 3]), kwargs={})]
+demo(5)          →  5                    ← พฤติกรรมไม่ถูกแตะเลย</code></pre>
+
+  <p>
+    ทำได้เพราะ <strong>ฟังก์ชันใน Python เป็น object ที่มี <code>__dict__</code> เหมือนของอื่น</strong> —
+    <code>fn.anything = ...</code> ได้เลย · โครงเดียวกับ <code>t._backward = _backward</code>
+    ที่ทำมาตั้งแต่วันที่สอง แค่กลับทิศ
+  </p>
+
+  <h3><code>parametrize</code> ทั้งอันใน 6 บรรทัด</h3>
+
+<pre><code>def parametrize(names, rows):
+    names = [n.strip() for n in names.split(",")]     # "a, b" → ["a", "b"]
+    def attach(fn):
+        fn.params = (names, rows)
+        return fn
+    return attach</code></pre>
+
+  <p>แล้วสิ่งที่ pytest ทำตอนเก็บเทสต์:</p>
+
+<pre><code>names, rows = show.params
+for row in rows:
+    kwargs = dict(zip(names, row))     # ←←← string กลายเป็น argument ตรงนี้
+    show(**kwargs)</code></pre>
+
+  <p>
+    <code>zip</code> จับคู่ชื่อกับค่าตามตำแหน่ง แล้ว <code>**</code> คลี่ dict เข้าไปเป็น keyword argument —
+    เหตุผลที่ต้องส่งชื่อมาเป็น string คือ pytest ต้องแยกให้ออกว่า
+    argument ตัวไหนมาจาก parametrize และตัวไหนมาจาก fixture
+  </p>
+
+  <h2>เครื่องมือ: <code>sys.path</code> ครั้งที่สาม</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>เจอตอนไหน</th><th>อาการ</th><th>สาเหตุเดียวกัน</th></tr></thead>
+    <tbody>
+      <tr><td>วันแรก · <code>pip</code></td><td>package ไปลงผิดที่</td><td>conda มาก่อนใน PATH</td></tr>
+      <tr><td>Day 4 เช้า · <code>from topo import topo</code></td><td><code>ModuleNotFoundError</code></td><td>บน path มี repo root ไม่ใช่ <code>micrograd/</code></td></tr>
+      <tr><td>Day 4 บ่าย · notebook</td><td><code>No module named 'micrograd'</code></td><td>kernel ยืนอยู่ที่ <code>notebooks/</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note good">
+    <span class="note-label">คำถามเดียวที่ตอบทั้งสามครั้ง</span>
+    <p style="margin-bottom:0">
+      <strong>“ตอนนี้ Python ยืนอยู่ตรงไหน”</strong> — <code>os.getcwd()</code> ·
+      <span class="g" data-t="syspath"><code>sys.path[0]</code></span> ·
+      <code>sys.executable</code><br>
+      แก้ได้ด้วย <code>"jupyter.notebookFileRoot": "${workspaceFolder}"</code>
+      ทำให้ notebook ยืนที่เดียวกับ pytest
+    </p>
+  </div>
+
+  <p>
+    และ <code>import</code> ไม่รับ path ของไฟล์ — <code>from ../micrograd.engine import Value</code>
+    เป็น SyntaxError เสมอ มันรับ <strong>ชื่อโมดูล</strong> ส่วนการแปลงชื่อ→ไฟล์เป็นงานของ <code>sys.path</code>
+    <strong>วิธีเดียวที่จะ “ย้อนขึ้นไป” คือแก้ <code>sys.path</code> ไม่ใช่แก้ข้อความใน <code>import</code></strong>
+  </p>
+
+  <h3>PATH ของ Windows — User กับ System</h3>
+
+<pre><code>PATH ที่ process ได้จริง  =  System PATH  +  ";"  +  User PATH
+                              ↑ มาก่อนเสมอ
+
+ไล่ซ้ายไปขวา ใช้ตัวแรกที่เจอ แล้วหยุด</code></pre>
+
+  <p>
+    <strong>process ที่เปิดอยู่แล้วถือสำเนา PATH ของตัวเองไว้</strong> — แก้ registry
+    มีผลกับ process ที่เกิดหลังจากนั้นเท่านั้น จึงต้องปิด VS Code ทุกหน้าต่างแล้วเปิดใหม่
+    ไม่ใช่แค่ Reload Window
+  </p>
+
+  <h2>วิธีแก้ที่กลายเป็นปัญหาเสียเอง</h2>
+
+  <p>
+    <code>topo.py</code> ต้องใช้ <code>if TYPE_CHECKING:</code> เพราะมี
+    <span class="g" data-t="circular">circular import</span> จริง —
+    แล้ว <code>viz.py</code> ก็ลอกรูปแบบนั้นมาทั้งที่ <code>engine.py</code> ไม่เคย import <code>viz</code> เลย
+  </p>
+
+<pre><code>TYPE_CHECKING at runtime is False        ← มันไม่เคยทำงานตอนรันจริง
+
+Edge = tuple[Value, Value]               ← assignment ธรรมดา รันจริง → NameError
+def trace(root: "Value")                 ← annotation ใส่ quote ไว้ → ไม่หาชื่อ</code></pre>
+
+  <div class="note bad">
+    <p style="margin-bottom:0">
+      <strong>เอาวิธีแก้ปัญหามาใช้ในที่ที่ไม่มีปัญหานั้น แล้ววิธีแก้กลายเป็นบั๊ก</strong> —
+      พอ <code>import</code> ตรงๆ ได้ quote ทุกตัวในไฟล์ก็หายไปเอง
+    </p>
+  </div>
+
+  <p>
+    กฎที่เหลือจากเรื่องนี้: <strong><code>import X</code> ≈ <code>X = &lt;ของนั้น&gt;</code></strong> —
+    เป็น statement ที่รันจริง ลำดับสำคัญเหมือน <code>x = 5</code> ทุกประการ
+    ส่วน annotation ใส่ quote ได้เพราะไม่มีใครหาชื่อในนั้นตอนรัน
+  </p>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <div id="quiz"></div>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    <a href="https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types">Python docs — numeric type emulation</a>
+    (ที่มาของ reflected operator)
+    · <a href="https://docs.pytest.org/en/stable/how-to/parametrize.html">pytest — parametrize</a>
+    · <a href="https://docs.python.org/3/reference/import.html">Python docs — the import system</a>
+  </div>
+
+  <div class="ask">
+    ประโยคเดียวที่ควรจำ: <strong>เวลาโค้ดทำสิ่งที่อธิบายไม่ได้ อย่าไล่อ่านในหัว —
+    พิมพ์ object นั้นออกมาถามว่ามันคืออะไรจริงๆ</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0007-out-of-the-notebook.html">← Lesson 07</a>
+      <a href="../reference/roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "เพิ่ม <code>__sub__</code> โดยเขียนเป็น <code>a + (-b)</code> — ทำไม gradient ถึงถูกโดยไม่ต้องเขียน <code>_backward</code> ใหม่?",
+    opts: [
+      "เพราะกราฟที่ได้ประกอบจาก node บวกกับคูณ ที่มี <code>_backward</code> ถูกอยู่แล้ว",
+      "เพราะ Python รู้ว่าการลบเป็นการดำเนินการผกผันของการบวก จึงกลับกฎให้เอง",
+      "เพราะ <code>__sub__</code> ไม่ได้สร้าง node ใหม่ในกราฟ จึงไม่ต้องมีกฎอนุพันธ์"
+    ],
+    a: 0,
+    why: "backward pass <b>ไม่รู้เลยว่ามี “การลบ” อยู่ในโลก</b> — มันเห็นแค่ node บวกกับ node คูณ แล้วเดินตามกฎเดิม · ผลที่สำคัญกว่าความสะดวก: กฎอนุพันธ์ทุกข้อที่เขียนเองคือโอกาสพลาดหนึ่งครั้ง ยิ่ง operation พื้นฐานน้อย ยิ่งมีที่ให้ผิดน้อย"
+  },
+  {
+    q: "<code>a * 2</code> ทำงานได้ แต่ <code>2 * a</code> โยน <code>TypeError</code> — เกิดอะไรขึ้น?",
+    opts: [
+      "Python ถามฝั่งซ้ายก่อนเสมอ · <code>int</code> ไม่รู้จัก <code>Value</code> จึงต้องมี <code>__rmul__</code> รับ",
+      "การคูณไม่สลับที่เมื่อฝั่งหนึ่งเป็น object ที่ผู้ใช้นิยามขึ้นมาเอง จึงต้องเรียงให้ถูก",
+      "<code>int</code> กับ <code>Value</code> คนละชนิดกัน ต้องแปลง <code>2</code> เป็น <code>Value</code> ก่อนทุกครั้ง"
+    ],
+    a: 0,
+    why: "Python ลอง <code>type(ซ้าย).__mul__</code> ก่อน ได้ <code>NotImplemented</code> จึงถอยไปลอง <code>type(ขวา).__rmul__</code> · กับดักคือมัน<b>เงียบจนกว่าจะเจอ</b> — เขียนทั้งโมเดลด้วย <code>a * 2</code> ได้สบาย แล้วพัง ณ บรรทัดที่พิมพ์ <code>2 * a</code> ครั้งแรก"
+  },
+  {
+    q: "<code>print(y._backward)</code> ได้ <code>Value.__init__.&lt;locals&gt;.&lt;lambda&gt;</code> — แปลว่าอะไร?",
+    opts: [
+      "closure ไม่เคยถูกผูกเข้ากับ node · <code>_backward</code> ยังเป็น <code>lambda: None</code> จาก <code>__init__</code>",
+      "closure ถูกผูกแล้วแต่ยังไม่เคยถูกเรียก จึงยังแสดงเป็นตัวเริ่มต้นที่ตั้งไว้",
+      "node ตัวนี้เป็น leaf จึงใช้ <code>_backward</code> ตัวเริ่มต้นซึ่งเป็นพฤติกรรมที่ถูกต้อง"
+    ],
+    a: 0,
+    why: "<code>__qualname__</code> บอกว่าฟังก์ชันเกิดที่ไหน — ถ้าผูกสำเร็จจะเห็น <code>Value.tanh.&lt;locals&gt;._backward</code> · นี่คือเหตุผลที่ <code>print</code> ข้างในไม่ออก: <b>มันถูกเรียกแล้ว แต่ไปโดนฟังก์ชันคนละตัว</b> ต่างจากการไม่ถูกเรียกเลย"
+  },
+  {
+    q: "เทสต์ <code>y = x.tanh(); y.backward(); assert x.grad == 1.0</code> ที่ <code>x = 0</code> ผ่าน แต่มองไม่เห็นบั๊กอะไร?",
+    opts: [
+      "การลืมคูณ gradient ที่ไหลมาจากข้างบน — เพราะ tanh อยู่นอกสุด ค่านั้นเป็น 1 พอดี",
+      "การคำนวณ <code>tanh</code> ผิดสูตร เพราะที่ <code>x = 0</code> ทุกสูตรให้ผลลัพธ์เป็นศูนย์",
+      "การลืมสะสม gradient ด้วย <code>+=</code> เพราะ node นี้มีพ่อแม่เพียงตัวเดียวเท่านั้น"
+    ],
+    a: 0,
+    why: "operation ที่อยู่นอกสุดคือ root ซึ่ง <code>backward()</code> ตั้ง grad ให้เป็น <code>1.0</code> — คูณด้วย 1 ก็เหมือนไม่ได้คูณ · <b>ทุกครั้งที่เพิ่ม operation ใหม่ ต้องมีอย่างน้อยหนึ่งเทสต์ที่มันถูกครอบอยู่</b> กับดักเดียวกับ <code>q = z*z</code> ในวันที่สอง"
+  },
+  {
+    q: "<code>tanh</code> ตัวเดียวจบ ได้ <code>0.46211715726000974</code> ส่วนที่ประกอบจาก <code>exp</code> ได้ <code>0.4621171572600097</code> — อันไหนผิด?",
+    opts: [
+      "ไม่มีอันไหนผิด — ลำดับการคำนวณต่างกัน ทศนิยมก็ปัดคนละแบบ",
+      "อันที่ประกอบจาก exp ผิด เพราะสะสมความคลาดเคลื่อนจากหลายขั้นตอนมากกว่า",
+      "อันที่เป็น tanh ตัวเดียวผิด เพราะ <code>math.tanh</code> ใช้การประมาณค่าภายใน"
+    ],
+    a: 0,
+    why: "ทั้งคู่ถูกต้องทางคณิตศาสตร์เท่ากัน แต่ลำดับการปัดเศษต่างกัน · นี่คือเหตุผลที่เทสต์ทั้งไฟล์ใช้ <code>pytest.approx</code> ไม่ใช่ <code>==</code> — และเป็นเรื่องที่จะเจอตลอดไปใน ML ที่ตัวเลขผ่านการคำนวณหลายพันขั้น"
+  },
+  {
+    q: "<code>@pytest.mark.parametrize(\"a, b\", CASES)</code> — string ของชื่อ กลายเป็น argument ของฟังก์ชันได้ยังไง?",
+    opts: [
+      "แยก string เป็นรายชื่อ แล้ว <code>dict(zip(names, row))</code> จับคู่ตามตำแหน่ง ส่งเข้าเป็น keyword",
+      "pytest อ่าน signature ของฟังก์ชันด้วย <code>inspect</code> แล้วเดาว่าตัวไหนตรงกับค่าไหน",
+      "decorator เขียนทับตัวฟังก์ชันเป็นตัวใหม่ที่รับ argument ตามชื่อใน string นั้น"
+    ],
+    a: 0,
+    why: "<code>parametrize</code> เป็น decorator ชนิด<b>แปะป้าย</b> ไม่ใช่ชนิดห่อ — มันคืนฟังก์ชันตัวเดิม แค่ติด <code>pytestmark</code> ไว้ · ตอน collect pytest อ่านป้ายนั้นแล้ว <code>zip</code> ชื่อกับค่าตามตำแหน่ง · เหตุผลที่ต้องบอกชื่อเป็น string คือต้องแยกให้ออกว่า argument ตัวไหนมาจาก parametrize ตัวไหนมาจาก fixture"
+  },
+  {
+    q: "<code>from ../micrograd.engine import Value</code> เป็น SyntaxError เพราะอะไร?",
+    opts: [
+      "<code>import</code> รับชื่อโมดูล ไม่ใช่ path ของไฟล์ — การหาไฟล์เป็นงานของ <code>sys.path</code>",
+      "ต้องเขียนเป็น <code>from ..micrograd.engine import Value</code> โดยใช้จุดสองจุดแทน",
+      "notebook ไม่รองรับ relative import ต้องใช้ absolute path เต็มของไฟล์แทนเสมอ"
+    ],
+    a: 0,
+    why: "<code>micrograd.engine</code> เป็น<i>ชื่อ</i> ส่วน <code>micrograd/engine.py</code> เป็น<i>path</i> — คนละโลกกัน Python แปลชื่อเป็นไฟล์โดยไล่หาใน <code>sys.path</code> · จุดนำหน้า (<code>from .topo import</code>) มีจริงแต่หมายถึงระดับ package ใช้ได้เฉพาะในไฟล์ที่อยู่ในแพ็กเกจ ไม่ใช่ใน notebook"
+  },
+  {
+    q: "<code>Edge = tuple[Value, Value]</code> พังด้วย NameError ทั้งที่ <code>def trace(root: \"Value\")</code> บรรทัดถัดมาไม่พัง — ต่างกันตรงไหน?",
+    opts: [
+      "บรรทัดแรกเป็น assignment ที่รันจริง · บรรทัดหลังเป็น annotation ที่ใส่ quote ไว้จึงไม่ถูกหาชื่อ",
+      "บรรทัดแรกอยู่นอกฟังก์ชัน จึงรันตอน import ส่วนบรรทัดหลังรันตอนเรียกฟังก์ชันเท่านั้น",
+      "<code>tuple[...]</code> ต้องการชนิดจริง ส่วน parameter annotation รับ string ได้เสมอ"
+    ],
+    a: 0,
+    why: "<code>if TYPE_CHECKING:</code> เป็น <code>False</code> ตอนรันจริง <code>Value</code> จึงไม่มีตัวตนในไฟล์นั้นเลย · ชื่อในเครื่องหมายคำพูด<b>เป็นแค่ข้อความ</b> ไม่มีใครไปหา ส่วน assignment รันจริงเสมอ · รากของปัญหาคือเอา <code>TYPE_CHECKING</code> ไปใช้ในไฟล์ที่ไม่มี circular import ตั้งแต่แรก"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
