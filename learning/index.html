@@ -166,6 +166,15 @@
       </p>
     </a>
 
+    <a class="card" href="lessons/0007-out-of-the-notebook.html">
+      <div class="c-num">Lesson 07 · 2026-08-10 · 8 ข้อ</div>
+      <div class="c-title">ออกจาก notebook — เทสต์ที่เป็นโจทย์ ไม่ใช่การตรวจ</div>
+      <p class="c-desc">
+        <code>zero_grad</code> ที่เจอจากการทดลอง · mutation testing ที่พิสูจน์ว่าเทสต์มีเขี้ยว ·
+        <code>pytest -x</code> แทนเซลล์ · <code>sys.path</code> · circular import · ผลของ rebuild
+      </p>
+    </a>
+
   </div>
 
   <!-- ============ REFERENCE ============ -->
@@ -187,7 +196,7 @@
     </a>
 
     <a class="card" href="reference/glossary.html">
-      <div class="c-num">Reference · 43 คำ</div>
+      <div class="c-num">Reference · 47 คำ</div>
       <div class="c-title">Glossary</div>
       <p class="c-desc">
         คำศัพท์ทุกคำที่ใช้ในบทเรียน นิยามเดียว ที่เดียว —
@@ -274,7 +283,7 @@
 
   <div class="sec" id="status">
     <h2>อยู่ตรงไหนแล้ว</h2>
-    <span class="sec-note">Day 4 · 2026-08-10 · อยู่เฟส 2 (rebuild)</span>
+    <span class="sec-note">Day 4 · 2026-08-10 · rebuild ผ่านแล้ว</span>
   </div>
 
   <div class="tw">
@@ -291,7 +300,8 @@
       <tr><td><code>topo()</code> — post-order + <code>reversed()</code></td><td>✅ ผ่าน property assert</td></tr>
       <tr><td><code>backward()</code> เต็มรูป</td><td>✅ <strong>เฟส 1 ปิด</strong> — assert ผ่านครบ 8 ตัว</td></tr>
       <tr><td><code>tests/</code> — 29 ข้อ ผ่าน mutation check แล้ว</td><td>✅ เขียนไว้รอแล้ว</td></tr>
-      <tr><td><code>micrograd/engine.py</code> — พิมพ์ใหม่จากความจำ</td><td>🔵 <strong>ทำอยู่</strong> — เทสต์ข้อ rebuild</td></tr>
+      <tr><td><code>micrograd/engine.py</code> — พิมพ์ใหม่จากความจำ</td><td>✅ <strong>29/29 เขียว</strong> — ผิดแค่ <code>reverse</code></td></tr>
+      <tr><td><code>micrograd/viz.py</code> · เขียนเทสต์เพิ่มเอง</td><td>🔵 ต่อไป — ปิดเฟส 2</td></tr>
       <tr><td><code>tanh</code> · reflected operators · <code>__pow__</code></td><td>⬜ เฟส 3</td></tr>
       <tr><td>Neuron → Layer → MLP → training loop</td><td>⬜ D6–D7</td></tr>
     </tbody>

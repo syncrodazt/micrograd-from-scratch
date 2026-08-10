@@ -226,6 +226,26 @@ window.GLOSSARY = {
     en: "gather",
     def: "<code>C[X]</code> — ไล่หยิบแถวตาม index ไปวางในบล็อกใหม่ ไม่ใช่การคูณเมทริกซ์ · backward ของมันคือ <strong>scatter-add</strong> ซึ่งต้อง<em>บวก</em>เพราะแถวเดียวอาจถูกหยิบหลายครั้งใน batch เดียว — เหตุผลเดียวกับที่ <code>_backward</code> ใช้ <code>+=</code>"
   },
+  "zerograd": {
+    term: "zero_grad",
+    en: "zeroing the gradients",
+    def: "การล้าง <code>grad</code> ของทุก node ให้เป็นศูนย์ก่อนเริ่ม backward รอบใหม่ จำเป็นเพราะ <code>backward()</code> รีเซ็ตให้แค่ root ส่วนที่เหลือใช้ <code>+=</code> จึงสะสมข้ามรอบ — เอนจินจงใจไม่ล้างให้เอง เพราะบางครั้งการสะสมข้ามหลาย backward คือสิ่งที่ต้องการ (batch ใหญ่เกินหน่วยความจำ) PyTorch เลือกแบบเดียวกัน จึงมี <code>optimizer.zero_grad()</code> เป็นคำสั่งแยก"
+  },
+  "mutation": {
+    term: "Mutation testing",
+    en: "mutation testing",
+    def: "จงใจใส่บั๊กเข้าไปในโค้ดทีละตัว แล้วนับว่าเทสต์พังกี่ข้อ — ถ้าไม่พังเลยแปลว่าเทสต์ชุดนั้นมองไม่เห็นบั๊กประเภทนั้น <strong>เทสต์ที่เขียวเสมอไม่ว่าโค้ดจะเป็นยังไง ก็ไม่ต่างจากไม่มีเทสต์</strong>"
+  },
+  "syspath": {
+    term: "sys.path",
+    en: "sys.path",
+    def: "รายการโฟลเดอร์ที่ Python ไล่หาโมดูลตามลำดับตอน <code>import</code> — <code>python -m</code> ใส่ <em>โฟลเดอร์ปัจจุบัน</em> ไว้ต้นรายการ ส่วนการรันไฟล์ตรงๆ ใส่ <em>โฟลเดอร์ของไฟล์นั้น</em> ความต่างนี้คือเหตุผลที่ <code>from topo import topo</code> ไม่ผ่านแต่ <code>from micrograd.topo import topo</code> ผ่าน"
+  },
+  "circular": {
+    term: "Circular import",
+    en: "circular import",
+    def: "A import B ระหว่างที่ B ก็กำลัง import A — โมดูลแรกยังรันไม่จบ ชื่อที่อยู่ใต้บรรทัดปัจจุบันจึงยังไม่มีตัวตน ได้ <code>partially initialized module</code> ทางออกคือทำให้ไม่ต้อง import จริงตอนรัน: ใส่ annotation เป็น string หรือ <code>if TYPE_CHECKING:</code>"
+  },
   "origin": {
     term: "origin / origin/main",
     en: "remote and remote-tracking branch",

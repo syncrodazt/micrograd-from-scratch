@@ -1,0 +1,394 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 07 — ออกจาก notebook: เทสต์ที่เป็นโจทย์ ไม่ใช่การตรวจ</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a> &nbsp;·&nbsp;
+    <a href="../reference/roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 07 · rebuild</div>
+    <h1>ออกจาก notebook<br>เทสต์ที่เป็นโจทย์ ไม่ใช่การตรวจ</h1>
+    <p class="standfirst">
+      วันที่เอนจินเสร็จ แล้วถูกลบทิ้งแล้วเขียนใหม่จากหน้าเปล่าทันที —
+      กับเหตุผลว่าทำไมนั่นถึงเป็นการใช้เวลาที่คุ้มที่สุดของทั้งสัปดาห์
+    </p>
+    <div class="meta">2026-08-10 · Day 4 · ปิดเฟส 1 · ผ่านเฟส 2 ขั้น 1–2</div>
+  </header>
+
+  <h2>สามบรรทัดที่ปิดเฟส 1</h2>
+
+  <p>
+    หลังจากมี <code>_backward</code> ครบและมี <span class="g" data-t="toposort">topological order</span> แล้ว
+    <code>backward()</code> เหลืองานแค่สามอย่าง: <strong>ประกาศปลายทาง → หาลำดับ → ไล่เรียก</strong>
+    ไม่มีคณิตศาสตร์ใหม่เลยแม้แต่บรรทัดเดียว
+  </p>
+
+  <div class="note good">
+    <span class="note-label">จุดที่ต้องสังเกต</span>
+    <p style="margin-bottom:0">
+      บรรทัดที่ตั้ง <code>grad</code> ของ root ใช้ <code>=</code> <strong>ไม่ใช่ <code>+=</code></strong> —
+      ต่างจากทุกที่ในเอนจิน เพราะมันคือ<em>เมล็ดเริ่มต้น</em> ไม่ใช่การรับค่าจากใคร
+      (<code>∂root/∂root = 1</code> เสมอ)
+    </p>
+  </div>
+
+  <h2>เรียก <code>backward()</code> สองรอบ แล้วเจอบั๊กที่ยังไม่ได้เขียน</h2>
+
+  <p>ผลการทดลอง: gradient <strong>เบิ้ล</strong></p>
+
+  <p>
+    เหตุผลอยู่ในโครงสร้างพอดี — <code>backward()</code> รีเซ็ตให้<strong>แค่ root ตัวเดียว</strong>
+    ส่วน node ที่เหลือทั้งกราฟใช้ <code>+=</code> เรียกซ้ำเมื่อไหร่ก็ทับสะสมของเก่าหมด
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ทุก training step ต้องเป็น</th></tr></thead>
+    <tbody>
+      <tr><td><span class="g" data-t="zerograd">zero grad ทุกตัว</span> → forward → backward → update weight</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>คำถามที่น่าสนใจกว่า: ทำไม <code>backward()</code> ไม่ล้างให้เองเลย</h3>
+
+  <p>
+    ดูเหมือนจะสะดวกกว่า แต่<strong>เขาจงใจไม่ทำ</strong> —
+    เพราะบางครั้งการสะสมข้าม backward หลายรอบคือสิ่งที่ต้องการจริงๆ
+    เช่นตอน batch ใหญ่เกินหน่วยความจำ ก็ซอยเป็นก้อนเล็กแล้วปล่อยให้ gradient บวกสะสม
+    ก่อนค่อย update ทีเดียว
+  </p>
+
+  <p>
+    <strong>PyTorch เลือกแบบเดียวกันเป๊ะ</strong> — นั่นคือเหตุผลที่ <code>optimizer.zero_grad()</code>
+    เป็นคำสั่งแยกที่ต้องเรียกเอง และเป็นเหตุผลที่การลืมมันคือบั๊กที่คนเจอกันทุกคน
+    <br>สิ่งที่เจอในเอนจินหน้าเดียวนี้ ไม่ใช่ของเล่น มันคือข้อตกลงเดียวกับของจริง
+  </p>
+
+  <h2>ทำไมต้อง rebuild ตอนนี้ ไม่รอตามแผนเดิม</h2>
+
+  <p>
+    แผนเดิมวาง “พิมพ์ <code>engine.py</code> ใหม่จากความจำ” ไว้เฟส 3 — หลังจากใส่
+    <code>tanh</code>, <code>exp</code>, <code>__pow__</code>, reflected operator เข้าไปหมดแล้ว
+    <strong>เลื่อนขึ้นมาทำก่อน</strong> ด้วยเหตุผลข้อเดียว:
+  </p>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      ตอนนี้เอนจิน<strong>เล็กที่สุดเท่าที่มันจะเคยเป็น</strong> —
+      <code>Value</code> · <code>__add__</code> · <code>__mul__</code> · <code>topo</code> · <code>backward</code><br>
+      เดือนหน้ามันจะใหญ่ขึ้นสามเท่า และการ rebuild ของที่ใหญ่กว่า
+      <em>ไม่ได้สอนอะไรเพิ่มเลย</em> — มันแค่ใช้เวลานานขึ้น
+    </p>
+  </div>
+
+  <p>
+    ที่สำคัญกว่า: <strong>rebuild เป็นเทสต์ข้อเดียวในสามข้อที่ยังไม่เคยลอง</strong>
+    explain ผ่านไปแล้วตอนเดินเมื่อเช้า debug ผ่านไปแล้วจาก 6 คำถาม
+    การเลื่อนเทสต์ที่ยังไม่เคยสอบออกไปเรื่อยๆ คือการเดาว่าตัวเองผ่าน
+  </p>
+
+  <h2>เทสต์คือโจทย์ ไม่ใช่การตรวจการบ้าน</h2>
+
+  <p>
+    ความเข้าใจปกติคือ “เขียนโค้ดเสร็จแล้วค่อยเขียนเทสต์มาตรวจ”
+    แต่รอบนี้ทำกลับกัน — <strong>เทสต์มาก่อน แล้วโค้ดตามมาทีหลัง</strong>
+    ซึ่งเปลี่ยนบทบาทของมันไปเลย:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>เทสต์เขียนทีหลัง</th><th>เทสต์เขียนก่อน</th></tr></thead>
+    <tbody>
+      <tr><td>ยืนยันสิ่งที่เขียนไปแล้ว</td><td><strong>นิยามว่าต้องทำอะไรได้</strong></td></tr>
+      <tr><td>มักเผลอเทสต์ตามที่โค้ดทำ</td><td>ไม่รู้จักโค้ดเลย จึงไม่เผลอตามกัน</td></tr>
+      <tr><td>ตอบว่า “พังไหม”</td><td>ตอบว่า <strong>“ต่อไปทำอะไร”</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ไฟล์ <code>tests/test_engine.py</code> จึงเขียนแบบ<strong>สเปก</strong> —
+    บอกว่าต้องทำอะไรได้ ไม่มีคำใบ้ว่าทำยังไงสักที่ ชื่อเทสต์เป็นประโยคเต็ม
+    เพื่อให้ตอนพังมันอ่านเหมือน<em>คำบอกว่าอะไรเสีย</em> ไม่ใช่ป้ายชื่อ
+  </p>
+
+  <h3>เทสต์ที่จับบั๊กไม่ได้ ก็ไม่ต่างจากไม่มีเทสต์</h3>
+
+  <p>
+    ก่อนใช้จริง ต้องพิสูจน์ก่อนว่ามันมีเขี้ยว วิธีคือ <span class="g" data-t="mutation">mutation testing</span> —
+    <strong>จงใจใส่บั๊กเข้าไปทีละตัว แล้วดูว่าเทสต์จับได้ไหม</strong>
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>บั๊กที่ใส่เข้าไป</th><th>เทสต์ที่พัง</th></tr></thead>
+    <tbody>
+      <tr><td><code>=</code> แทน <code>+=</code></td><td>10</td></tr>
+      <tr><td><code>*</code> ลืมคูณ gradient ที่ไหลมา</td><td>4</td></tr>
+      <tr><td><code>topo</code> ไม่ <code>reverse</code></td><td>12</td></tr>
+      <tr><td><code>topo</code> append ก่อนลูป</td><td>12</td></tr>
+      <tr><td><code>topo</code> ไม่มี visited guard</td><td>7</td></tr>
+      <tr><td><code>backward</code> ลืมตั้ง root</td><td>14</td></tr>
+      <tr class="row-key"><td><code>_prev</code> ยุบตัวซ้ำ (เป็น set)</td><td><strong>1</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    แถวสุดท้ายน่าสนใจที่สุด — <strong>พังแค่ข้อเดียว</strong> เพราะ <code>_backward</code>
+    เป็น <span class="g" data-t="closure">closure</span> ที่จับ <code>self</code> กับ <code>other</code> ไว้เอง
+    ไม่เคยอ่าน <code>_prev</code> เลย gradient จึงยังถูก มีแต่<em>รูปกราฟ</em>ที่โกหก
+  </p>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      ถ้าออกแบบอีกแบบ (เก็บ <code>_op</code> ไว้แล้ว <code>if/elif</code> ตอน backward)
+      บั๊กเดียวกันนี้จะทำให้ <strong>gradient ผิดจริง และเงียบ</strong><br>
+      <strong>บั๊กตัวเดียวกัน ร้ายแรงไม่เท่ากัน ขึ้นกับว่าออกแบบไว้ยังไง</strong> —
+      closure ทำให้บั๊กนี้กลายเป็น error ที่มองเห็น แทนที่จะเป็นตัวเลขผิดเงียบๆ
+      นั่นคือคุณสมบัติของการออกแบบที่ดี ไม่ใช่เรื่องบังเอิญ
+    </p>
+  </div>
+
+  <h2>รอบการทำงานใหม่ — <code>pytest -x</code> คือเซลล์ใน notebook</h2>
+
+  <p>
+    ความกังวลตอนย้ายออกจาก notebook: “เขียนเซลล์หนึ่ง รันหนึ่ง เห็นค่าเลย จะหายไป”
+    ปรากฏว่าไม่หาย และเร็วกว่าเดิม — 29 เทสต์รันจบใน <strong>0.02 วินาที</strong>
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>flag</th><th>ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>-x</code></td><td>หยุดข้อแรกที่พัง = <strong>“เซลล์ถัดไปที่ต้องทำ”</strong></td></tr>
+      <tr><td><code>-q</code></td><td>ย่อ output</td></tr>
+      <tr><td><code>--ff</code></td><td>รันข้อที่พังรอบที่แล้วก่อน</td></tr>
+      <tr><td><code>-k ชื่อ</code></td><td>รันเฉพาะข้อที่ชื่อตรง</td></tr>
+      <tr><td><code>--pdb</code></td><td><strong>หยุดตรงจุดที่พังแล้วให้พิมพ์ดูค่าได้</strong> — อันนี้แหละคือ notebook</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>และ pytest โชว์ค่าจริงให้ดูอยู่แล้ว:</p>
+
+<pre><code>&gt;       assert x.grad == 2.0
+E       assert 1.0 == 2.0
+E        +  where 1.0 = Value(data = 3.0).grad</code></pre>
+
+  <p>
+    สังเกตว่า <code>Value(data = 3.0)</code> มาจาก <code>__repr__</code> ที่เขียนไว้ตั้งแต่วันแรก —
+    <strong>งานวันนั้นมาจ่ายคืนตรงนี้</strong> และเป็นเหตุผลจริงๆ ที่ <code>__repr__</code> ต้องอ่านออก
+    ไม่ใช่แค่ “มีไว้ให้ครบ”
+  </p>
+
+  <h2>Package กับ import — เรื่องที่ notebook ซ่อนไว้ทั้งหมด</h2>
+
+  <p>
+    ใน notebook ทุกอย่างอยู่ใน namespace เดียว พอแยกเป็นไฟล์จริงถึงได้เจอว่า
+    Python หาโมดูลเจอได้ยังไง
+  </p>
+
+<pre><code>micrograd/
+    __init__.py     ← มีไฟล์นี้ โฟลเดอร์ถึงเป็น "package"
+    engine.py
+    topo.py
+tests/
+    test_engine.py</code></pre>
+
+  <div class="note bad">
+    <span class="note-label">ที่พังตอนแรก</span>
+    <p style="margin-bottom:0">
+      <code>from topo import topo</code> ไม่ผ่าน เพราะโฟลเดอร์ที่อยู่บน
+      <span class="g" data-t="syspath">sys.path</span> คือ <strong>repo root ไม่ใช่ <code>micrograd/</code></strong><br>
+      Python เห็น <code>micrograd</code> เป็น package แต่ไม่เห็น <code>topo</code> เป็นโมดูลระดับบนสุด
+    </p>
+  </div>
+
+<pre><code>from micrograd.topo import topo    # absolute — อ่านแล้วรู้ว่ามาจากไหน
+from .topo import topo             # relative — จุดเดียว = "โฟลเดอร์เดียวกับฉัน"</code></pre>
+
+  <h3>กับดักถัดไปห่างกันสองนาที: circular import</h3>
+
+  <p>
+    <code>topo.py</code> อยากใส่ type hint <code>root: Value</code> จึง import <code>Value</code> จาก
+    <code>engine.py</code> — แต่ <code>engine.py</code> ก็กำลัง import <code>topo</code> อยู่:
+  </p>
+
+<pre><code>ImportError: cannot import name 'Value' from partially initialized
+module 'micrograd.engine' (most likely due to a circular import)</code></pre>
+
+  <p>คำว่า <strong>partially initialized</strong> คือคำใบ้ทั้งหมด — โมดูลยังรันไม่จบ ชื่อจึงยังไม่ครบ</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ทางออก</th><th>ได้ / เสีย</th></tr></thead>
+    <tbody>
+      <tr><td>ตัด type hint ทิ้ง</td><td>ง่ายสุด · เสีย type hint</td></tr>
+      <tr><td>ใส่เป็น string <code>"Value"</code></td><td>ไม่ import จริงตอนรัน · ยังได้ hint</td></tr>
+      <tr><td><code>if TYPE_CHECKING:</code></td><td><strong>วิธีมาตรฐาน</strong> — import เฉพาะตอน type checker อ่าน</td></tr>
+      <tr><td>ยุบกลับเป็นไฟล์เดียว</td><td>ไม่มีปัญหานี้เลย · เทสต์แยกไม่ได้</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      เกร็ดที่ทำให้เทสต์ยังทำงาน: <strong>ชื่อที่ <code>import</code> เข้ามาในโมดูล
+      นับเป็น attribute ของโมดูลนั้นด้วย</strong> —
+      <code>engine.py</code> เขียน <code>from micrograd.topo import topo</code> แล้ว
+      <code>micrograd.engine.topo</code> ก็มีอยู่จริง เทสต์จึงหาเจอโดยไม่ต้องแก้อะไร
+    </p>
+  </div>
+
+  <h2>ผลของ rebuild</h2>
+
+  <p>
+    ผ่านครบ 29 ข้อ และ<strong>ผิดตรงจุดเดียวที่ควรผิด</strong> — ลืม <code>reverse</code>
+  </p>
+
+  <div class="note good">
+    <span class="note-label">ประโยคที่สำคัญที่สุดของทั้งวัน</span>
+    <p style="margin-bottom:0">
+      <em>“พอมันไม่ได้ plot graph ออกมา บางทีมันไม่เห็นภาพ
+      แต่พอย้อนคิดดูแล้ว เอ้ยมันต้อง reverse”</em><br><br>
+      นี่คือความต่างระหว่าง <strong>“จำได้”</strong> กับ <strong>“รู้”</strong> —
+      ไม่มีรูป ไม่มีโน้ต ก็ยังไล่กลับไปหา invariant แล้ว derive คำตอบออกมาใหม่ได้
+      ถ้าเป็นการท่องจำ พอไม่มีรูปก็จบ
+    </p>
+  </div>
+
+  <p>
+    และ <code>reverse</code> คือขั้นเดียวในเอนจินที่<strong>ไม่มีเหตุผลเชิงสัญชาตญาณรองรับ</strong> —
+    ทุกบรรทัดอื่น derive จากแคลคูลัสหรือจากกฎ “พ่อมาก่อนลูก” ได้ตรงๆ
+    ส่วน <code>reverse</code> เป็นผลข้างเคียงของการเลือกบันทึก node ที่ท้ายลูป
+    จึงเป็นจุดที่ความจำหลุดง่ายที่สุด — และเป็นจุดที่หลุดจริง
+  </p>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <div id="quiz"></div>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    <a href="https://docs.pytest.org/en/stable/how-to/assert.html">pytest — writing assertions</a>
+    · <a href="https://docs.python.org/3/reference/import.html">Python docs — the import system</a>
+    · <a href="https://docs.python.org/3/library/typing.html#typing.TYPE_CHECKING">Python docs — <code>TYPE_CHECKING</code></a>
+    · <a href="https://docs.pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html">PyTorch — <code>zero_grad</code></a>
+  </div>
+
+  <div class="ask">
+    ประโยคเดียวที่ควรจำ: <strong>เทสต์ที่เขียนก่อนโค้ด ตอบคำถามว่า “ต่อไปทำอะไร”
+    ไม่ใช่ “พังหรือยัง” — และเทสต์ที่ยังไม่เคยเห็นบั๊กจริง ยังไม่รู้ว่าตัวเองใช้ได้</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0006-topological-order.html">← Lesson 06</a>
+      <a href="../reference/roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "ใน <code>backward()</code> ทำไมบรรทัดที่ตั้ง grad ของ root ถึงใช้ <code>=</code> ทั้งที่ทั้งเอนจินใช้ <code>+=</code>?",
+    opts: [
+      "เพราะมันคือเมล็ดเริ่มต้น ไม่ได้รับค่าจากใคร — <code>∂root/∂root = 1</code> เสมอตามนิยาม",
+      "เพราะ root ไม่มีพ่อแม่ การใช้ <code>+=</code> จึงทำให้เกิด error ตอนรันทันที",
+      "เพราะถ้าใช้ <code>+=</code> ค่าจะกลายเป็น 2.0 ซึ่งทำให้ gradient ทั้งกราฟใหญ่เกินไป"
+    ],
+    a: 0,
+    why: "<code>+=</code> มีไว้รวมของที่ไหลมาจากหลายเส้นทาง แต่ root ไม่มีเส้นทางไหนไหลมาหาเลย มันคือจุดเริ่ม ไม่ใช่จุดรวม — และเพราะ <code>=</code> นี้เอง <code>backward()</code> จึงรีเซ็ตให้แค่ root ตัวเดียว ทำให้เรียกซ้ำแล้ว node อื่นสะสมทับ"
+  },
+  {
+    q: "เรียก <code>d.backward()</code> สองรอบติดกัน แล้ว gradient เบิ้ล — ควรแก้ยังไง?",
+    opts: [
+      "ไม่ต้องแก้ที่เอนจิน แต่ต้อง zero grad ทุกตัวก่อนทุก step ใน training loop",
+      "แก้ <code>backward()</code> ให้ล้าง grad ของทุก node ก่อนเริ่มเดินย้อนกลับเสมอ",
+      "แก้ <code>_backward</code> จาก <code>+=</code> เป็น <code>=</code> เพื่อไม่ให้สะสมข้ามรอบ"
+    ],
+    a: 0,
+    why: "การสะสมข้าม backward หลายรอบบางทีคือสิ่งที่ต้องการจริงๆ (batch ใหญ่เกินหน่วยความจำ ก็ซอยเป็นก้อนแล้วปล่อยให้บวกสะสมก่อน update ทีเดียว) <b>PyTorch เลือกแบบเดียวกัน</b> ซึ่งเป็นเหตุผลที่ <code>optimizer.zero_grad()</code> เป็นคำสั่งแยก · ส่วนตัวเลือกที่สามจะทำลาย accumulation ที่ต้องมีภายในรอบเดียวด้วย"
+  },
+  {
+    q: "ทำไมถึงเลื่อน “พิมพ์ <code>engine.py</code> ใหม่จากความจำ” ขึ้นมาทำก่อน <code>tanh</code>?",
+    opts: [
+      "เพราะเอนจินเล็กที่สุดตอนนี้ และ rebuild ของที่ใหญ่กว่าไม่ได้สอนอะไรเพิ่ม",
+      "เพราะ <code>tanh</code> ต้องมีไฟล์ <code>.py</code> จริงก่อน จะเขียนใน notebook ไม่ได้",
+      "เพราะเทสต์ที่เขียนไว้ครอบคลุมเฉพาะ <code>+</code> กับ <code>*</code> เท่านั้นในตอนนี้"
+    ],
+    a: 0,
+    why: "ต้นทุนของ rebuild โตตามขนาดของสิ่งที่ต้อง rebuild แต่<b>บทเรียนที่ได้ไม่โตตาม</b> — และ rebuild เป็นเทสต์ข้อเดียวในสามข้อที่ยังไม่เคยสอบ การเลื่อนออกไปเรื่อยๆ คือการเดาว่าตัวเองผ่าน"
+  },
+  {
+    q: "เทสต์ที่เขียน<b>ก่อน</b>โค้ด ต่างจากเทสต์ที่เขียนทีหลังตรงไหนที่สำคัญที่สุด?",
+    opts: [
+      "มันไม่รู้จักโค้ด จึงไม่เผลอเทสต์ตามสิ่งที่โค้ดบังเอิญทำ และตอบว่า “ต่อไปทำอะไร”",
+      "มันรันเร็วกว่า เพราะยังไม่มีโค้ดจริงให้ import เข้ามาตอนเริ่มเก็บรวบรวมเทสต์",
+      "มันครอบคลุมมากกว่าโดยอัตโนมัติ เพราะเขียนตอนที่ยังไม่รู้ว่าจะ implement ยังไง"
+    ],
+    a: 0,
+    why: "เทสต์ที่เขียนทีหลังมักกลายเป็นการบันทึกว่าโค้ดทำอะไร ไม่ใช่ว่าโค้ด<i>ควร</i>ทำอะไร — บั๊กที่อยู่ในหัวตอนเขียนโค้ด ก็จะอยู่ในหัวตอนเขียนเทสต์ด้วย · เขียนก่อนทำให้เทสต์กลายเป็นสเปก และ <code>-x</code> ทำให้มันเป็นรายการงานที่เรียงลำดับมาให้แล้ว"
+  },
+  {
+    q: "Mutation testing คืออะไร และทำไมต้องทำ?",
+    opts: [
+      "จงใจใส่บั๊กเข้าไปทีละตัวแล้วดูว่าเทสต์จับได้ไหม — เทสต์ที่ไม่เคยเห็นบั๊กยังพิสูจน์ตัวเองไม่ได้",
+      "รันเทสต์ชุดเดิมซ้ำหลายรอบด้วยค่าสุ่ม เพื่อดูว่าผลลัพธ์คงที่ทุกครั้งหรือเปล่า",
+      "เปลี่ยนชื่อฟังก์ชันกับตัวแปรทั้งหมด แล้วดูว่าเทสต์ยัง import และรันผ่านได้อยู่ไหม"
+    ],
+    a: 0,
+    why: "เทสต์ที่เขียวเสมอ ไม่ว่าโค้ดจะเป็นยังไง ก็ไม่ต่างจากไม่มีเทสต์ · การใส่บั๊กที่<i>รู้อยู่แล้วว่าเคยเจอจริง</i> แล้วนับว่าพังกี่ข้อ เป็นวิธีที่ถูกที่สุดในการรู้ว่าชุดเทสต์มีเขี้ยวจริงหรือแค่ดูดี"
+  },
+  {
+    q: "ทำ <code>_prev</code> ให้ยุบตัวซ้ำ (เป็น set) แล้วพังแค่ 1 เทสต์จาก 29 — เพราะอะไร?",
+    opts: [
+      "เพราะ <code>_backward</code> เป็น closure ที่จับตัวแปรไว้เอง ไม่เคยอ่าน <code>_prev</code> เลย",
+      "เพราะเทสต์ชุดนี้ยังครอบคลุมไม่พอ ต้องเพิ่มอีกหลายข้อถึงจะจับกรณีนี้ได้ครบ",
+      "เพราะ set ใน Python ยังคงลำดับที่ใส่ไว้อยู่ ผลลัพธ์จึงเหมือนเดิมเกือบทั้งหมด"
+    ],
+    a: 0,
+    why: "gradient ยังถูกทั้งหมด เพราะ closure จับ <code>self</code> กับ <code>other</code> ไว้ตั้งแต่ตอนสร้าง node · ที่พังคือ<i>ความซื่อสัตย์ของกราฟ</i> ซึ่งมีเทสต์คุมอยู่ข้อเดียว · <b>ถ้าออกแบบอีกแบบ (อ่าน <code>_op</code> แล้ว <code>if/elif</code>) บั๊กเดียวกันนี้จะทำให้ gradient ผิดจริงและเงียบ</b> — การออกแบบเปลี่ยนความร้ายแรงของบั๊กได้"
+  },
+  {
+    q: "<code>engine.py</code> เขียน <code>from micrograd.topo import topo</code> — แล้ว <code>micrograd.engine.topo</code> มีอยู่ไหม?",
+    opts: [
+      "มี — ชื่อที่ import เข้ามาในโมดูล นับเป็น attribute ของโมดูลนั้นด้วย",
+      "ไม่มี — ต้องเขียน <code>topo = topo</code> ซ้ำอีกครั้งถึงจะกลายเป็น attribute ของโมดูล",
+      "มี แต่เฉพาะตอนที่ใส่ชื่อไว้ใน <code>__all__</code> ของไฟล์ <code>micrograd/__init__.py</code>"
+    ],
+    a: 0,
+    why: "<code>import</code> คือการ<b>ผูกชื่อไว้ใน namespace ของโมดูลที่กำลังรัน</b> ไม่ต่างจากการกำหนดค่าตัวแปร — <code>engine.topo</code> จึงมีจริง และเป็นเหตุผลที่ <code>test_topo.py</code> ยังหาเจอหลังแยก <code>topo</code> ออกไปเป็นไฟล์ต่างหาก โดยไม่ต้องแก้เทสต์เลย · <code>__all__</code> มีผลกับ <code>from x import *</code> เท่านั้น"
+  },
+  {
+    q: "<code>ImportError: cannot import name 'Value' from <b>partially initialized</b> module</code> — คำว่า partially initialized บอกอะไร?",
+    opts: [
+      "โมดูลนั้นกำลังรันอยู่แต่ยังไม่จบ ชื่อที่อยู่หลังบรรทัดปัจจุบันจึงยังไม่มีตัวตน",
+      "โมดูลนั้นติดตั้งมาไม่ครบ ต้องลง dependency เพิ่มก่อนถึงจะ import ได้สมบูรณ์",
+      "โมดูลนั้นมีไฟล์ <code>__init__.py</code> ที่ว่างเปล่า จึงยังไม่ถูกนับว่าเป็น package"
+    ],
+    a: 0,
+    why: "<code>engine.py</code> รันมาถึงบรรทัด <code>from micrograd.topo import topo</code> แล้วกระโดดไปรัน <code>topo.py</code> ซึ่งย้อนกลับมาขอ <code>Value</code> — แต่ตอนนั้น <code>class Value</code> ยังอยู่<i>ข้างล่าง</i>บรรทัดที่กำลังรันอยู่ จึงยังไม่มีตัวตน · ทางออกทุกทางคือการทำให้ไม่ต้อง import จริงตอนรัน (string annotation หรือ <code>TYPE_CHECKING</code>)"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
