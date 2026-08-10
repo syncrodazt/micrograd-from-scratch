@@ -238,3 +238,25 @@ def test_tanh_gradient_where_tanh_is_inside():
 
     expected = numerical_gradient(lambda x: math.tanh(x) * math.tanh(x), xs, 0)
     assert x.grad == pytest.approx(expected, rel=1e-4, abs=1e-6)
+
+
+CASES = [
+    pytest.param(lambda a, b, c: a.tanh(), lambda a, b, c: math.tanh(a), id="tanh"),
+    pytest.param(
+        lambda a, b, c: a.tanh() * a.tanh(),
+        lambda a, b, c: math.tanh(a) * math.tanh(a),
+        id="tanh^2",
+    ),
+]
+
+
+@pytest.mark.parametrize("on_values, on_float", CASES)
+def test_backward_agrees_with_the_numerical_gradient_tanh(on_values, on_float):
+    xs = [2.0, -3.0, 4.0]
+    values = [Value(x) for x in xs]
+
+    on_values(*values).backward()
+
+    for i, v in enumerate(values):
+        expected = numerical_gradient(on_float, xs, i)
+        assert v.grad == pytest.approx(expected, rel=1e-4, abs=1e-6)
