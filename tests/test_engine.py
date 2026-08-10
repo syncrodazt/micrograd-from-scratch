@@ -13,10 +13,9 @@ Every test is named as a sentence so a failure reads like a statement of
 what broke, not like a label.
 """
 
-import pytest
+import pytest, math
 
 from micrograd.engine import Value
-
 
 # --------------------------------------------------------------- forward
 
@@ -218,3 +217,24 @@ def test_calling_backward_twice_accumulates_and_that_is_on_purpose():
 #     (a.backward() is legal and means "treat a as the final output")
 #   - the label survives being carried through an operation
 # ---------------------------------------------------------------------
+
+
+def test_tanh_gradient_at_zero():
+    xs = [0.0]
+    x = Value(xs[0])
+    y = x.tanh()
+    y.backward()
+
+    expected = numerical_gradient(math.tanh, xs, 0)
+    assert x.grad == pytest.approx(expected, rel=1e-4, abs=1e-6)
+
+
+def test_tanh_gradient_where_tanh_is_inside():
+    xs = [2.0]
+    x = Value(xs[0])
+    y = x.tanh()
+    z = y * y
+    z.backward()
+
+    expected = numerical_gradient(lambda x: math.tanh(x) * math.tanh(x), xs, 0)
+    assert x.grad == pytest.approx(expected, rel=1e-4, abs=1e-6)

@@ -1,4 +1,5 @@
 from micrograd.topo import topo
+import math
 
 
 class Value:
@@ -33,6 +34,16 @@ class Value:
             other.grad += t.grad * self.data
 
         t._backward = _backward
+        return t
+
+    def tanh(self):
+        t = Value(math.tanh(self.data), _op="tanh", _prev=[self])
+
+        def _backward():
+            self.grad += (1 - t.data**2) * t.grad
+
+        t._backward = _backward
+
         return t
 
     def backward(self) -> None:
