@@ -19,7 +19,7 @@
       แผนทั้งเดือนในหน้าเดียว ติ๊กได้ และจำสถานะไว้ในเบราว์เซอร์ —
       เปิดหน้านี้ตอนเริ่มทุกเซสชัน เพื่อไม่ต้องถามว่า “แล้วต่อไปทำอะไร”
     </p>
-    <div class="meta">อัปเดตล่าสุด 2026-08-10 · Day 4 · <strong>เฟส 1 ปิดแล้ว</strong></div>
+    <div class="meta">อัปเดตล่าสุด 2026-08-10 · Day 4 · เฟส 0–1 ปิดแล้ว · เทสต์ 29 ข้อรออยู่</div>
   </header>
 
   <div class="track" data-track="micrograd-m1">
@@ -155,18 +155,58 @@
     </span></label>
   </div>
 
-  <h2>เฟส 2 — operation ที่เหลือ <span class="pill now">อยู่ตรงนี้</span></h2>
+  <h2>เฟส 2 — rebuild test <span class="pill now">อยู่ตรงนี้</span></h2>
+
+  <div class="phase now">
+    <div class="phase-head">
+      <h3>ออกจาก notebook แล้วพิสูจน์ว่าจำได้จริง</h3>
+      <span class="pill now">กำลังทำ</span>
+      <span class="phase-count" data-phase-count></span>
+    </div>
+    <p class="phase-note">
+      <strong>เดิมอยู่เฟส 3 — ย้ายขึ้นมาตั้งใจ</strong> เพราะตอนนี้ engine เล็กที่สุดเท่าที่มันจะเคยเป็น
+      (<code>Value</code> · <code>__add__</code> · <code>__mul__</code> · <code>topo</code> · <code>backward</code>)
+      พอใส่ <code>tanh</code>, <code>exp</code>, <code>__pow__</code> และ reflected operator เข้าไป
+      มันจะใหญ่ขึ้นสามเท่า แล้วการ rebuild จะยากขึ้นโดยไม่ได้เรียนรู้อะไรเพิ่ม<br>
+      Explain ผ่านแล้ว · Debug ผ่านแล้ว · <strong>เฟสนี้คือเทสต์ข้อ 1 ที่ยังไม่เคยลอง</strong>
+    </p>
+
+    <label class="task crit" data-id="p3-1"><input type="checkbox"><span class="t-body">
+      <span class="t-title">พิมพ์ <code>micrograd/engine.py</code> ใหม่ <strong>จากความจำ</strong></span>
+      <span class="t-why">ปิด notebook ปิด <code>learning/</code> ปิดทุกอย่าง เปิดได้แค่ <code>tests/</code> — นั่นคือโจทย์ ไม่ใช่เฉลย · ก๊อปวางเมื่อไหร่ ก็ยังไม่รู้ว่าผ่านหรือเปล่า</span>
+    </span></label>
+
+    <label class="task crit" data-id="p3-4"><input type="checkbox"><span class="t-body">
+      <span class="t-title">ทำให้ <code>python -m pytest</code> เขียวครบ 29 ข้อ</span>
+      <span class="t-why">เทสต์เขียนไว้ให้แล้วใน <code>tests/</code> · ผ่าน mutation check แล้วว่าจับบั๊กได้ทุกตัวที่เจอมาสามวัน · <code>-x</code> หยุดที่ข้อแรกที่พัง</span>
+    </span></label>
+
+    <label class="task" data-id="rb-1"><input type="checkbox"><span class="t-body">
+      <span class="t-title">เขียนเทสต์เพิ่มเอง ท้าย <code>tests/test_engine.py</code></span>
+      <span class="t-why">มีหัวข้อให้ 4 อันในคอมเมนต์ท้ายไฟล์ · การออกแบบเทสต์ที่กระทบจุดที่ต้องการจริงๆ เป็นทักษะแยกจากการเขียนโค้ด</span>
+    </span></label>
+
+    <label class="task" data-id="p3-5"><input type="checkbox"><span class="t-body">
+      <span class="t-title"><code>micrograd/viz.py</code> — ย้าย <code>trace</code> กับ <code>plot_graph</code> ออกจาก notebook</span>
+      <span class="t-why">เขียนเองไปแล้ว ย้ายอย่างเดียว · ต้องตัดสินใจว่า <code>trace</code> ควรอยู่ <code>engine</code> หรือ <code>viz</code></span>
+    </span></label>
+  </div>
+
+  <h2>เฟส 3 — operation ที่เหลือ</h2>
 
   <div class="phase">
     <div class="phase-head">
       <h3>ทำให้ engine ใช้งานได้จริง</h3>
-      <span class="pill now">กำลังทำ</span>
+      <span class="pill todo">รอ</span>
       <span class="phase-count" data-phase-count></span>
     </div>
+    <p class="phase-note">
+      ทุกตัวที่เพิ่มตรงนี้ ให้เพิ่มเทสต์ใน <code>tests/</code> ไปด้วย — เทสต์ 29 ข้อเดิมต้องยังเขียวตลอด
+    </p>
 
     <label class="task" data-id="p2-1"><input type="checkbox"><span class="t-body">
       <span class="t-title"><code>tanh</code> — activation ตัวแรก</span>
-      <span class="t-why">อนุพันธ์คือ <code>1 - tanh²(x)</code> — derive เองก่อน</span>
+      <span class="t-why">อนุพันธ์คือ <code>1 - tanh²(x)</code> — derive เองก่อน · operation แรกที่มี <code>_prev</code> ตัวเดียว และไม่ใช่ operator</span>
     </span></label>
 
     <label class="task" data-id="p2-2"><input type="checkbox"><span class="t-body">
@@ -185,42 +225,27 @@
     </span></label>
   </div>
 
-  <h2>เฟส 3 — ออกจาก notebook</h2>
+  <h2>เฟส 4 — เครือข่ายและการเทรน</h2>
 
   <div class="phase">
     <div class="phase-head">
-      <h3>เป็นโค้ดจริง</h3>
+      <h3>จาก engine เป็นโมเดล</h3>
       <span class="pill todo">รอ</span>
       <span class="phase-count" data-phase-count></span>
     </div>
-
-    <label class="task crit" data-id="p3-1"><input type="checkbox"><span class="t-body">
-      <span class="t-title">พิมพ์ <code>micrograd/engine.py</code> ใหม่ <strong>จากความจำ</strong></span>
-      <span class="t-why">จุดวัดผลจริงจุดแรก — ก๊อปวางเมื่อไหร่ ก็ยังไม่รู้ว่าผ่าน test ข้อ 1 หรือเปล่า</span>
-    </span></label>
 
     <label class="task" data-id="p3-2"><input type="checkbox"><span class="t-body">
       <span class="t-title"><code>micrograd/nn.py</code> — <code>Neuron</code> → <code>Layer</code> → <code>MLP</code></span>
       <span class="t-why">แต่ละชั้นประกอบจากชั้นก่อนหน้า ไม่มีอะไรใหม่นอกจากการจัดระเบียบ</span>
     </span></label>
 
-    <label class="task" data-id="p3-3"><input type="checkbox"><span class="t-body">
+    <label class="task crit" data-id="p3-3"><input type="checkbox"><span class="t-body">
       <span class="t-title">Training loop — forward → loss → backward → update</span>
-      <span class="t-why">มีบั๊กคลาสสิกหนึ่งตัวรออยู่ตรงนี้ ปล่อยให้เจอเอง</span>
-    </span></label>
-
-    <label class="task" data-id="p3-4"><input type="checkbox"><span class="t-body">
-      <span class="t-title"><code>tests/</code> — pytest ที่ต้องทำให้ผ่าน</span>
-      <span class="t-why">ผมเขียนเทสต์ให้ · รันด้วย <code>python -m pytest</code> เสมอ</span>
-    </span></label>
-
-    <label class="task" data-id="p3-5"><input type="checkbox"><span class="t-body">
-      <span class="t-title"><code>micrograd/viz.py</code> — ย้าย <code>plot_graph</code> ออกจาก notebook</span>
-      <span class="t-why">ตอนนี้เขียนเองไปแล้ว ย้ายอย่างเดียว</span>
+      <span class="t-why">มีบั๊กคลาสสิกหนึ่งตัวรออยู่ตรงนี้ — <strong>และเจอตัวอย่างของมันไปแล้วตอนเรียก <code>backward()</code> สองรอบ</strong> ปล่อยให้เจอเองอีกที</span>
     </span></label>
   </div>
 
-  <h2>เฟส 4 — ส่งมอบ</h2>
+  <h2>เฟส 5 — ส่งมอบ</h2>
 
   <div class="phase">
     <div class="phase-head">
@@ -245,7 +270,7 @@
     </span></label>
   </div>
 
-  <h2>เฟส 5 — makemore <span style="font-weight:400;font-size:0.8em;color:var(--ink-faint)">สัปดาห์ 3–4</span></h2>
+  <h2>เฟส 6 — makemore <span style="font-weight:400;font-size:0.8em;color:var(--ink-faint)">สัปดาห์ 3–4</span></h2>
 
   <div class="phase">
     <div class="phase-head">

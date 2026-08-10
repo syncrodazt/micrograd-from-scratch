@@ -182,7 +182,7 @@
       <div class="c-title">Roadmap — อยู่ตรงไหนแล้ว</div>
       <p class="c-desc">
         แผนทั้งเดือนในหน้าเดียว 5 เฟส ติ๊กได้และจำสถานะให้ ·
-        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · <strong>เฟส 1 ปิดแล้ว</strong> · ตอนนี้อยู่เฟส 2 (operation ที่เหลือ)
+        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · เฟส 0–1 ปิดแล้ว · <strong>เฟส 2 คือ rebuild test</strong> ที่ย้ายขึ้นมาจากเฟส 3
       </p>
     </a>
 
@@ -274,7 +274,7 @@
 
   <div class="sec" id="status">
     <h2>อยู่ตรงไหนแล้ว</h2>
-    <span class="sec-note">Day 4 · 2026-08-10 · เฟส 1 ปิดแล้ว</span>
+    <span class="sec-note">Day 4 · 2026-08-10 · อยู่เฟส 2 (rebuild)</span>
   </div>
 
   <div class="tw">
@@ -290,7 +290,9 @@
       <tr><td>เรียก <code>_backward()</code> ด้วยมือ · พิสูจน์ว่าลำดับสำคัญ</td><td>✅ สลับลำดับแล้วได้ 0 เงียบๆ</td></tr>
       <tr><td><code>topo()</code> — post-order + <code>reversed()</code></td><td>✅ ผ่าน property assert</td></tr>
       <tr><td><code>backward()</code> เต็มรูป</td><td>✅ <strong>เฟส 1 ปิด</strong> — assert ผ่านครบ 8 ตัว</td></tr>
-      <tr><td><code>tanh</code> · reflected operators · <code>__pow__</code></td><td>🔵 ต่อไป — เฟส 2</td></tr>
+      <tr><td><code>tests/</code> — 29 ข้อ ผ่าน mutation check แล้ว</td><td>✅ เขียนไว้รอแล้ว</td></tr>
+      <tr><td><code>micrograd/engine.py</code> — พิมพ์ใหม่จากความจำ</td><td>🔵 <strong>ทำอยู่</strong> — เทสต์ข้อ rebuild</td></tr>
+      <tr><td><code>tanh</code> · reflected operators · <code>__pow__</code></td><td>⬜ เฟส 3</td></tr>
       <tr><td>Neuron → Layer → MLP → training loop</td><td>⬜ D6–D7</td></tr>
     </tbody>
   </table>
