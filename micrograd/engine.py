@@ -17,6 +17,7 @@ class Value:
         return f"Value(data = {self.data}, label = {self.label})"
 
     def __add__(self, other: "Value") -> "Value":
+        other = Value(other) if type(other) != Value else other
         t = Value(self.data + other.data, _op="+", _prev=[self, other])
 
         def _backward():
@@ -26,7 +27,11 @@ class Value:
         t._backward = _backward
         return t
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __mul__(self, other: "Value") -> "Value":
+        other = Value(other) if type(other) != Value else other
         t = Value(self.data * other.data, _op="*", _prev=[self, other])
 
         def _backward():
@@ -36,12 +41,51 @@ class Value:
         t._backward = _backward
         return t
 
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __neg__(self):
+        return self * -1
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __rsub__(self, other):
+        return -self.__sub__(other)
+
+    def __pow__(self, other):
+        assert isinstance(other, (int, float))
+        t = Value(math.pow(self.data, other), _op="^{other}", _prev=[self])
+
+        def _backward():
+            self.grad += t.grad * other * math.pow(self.data, other - 1)
+
+        t._backward = _backward
+        return t
+
+    def __truediv__(self, other):
+        other = Value(other) if type(other) != Value else other
+        return self * other**-1
+
+    def __rtruediv__(self, other):
+        return (self.__truediv__(other)) ** -1
+
     def tanh(self):
         t = Value(math.tanh(self.data), _op="tanh", _prev=[self])
 
         def _backward():
             self.grad += (1 - t.data**2) * t.grad
             # self.grad += 1 - t.data**2
+
+        t._backward = _backward
+
+        return t
+
+    def exp(self):
+        t = Value(math.exp(self.data), _op="exp", _prev=[self])
+
+        def _backward():
+            self.grad += t.grad * t.data
 
         t._backward = _backward
 

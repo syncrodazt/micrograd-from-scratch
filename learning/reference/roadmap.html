@@ -19,7 +19,7 @@
       แผนทั้งเดือนในหน้าเดียว ติ๊กได้ และจำสถานะไว้ในเบราว์เซอร์ —
       เปิดหน้านี้ตอนเริ่มทุกเซสชัน เพื่อไม่ต้องถามว่า “แล้วต่อไปทำอะไร”
     </p>
-    <div class="meta">อัปเดตล่าสุด 2026-08-10 · Day 4 · <strong>เฟส 2 ปิด · 31/31 เขียว</strong> · เริ่มเฟส 3 แล้ว</div>
+    <div class="meta">อัปเดตล่าสุด 2026-08-10 · Day 4 · <strong>เฟส 3 ปิด · 85/85 เขียว</strong> · engine ครบทุก operation</div>
   </header>
 
   <div class="track" data-track="micrograd-m1">
@@ -194,10 +194,10 @@
 
   <h2>เฟส 3 — operation ที่เหลือ</h2>
 
-  <div class="phase">
+  <div class="phase phase-done">
     <div class="phase-head">
       <h3>ทำให้ engine ใช้งานได้จริง</h3>
-      <span class="pill todo">รอ</span>
+      <span class="pill ok">เสร็จ</span>
       <span class="phase-count" data-phase-count></span>
     </div>
     <p class="phase-note">
@@ -209,28 +209,28 @@
       <span class="t-why">อนุพันธ์คือ <code>1 - tanh²(x)</code> — derive เองก่อน · operation แรกที่มี <code>_prev</code> ตัวเดียว และไม่ใช่ operator</span>
     </span></label>
 
-    <label class="task" data-id="p2-2"><input type="checkbox"><span class="t-body">
+    <label class="task" data-id="p2-2"><input type="checkbox" checked><span class="t-body">
       <span class="t-title"><code>__neg__</code> · <code>__sub__</code> · <code>__pow__</code> · <code>__truediv__</code> · <code>exp</code></span>
       <span class="t-why">หลายตัวเขียนในรูปของ <code>+</code> และ <code>*</code> ได้ ไม่ต้องเขียนใหม่หมด</span>
     </span></label>
 
-    <label class="task" data-id="p2-3"><input type="checkbox"><span class="t-body">
+    <label class="task" data-id="p2-3"><input type="checkbox" checked><span class="t-body">
       <span class="t-title"><span class="g" data-t="reflected">Reflected operator</span> — <code>__radd__</code>, <code>__rmul__</code></span>
       <span class="t-why">กับดัก “<code>2 * a</code> พังทั้งที่ <code>a * 2</code> ผ่าน” · และรองรับ <code>Value + 1</code></span>
     </span></label>
 
-    <label class="task" data-id="p2-4"><input type="checkbox"><span class="t-body">
+    <label class="task" data-id="p2-4"><input type="checkbox" checked><span class="t-body">
       <span class="t-title">แตก <code>tanh</code> ออกเป็น <code>exp</code> แล้วเทียบ gradient</span>
       <span class="t-why">พิสูจน์ว่า “หน่วยย่อยแค่ไหน” เป็นทางเลือกด้านวิศวกรรม ไม่ใช่กฎของคณิตศาสตร์</span>
     </span></label>
   </div>
 
-  <h2>เฟส 4 — เครือข่ายและการเทรน</h2>
+  <h2>เฟส 4 — เครือข่ายและการเทรน <span class="pill now">อยู่ตรงนี้</span></h2>
 
   <div class="phase">
     <div class="phase-head">
       <h3>จาก engine เป็นโมเดล</h3>
-      <span class="pill todo">รอ</span>
+      <span class="pill now">กำลังทำ</span>
       <span class="phase-count" data-phase-count></span>
     </div>
 
