@@ -1,0 +1,7 @@
+[tool.pytest.ini_options]
+# Tests import `micrograd` as a package, so the repo root has to be
+# importable. `python -m pytest` already puts the current directory on
+# sys.path; this line makes a bare `pytest` work too.
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra"
