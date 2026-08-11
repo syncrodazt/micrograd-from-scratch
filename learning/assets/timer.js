@@ -46,6 +46,19 @@
     return h + " ชม. " + m + " นาที";
   }
 
+  /* Accepts what a tired person actually types: 90, 90m, 1.5h, 1h30, 1:30.
+     Returns milliseconds, or null if it makes no sense. */
+  function parseDuration(text) {
+    var s = String(text == null ? "" : text).trim().toLowerCase().replace(/\s+/g, "");
+    if (!s) return null;
+    var m;
+    if ((m = s.match(/^(\d+):(\d{1,2})$/))) return (+m[1] * 60 + +m[2]) * 60000;
+    if ((m = s.match(/^(\d+(?:\.\d+)?)h(\d+)?m?$/)))
+      return (parseFloat(m[1]) * 60 + (m[2] ? +m[2] : 0)) * 60000;
+    if ((m = s.match(/^(\d+(?:\.\d+)?)m?$/))) return parseFloat(m[1]) * 60000;
+    return null;
+  }
+
   function boot() {
     var track = document.querySelector("[data-track]");
     if (!track) return;
@@ -119,6 +132,44 @@
       });
 
       line.appendChild(btn);
+
+      /* Forgetting to press play is the normal case, not the exception, so
+         entering the time afterwards has to be as easy as starting it. */
+      var edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "t-timer edit";
+      edit.textContent = "✎";
+      edit.title = "ใส่เวลาย้อนหลัง";
+      edit.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var r = rec(t.dataset.id);
+        var current = live(r);
+        var answer = window.prompt(
+          "ทำขั้นนี้ไปกี่นาที? \n\nพิมพ์ได้หลายแบบ: 90 · 90m · 1.5h · 1h30 · 1:30\nใส่ 0 เพื่อล้างเวลาของขั้นนี้",
+          current ? String(Math.round(current / 60000)) : ""
+        );
+        if (answer === null) return;
+        var ms = parseDuration(answer);
+        if (ms === null) {
+          window.alert("อ่านไม่ออก — ลองแบบนี้: 90 หรือ 1.5h หรือ 1:30");
+          return;
+        }
+        stop(r);
+        if (ms === 0) {
+          delete db[t.dataset.id];
+        } else {
+          r.elapsed = ms;
+          /* Nothing was recorded live, so date the span backwards from now.
+             The total is what matters; the clock time is a rough anchor. */
+          if (!r.first) r.first = Date.now() - ms;
+          if (t.querySelector("input").checked && !r.end) r.end = Date.now();
+        }
+        save();
+        paint();
+      });
+      line.appendChild(edit);
+
       var text = document.createElement("span");
       text.className = "t-time-text";
       line.appendChild(text);

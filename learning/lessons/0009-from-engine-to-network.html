@@ -1,0 +1,397 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 09 — จาก engine เป็นเครือข่าย: สองช่วงเวลา และความเงียบของ zip</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a> &nbsp;·&nbsp;
+    <a href="../reference/roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 09 · nn.py</div>
+    <h1>จาก engine เป็นเครือข่าย<br>สองช่วงเวลา และความเงียบของ <code>zip</code></h1>
+    <p class="standfirst">
+      วันที่ไม่มีคณิตศาสตร์ใหม่เลยแม้แต่บรรทัดเดียว —
+      มีแต่การจัดระเบียบว่าอะไรอยู่นาน อะไรเกิดใหม่ทุกครั้ง
+    </p>
+    <div class="meta">2026-08-11 · Day 5 · เฟส 4 ขั้นแรก</div>
+  </header>
+
+  <h2>คำถามที่ปลดล็อกทั้งไฟล์</h2>
+
+  <div class="note bad">
+    <p style="margin-bottom:0">
+      <em>“เรายังไม่มี <code>x</code> แล้วจะคูณ <code>w</code> กับ <code>x</code> ยังไง”</em>
+    </p>
+  </div>
+
+  <p>
+    คำตอบคือ <strong>ไม่ต้องคูณตอนนั้น</strong> — งานของ <code>Neuron</code> แบ่งเป็นสองช่วงเวลาที่ไม่เกี่ยวกัน
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>ทำอะไร</th><th>อยู่นานแค่ไหน</th><th>เรียกว่า</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>__init__</code></td>
+        <td>สร้าง <code>w</code> กับ <code>b</code></td>
+        <td><strong>ตลอดชีวิตของ neuron</strong></td>
+        <td><strong>parameter</strong></td>
+      </tr>
+      <tr>
+        <td><code>__call__</code></td>
+        <td>เอา <code>w</code> มาเจอ <code>x</code> แล้วคำนวณ</td>
+        <td><strong>เกิดใหม่ทุกครั้ง แล้วทิ้ง</strong></td>
+        <td>activation / ตัวกลาง</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <code>x</code> ไม่มีตอน <code>__init__</code> <strong>เพราะมันไม่ควรมี</strong> —
+    neuron ตัวเดียวกันต้องรับ input ได้หลายชุดตลอดการเทรน ถ้า <code>x</code> ฝังอยู่ในตัวมัน
+    ก็เรียกซ้ำด้วยข้อมูลใหม่ไม่ได้
+  </p>
+
+  <div class="note good">
+    <span class="note-label"><code>__call__</code></span>
+<pre style="margin:.6rem 0 0"><code>class Greeter:
+    def __init__(self, name):     # รันครั้งเดียว ตอนสร้าง object
+        self.name = name
+
+    def __call__(self, mood):     # รันทุกครั้งที่ใส่วงเล็บ
+        return f"{mood}, {self.name}!"
+
+g = Greeter("world")
+g("hello")     → "hello, world!"
+g("goodbye")   → "goodbye, world!"     object เดิม เรียกใหม่ได้เรื่อยๆ</code></pre>
+    <p style="margin-bottom:0">
+      dunder ตระกูลเดียวกับ <code>__add__</code>, <code>__mul__</code>, <code>__repr__</code>
+      ที่เขียนมาแล้ว — ต่างกันแค่มันผูกกับวงเล็บแทนเครื่องหมายคณิตศาสตร์
+    </p>
+  </div>
+
+  <p>
+    และเส้นแบ่ง parameter / ตัวกลาง คือนิยามของ <code>parameters()</code> พอดี —
+    มันคือรายการ “ของที่ต้องอัปเดตตอนเทรน” ไม่ใช่ “Value ทั้งหมดในเครือข่าย”
+    ซึ่งมีเป็นพันตัวและตายทุกรอบ
+  </p>
+
+  <h2>ค่าเริ่มต้นของ weight — ผิดได้สองทาง</h2>
+
+  <h3>เล็กเกินไป: symmetry</h3>
+
+  <p>
+    ถ้า weight ทุกตัวเริ่มที่ศูนย์ (หรือค่าเดียวกันหมด) neuron ทุกตัวในชั้นจะเห็น input เดียวกัน
+    ได้ gradient เท่ากัน อัปเดตเท่ากัน — <strong>แล้วเหมือนกันตลอดไป</strong>
+    ชั้นที่มี 100 neuron ก็เรียนรู้ได้เท่ากับมี 1
+  </p>
+
+  <h3>ใหญ่เกินไป: saturation</h3>
+
+  <p>วัดจริงกับ neuron ที่รับ 3 input ค่าประมาณ 1.0:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>weight ประมาณ</th><th><code>z</code></th><th><code>tanh(z)</code></th><th><code>tanh'(z)</code></th></tr></thead>
+    <tbody>
+      <tr><td>0.1</td><td>0.3</td><td>0.29131</td><td>9.15e-01</td></tr>
+      <tr><td>1.0</td><td>3.0</td><td>0.99505</td><td>9.87e-03</td></tr>
+      <tr><td>5.0</td><td>15.0</td><td>1.00000</td><td><strong>3.74e-13</strong></td></tr>
+      <tr class="row-key"><td>20.0</td><td>60.0</td><td>1.00000</td><td><strong>0.00e+00</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <code>tanh</code> แบนที่ปลายทั้งสองข้าง — <strong>weight ใหญ่ → <code>z</code> ใหญ่ →
+    <code>tanh'</code> เข้าใกล้ศูนย์ → gradient ที่ไหลย้อนกลับถูกคูณด้วยเกือบศูนย์</strong>
+    แถวสุดท้ายคือศูนย์จริงๆ ไม่ใช่เกือบ: เครือข่ายตายสนิท เรียนอะไรไม่ได้อีกเลย
+  </p>
+
+  <p>
+    <code>uniform(-1, 1)</code> จึงอยู่ตรงกลางพอดี — ต่างกันมากพอจะทำลาย symmetry
+    และเล็กพอที่ <code>tanh</code> ยังอยู่ในช่วงที่ชัน
+    <em>(Xavier / He initialization เกิดมาเพื่อเลือกช่วงนี้ให้ถูกตามขนาดของชั้น — แต่นั่น M2)</em>
+  </p>
+
+  <h2><code>zip</code> ที่ตัดของทิ้งเงียบๆ</h2>
+
+  <p>
+    <code>Neuron.__call__</code> จับคู่ weight กับ input ด้วย <code>zip</code> —
+    แล้วเกิดเรื่องนี้ขึ้น:
+  </p>
+
+<pre><code>n = Neuron(3)
+n([1.0, 2.0])        # ให้มาแค่ 2 input จาก 3
+
+→ Value(data = 0.9689875274388016)
+   ...ไม่มี error เลย</code></pre>
+
+  <div class="note bad">
+    <span class="note-label">พฤติกรรมมาตรฐานของ <code>zip</code></span>
+    <p style="margin-bottom:0">
+      <strong>มันหยุดที่ตัวสั้นกว่า แล้วเงียบ</strong> — neuron ที่รอ 3 input ได้มา 2
+      ก็คำนวณต่อโดยแกล้งลืม weight ตัวสุดท้าย แล้วคืนตัวเลขที่ดูสมเหตุสมผลออกมา<br>
+      รูปแบบเดียวกับบั๊กทุกตัวที่ไล่ล่ากันมาทั้งสัปดาห์: <strong>ผิดโดยไม่ส่งเสียง</strong>
+      และใน MLP ลึกๆ จะไล่หาแทบไม่ได้
+    </p>
+  </div>
+
+  <p>Python 3.10+ มีทางออกอยู่ในตัว:</p>
+
+<pre><code>zip(self.ws, xs, strict=True)
+
+→ ValueError: zip() argument 2 is shorter than argument 1</code></pre>
+
+  <p>
+    <strong>เปลี่ยนตัวเลขผิดเงียบๆ ให้กลายเป็น error ที่ชี้จุดทันที ด้วยการพิมพ์เพิ่ม 14 ตัวอักษร</strong>
+  </p>
+
+  <div class="note good">
+    <span class="note-label">หลักการที่ใหญ่กว่าตัวอย่างนี้</span>
+    <p style="margin-bottom:0">
+      ทุกครั้งที่ภาษาให้เลือกระหว่าง “ทำต่อไปเงียบๆ” กับ “หยุดแล้วบอก” —
+      <strong>เลือกอย่างหลังเสมอ ถ้าไม่มีเหตุผลชัดเจนที่จะไม่เลือก</strong><br>
+      เดือนนี้เจอมาแล้วสามรูปแบบ: gradient ที่ทับกันเพราะ <code>=</code> แทน <code>+=</code> ·
+      ลำดับ backward ที่ผิดแล้วให้ค่าครึ่งเดียว · และตอนนี้ <code>zip</code> ที่ตัดของทิ้ง
+      ไม่มีอันไหนโยน error สักอัน
+    </p>
+  </div>
+
+  <h2>สำนวนที่ได้มาระหว่างทาง</h2>
+
+  <h3>จับคู่ขนาดของชั้นด้วย list ที่เลื่อนไปหนึ่งช่อง</h3>
+
+<pre><code>zip([nin, *sizes], sizes)
+
+[3, 4, 4, 1]        ← ขาเข้า
+   [4, 4, 1]        ← ขาออก
+→  (3,4) (4,4) (4,1)</code></pre>
+
+  <p>
+    แต่ละ layer ต้องรู้ <em>ขนาดขาเข้า</em> กับ <em>ขนาดขาออก</em> ของตัวเอง
+    และขาเข้าของชั้นหนึ่งก็คือขาออกของชั้นก่อนหน้า —
+    <strong><code>zip</code> ที่หยุดเองตรงตัวสั้นกว่า ทำให้ตัวเกินท้ายหายไปโดยไม่ต้องสั่ง</strong>
+    ไม่มีการคำนวณ index จึงไม่มีทาง off-by-one
+  </p>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      สังเกตว่า<strong>คุณสมบัติเดียวกันของ <code>zip</code></strong> —
+      หยุดที่ตัวสั้นกว่าโดยไม่บ่น — เป็นทั้งบั๊กที่อันตรายในหัวข้อก่อนหน้า
+      และเครื่องมือที่สะอาดในหัวข้อนี้ <strong>ไม่มีคุณสมบัติไหนดีหรือแย่ในตัวเอง
+      มีแต่เหมาะหรือไม่เหมาะกับที่ที่ใช้</strong>
+    </p>
+  </div>
+
+  <h3>อ่าน comprehension ที่มี <code>for</code> สองชั้น</h3>
+
+<pre><code>[p for neuron in self.neurons for p in neuron.parameters()]</code></pre>
+
+  <p>เท่ากับ:</p>
+
+<pre><code>result = []
+for neuron in self.neurons:          # for ตัวแรก = วงนอก
+    for p in neuron.parameters():    # for ตัวที่สอง = วงใน
+        result.append(p)             # นิพจน์หน้าสุด = สิ่งที่เก็บ</code></pre>
+
+  <p>
+    <strong>ลำดับของ <code>for</code> เรียงเหมือนโค้ดปกติทุกประการ</strong> —
+    ที่สับสนคือนิพจน์ที่จะเก็บอยู่<em>หน้าสุด</em> ทั้งที่เกิดขึ้น<em>ท้ายสุด</em>
+  </p>
+
+  <p>
+    ส่วน <code>[(*l) for l in lists]</code> ใช้ไม่ได้เพราะ
+    <strong>generator ให้ผลได้ทีละหนึ่งค่าต่อรอบ</strong> — จะให้มันคายหลายค่าในรอบเดียวไม่ได้ตั้งแต่ต้น
+  </p>
+
+  <h2>เทสต์ที่ตรึงทั้งสายด้วยความสัมพันธ์เดียว</h2>
+
+<pre><code>w_i.grad == b.grad × x_i</code></pre>
+
+  <p>
+    ทั้ง bias และ weight ทุกตัวอยู่ใต้ <code>tanh</code> ตัวเดียวกัน
+    <strong>ตัวคูณที่ไหลลงมาจากข้างบนจึงเป็นตัวเดียวกันหมด</strong>
+    สิ่งที่แยกพวกมันคือ input ที่แต่ละ weight ถูกคูณด้วยเท่านั้น
+  </p>
+
+  <p>
+    เทสต์ข้อเดียวนี้ตรวจทั้งเส้นทางตั้งแต่ output ย้อนกลับไปถึง parameter —
+    และมันยังบอกเรื่องที่ใหญ่กว่านั้น: <strong>weight ที่ได้รับ input ค่ามาก
+    จะได้ gradient มากตามสัดส่วน</strong> ซึ่งคือเหตุผลที่ input ที่ scale ต่างกันมากๆ
+    ทำให้เครือข่ายเทรนยาก และเป็นที่มาของการ normalize ข้อมูลก่อนเทรน
+  </p>
+
+  <h2>เทสต์จับ regression ได้ในหนึ่งวินาที</h2>
+
+  <p>ระหว่างแยกตรรกะห่อค่าออกมาเป็นเมธอดเดียว เงื่อนไขกลับด้าน:</p>
+
+<pre><code>return Value(x) if isinstance(x, Value) else x</code></pre>
+
+  <p>
+    ห่อของที่เป็น <code>Value</code> อยู่แล้ว และปล่อยตัวเลขธรรมดาไว้เฉยๆ — กลับกันพอดี
+  </p>
+
+<pre><code>67 failed, 18 passed</code></pre>
+
+  <p>
+    <strong>รู้ทันทีภายในวินาทีเดียว</strong> ถ้าไม่มีเทสต์ บั๊กนี้จะไปโผล่ตอนเขียน <code>nn.py</code>
+    แล้วดูเหมือนปัญหาของ <code>nn.py</code> — ไล่ผิดที่ไปเป็นชั่วโมง
+  </p>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      <strong>นี่คือเหตุผลที่ refactor ต้องมีเทสต์รองอยู่ก่อน ไม่ใช่ทำทีหลัง</strong> —
+      refactor แปลว่า “เปลี่ยนรูปโดยไม่เปลี่ยนพฤติกรรม” ซึ่งเป็นคำกล่าวอ้างที่พิสูจน์ไม่ได้เลย
+      ถ้าไม่มีอะไรคอยตรวจพฤติกรรม
+    </p>
+  </div>
+
+  <h2>ข้ออ้างที่ทำให้การเทรนเป็นไปได้</h2>
+
+<pre><code>out = net(x)
+out.backward()
+
+for p in net.parameters():
+    p.data -= 0.01 * p.grad      # เดินสวนทาง gradient
+
+net(x)   →  น้อยลง</code></pre>
+
+  <p>
+    <code>grad</code> บอกว่า <em>“ขยับ parameter ไปทางไหนแล้ว output จะเพิ่ม”</em> —
+    เดินสวนทางก็ได้ค่าที่ลดลง <strong>ทั้ง training loop คือบรรทัดนี้ ทำซ้ำ</strong>
+    โดยเปลี่ยนจาก output ดิบเป็น loss
+  </p>
+
+  <p>
+    และมีเทสต์คู่แฝดที่เดินตาม gradient แล้วต้องได้ค่าเพิ่ม — <strong>ตรึงเครื่องหมายไว้</strong>
+    ถ้าเขียน gradient descent ผิดเครื่องหมาย เทสต์นั้นจะเป็นข้อที่ยังผ่านอยู่
+  </p>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <div id="quiz"></div>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    <a href="https://docs.python.org/3/library/functions.html#zip">Python docs — <code>zip</code></a>
+    (พร้อมเหตุผลของ <code>strict</code>)
+    · <a href="https://peps.python.org/pep-0618/">PEP 618 — Add Optional Length-Checking To zip</a>
+    · <a href="https://docs.python.org/3/reference/datamodel.html#object.__call__">Python docs — <code>__call__</code></a>
+  </div>
+
+  <div class="ask">
+    ประโยคเดียวที่ควรจำ: <strong>อะไรที่อยู่นานคือ parameter · อะไรที่เกิดใหม่ทุกรอบคือตัวกลาง —
+    และเมื่อภาษาให้เลือกระหว่างเงียบกับส่งเสียง ให้เลือกส่งเสียง</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0008-composition-and-diagnosis.html">← Lesson 08</a>
+      <a href="../reference/roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "ทำไม <code>Neuron.__init__</code> ถึงสร้างแค่ <code>w</code> กับ <code>b</code> ไม่คำนวณ <code>w*x + b</code> ไปเลย?",
+    opts: [
+      "เพราะ neuron ตัวเดียวต้องรับ input ได้หลายชุด — <code>x</code> ยังไม่มีตอนนั้นและไม่ควรมี",
+      "เพราะการคำนวณตอน <code>__init__</code> จะทำให้สร้าง object ช้าเกินไปเมื่อเครือข่ายใหญ่",
+      "เพราะ <code>Value</code> ยังไม่รองรับการคูณกับ list ต้องรอให้แปลงเป็น Value ก่อนเสมอ"
+    ],
+    a: 0,
+    why: "งานของ neuron แบ่งเป็นสองช่วงเวลา — <code>__init__</code> สร้างของที่<b>อยู่ตลอดชีวิต</b> (parameter) ส่วน <code>__call__</code> สร้างของที่<b>เกิดใหม่ทุกครั้งแล้วทิ้ง</b> (ตัวกลาง) · ถ้า <code>x</code> ฝังอยู่ในตัว neuron ก็เรียกซ้ำด้วยข้อมูลชุดใหม่ไม่ได้ ซึ่งคือทั้งหมดของการเทรน"
+  },
+  {
+    q: "เริ่ม weight ทุกตัวที่ 0 แล้วจะเกิดอะไรขึ้น?",
+    opts: [
+      "neuron ทุกตัวในชั้นได้ gradient เท่ากัน อัปเดตเท่ากัน แล้วเหมือนกันตลอดไป",
+      "gradient เป็นศูนย์หมดทั้งเครือข่าย จึงไม่มีอะไรเปลี่ยนแปลงเลยตั้งแต่ก้าวแรก",
+      "เครือข่ายยังเทรนได้ปกติ แค่ใช้เวลามากกว่าเดิมเล็กน้อยในช่วงต้นเท่านั้น"
+    ],
+    a: 0,
+    why: "เรียกว่าปัญหา <b>symmetry</b> — ชั้นที่มี 100 neuron ที่เริ่มเหมือนกันหมด เรียนรู้ได้เท่ากับมี neuron เดียว เพราะไม่มีอะไรทำให้มันแตกต่างกันได้เลย · ส่วน bias เริ่มที่ศูนย์ได้ไม่มีปัญหา เพราะ weight ที่ต่างกันก็ทำลาย symmetry ไปแล้ว"
+  },
+  {
+    q: "เริ่ม weight ที่ค่าใหญ่ๆ เช่นประมาณ 20 แล้วจะเกิดอะไรขึ้น?",
+    opts: [
+      "<code>tanh</code> อิ่มตัว · <code>tanh'</code> กลายเป็น 0 · gradient ที่ไหลย้อนกลับตายสนิท",
+      "output ของเครือข่ายจะใหญ่เกินขอบเขต จนเกิด overflow ตอนคำนวณ forward pass",
+      "เครือข่ายจะเรียนรู้เร็วขึ้นมากในช่วงแรก แต่จะแกว่งไม่ลู่เข้าในช่วงหลังของการเทรน"
+    ],
+    a: 0,
+    why: "วัดจริง: weight ~20 กับ 3 input ให้ <code>z = 60</code> · <code>tanh(60) = 1.00000</code> · <code>tanh'(60) = 0.00e+00</code> <b>ศูนย์จริงๆ ไม่ใช่เกือบ</b> — gradient ทุกตัวที่ผ่าน node นั้นถูกคูณด้วยศูนย์ · <code>tanh</code> บีบ output ไว้ที่ ±1 อยู่แล้ว overflow จึงไม่เกิด"
+  },
+  {
+    q: "<code>Neuron(3)</code> แล้วเรียกด้วย input แค่ 2 ตัว — เกิดอะไรขึ้น?",
+    opts: [
+      "<code>zip</code> หยุดที่ตัวสั้นกว่าเงียบๆ · ได้ตัวเลขที่ดูปกติออกมาโดยลืม weight ตัวสุดท้าย",
+      "<code>IndexError</code> ตอนพยายามอ่าน weight ตัวที่สามที่ไม่มีคู่ของมันในรายการ input",
+      "<code>ValueError</code> เพราะ Python ตรวจความยาวของทั้งสองรายการให้อัตโนมัติเสมอ"
+    ],
+    a: 0,
+    why: "พฤติกรรมมาตรฐานของ <code>zip</code> คือหยุดที่ตัวสั้นกว่าโดยไม่บ่น · <code>zip(..., strict=True)</code> (Python 3.10+) เปลี่ยนให้เป็น <code>ValueError</code> แทน — <b>พิมพ์เพิ่ม 14 ตัวอักษร แลกกับการเปลี่ยนตัวเลขผิดเงียบๆ ให้เป็น error ที่ชี้จุดทันที</b>"
+  },
+  {
+    q: "<code>zip([nin, *sizes], sizes)</code> ใน <code>MLP.__init__</code> อาศัยคุณสมบัติอะไรของ <code>zip</code>?",
+    opts: [
+      "คุณสมบัติเดียวกับที่เป็นบั๊กใน Neuron — มันหยุดที่ตัวสั้นกว่า ตัวเกินท้ายจึงหายไปเอง",
+      "คุณสมบัติที่ <code>zip</code> เติมค่า <code>None</code> ให้ตัวที่สั้นกว่าจนยาวเท่ากันโดยอัตโนมัติ",
+      "คุณสมบัติที่ <code>zip</code> วนกลับไปเริ่มต้นใหม่เมื่อรายการหนึ่งหมดก่อนอีกรายการหนึ่ง"
+    ],
+    a: 0,
+    why: "list ขาเข้ายาวกว่าขาออกอยู่หนึ่งช่องเสมอ และ <code>zip</code> ตัดตัวเกินให้เอง จึงไม่ต้องคำนวณ index เลย — ไม่มีทาง off-by-one · <b>คุณสมบัติเดียวกันเป๊ะที่ทำให้ Neuron ผิดเงียบๆ</b> กลายเป็นเครื่องมือที่สะอาดตรงนี้ · ไม่มีคุณสมบัติไหนดีหรือแย่ในตัวเอง มีแต่เหมาะหรือไม่เหมาะกับที่ที่ใช้"
+  },
+  {
+    q: "<code>[p for neuron in neurons for p in neuron.parameters()]</code> — <code>for</code> สองตัวเรียงยังไง?",
+    opts: [
+      "ตัวแรกคือวงนอก ตัวที่สองคือวงใน — เหมือนเขียน for ซ้อนกันจากบนลงล่างทุกประการ",
+      "ตัวที่สองคือวงนอก เพราะ comprehension ประเมินจากขวาไปซ้ายเสมอในทุกกรณี",
+      "ทั้งสองวนพร้อมกันแบบคู่ขนาน เหมือน <code>zip</code> ที่จับคู่ทีละตัวจากทั้งสองรายการ"
+    ],
+    a: 0,
+    why: "ลำดับของ <code>for</code> เรียงเหมือนโค้ดปกติ · ที่สับสนคือ<b>นิพจน์ที่จะเก็บอยู่หน้าสุด ทั้งที่เกิดขึ้นท้ายสุด</b> · ส่วน <code>[(*l) for l in lists]</code> ใช้ไม่ได้เพราะ generator ให้ผลได้ทีละหนึ่งค่าต่อรอบ จะคายหลายค่าในรอบเดียวไม่ได้"
+  },
+  {
+    q: "ทำไมเทสต์ <code>w_i.grad == b.grad × x_i</code> ถึงตรวจได้เยอะกว่าที่หน้าตาบอก?",
+    opts: [
+      "bias กับ weight อยู่ใต้ non-linearity ตัวเดียวกัน ตัวคูณที่ไหลลงมาจึงเหมือนกันทั้งหมด",
+      "มันเทียบกับ numerical gradient ไปในตัว จึงตรวจสูตรอนุพันธ์ของทุก operation พร้อมกัน",
+      "มันบังคับให้ <code>parameters()</code> คืน object จริง ไม่ใช่ copy ซึ่งเป็นบั๊กที่พบบ่อยที่สุด"
+    ],
+    a: 0,
+    why: "อะไรก็ตามที่ไหลลงมาจาก output ถึง pre-activation เป็น<b>ตัวเดียวกัน</b>สำหรับ bias และทุก weight — สิ่งที่แยกพวกมันคือ input ที่ถูกคูณด้วยเท่านั้น อัตราส่วนนี้จึงตรึงทั้งสายไว้ด้วยความสัมพันธ์เดียว · และมันอธิบายด้วยว่าทำไมต้อง normalize ข้อมูลก่อนเทรน: input ที่ scale ต่างกันมากทำให้ gradient ของ weight ต่างกันมากตามไปด้วย"
+  },
+  {
+    q: "แยกตรรกะห่อค่าออกมาแล้วเขียนเงื่อนไขกลับด้าน ผลคือ <code>67 failed, 18 passed</code> — บทเรียนคืออะไร?",
+    opts: [
+      "refactor ต้องมีเทสต์รองอยู่<b>ก่อน</b> เพราะ “เปลี่ยนรูปโดยไม่เปลี่ยนพฤติกรรม” พิสูจน์ไม่ได้ถ้าไม่มีอะไรตรวจ",
+      "ไม่ควรแยกตรรกะที่ซ้ำกันออกมาเป็นเมธอด เพราะการรวมศูนย์ทำให้จุดเดียวพังแล้วพังทั้งหมด",
+      "ควรเขียนเทสต์เพิ่มสำหรับเมธอดที่แยกออกมาโดยเฉพาะ ก่อนจะเริ่มแยกมันออกมาทุกครั้ง"
+    ],
+    a: 0,
+    why: "คำว่า refactor แปลว่า “เปลี่ยนรูปโดยไม่เปลี่ยนพฤติกรรม” ซึ่งเป็น<b>คำกล่าวอ้างที่ตรวจสอบไม่ได้เลย</b>ถ้าไม่มีอะไรคอยดูพฤติกรรมอยู่ · ถ้าไม่มีเทสต์ บั๊กนี้จะไปโผล่ตอนเขียน <code>nn.py</code> แล้วดูเหมือนปัญหาของ <code>nn.py</code> — ไล่ผิดที่ไปเป็นชั่วโมง"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>

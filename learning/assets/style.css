@@ -923,3 +923,12 @@ tr.row-key > td {
   background: var(--accent-bg);
   box-shadow: inset 2px 0 0 var(--accent);
 }
+
+/* Retroactive time entry: quieter than the start/pause control next to it. */
+.t-timer.edit {
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  opacity: 0.55;
+}
+.t-timer.edit:hover { opacity: 1; }
