@@ -1,0 +1,234 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คำตอบดิบ — retrieval session 2026-08-12</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="2026-08-12-review.html">รีวิวคำตอบชุดนี้</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Retrieval · 2026-08-12</div>
+    <h1>คำตอบดิบ — เดินตอนเช้า ไม่เปิดโน้ต</h1>
+    <p class="standfirst">
+      รอบที่สอง หลังจากรอบแรกเมื่อ 9 ส.ค. — คราวนี้ครอบคลุมทั้ง engine และ <code>nn.py</code>
+      พร้อมชุดคำถาม “อะไรพังถ้า…” เจ็ดข้อ
+    </p>
+    <div class="meta">
+      2026-08-12 · Day 6 · M1 micrograd
+      <span class="dl">· ต้นฉบับ <a href="2026-08-12-recall.md">recall.md</a></span>
+    </div>
+  </header>
+
+  <span class="stamp">ถอดเสียงดิบ · จัดหัวข้อตามโจทย์เท่านั้น</span>
+
+  <div class="note good">
+    <span class="note-label">ข้อสังเกตของตัวเองเรื่องวิธีเรียน</span>
+    <p style="margin-bottom:0">
+      <em>“การที่เราออกไปตอนเช้า มันเป็นการทบทวนที่ดี แล้วมันฟิตอยู่ในสมอง
+      พอใน session ครั้งถัดไป เราก็เขียนโค้ดออกมาได้เลย
+      <strong>ถ้าเกิดเราไม่มี session แบบนี้ — session แบบ recall หรือแบบพูดทบทวนตัวเอง —
+      ระดับความเข้าใจ ระดับ recall ของเราจะไม่ดีขนาดนี้</strong>”</em>
+    </p>
+  </div>
+
+  <p>
+    หน้านี้เก็บ<strong>สภาพความเข้าใจ ณ วันที่ 12 ส.ค.</strong> ไว้ตรงๆ รวมทั้งจุดที่พูดวน
+    ที่เดาผิด และที่ยังตอบไม่ได้ — ตรวจแล้วที่
+    <a href="2026-08-12-review.html">หน้า review</a>
+  </p>
+
+  <h2>โจทย์ที่ตั้งไว้ก่อนออกเดิน</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ช่วง</th><th>ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td>1 · 0–8 นาที</td><td>เล่าทั้งเส้นออกเสียง ตั้งแต่ <code>Value(2.0)</code> จนถึง MLP ที่เทรนได้</td></tr>
+      <tr><td>2 · 8–15 นาที</td><td>เขียนในหัวทีละบรรทัด — <code>Neuron</code>, <code>Layer.parameters()</code>, <code>MLP.__init__</code></td></tr>
+      <tr><td>3 · 15–24 นาที</td><td><strong>“อะไรพังถ้า…” 7 ข้อ</strong></td></tr>
+      <tr><td>4 · 24–30 นาที</td><td>ออกแบบ training loop ในหัว</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>บวกคำถามค้างจากเมื่อคืน: <em>ทำไมเซ็ตศูนย์เฉพาะ parameter ไม่ต้องเซ็ตตัวกลาง 85 ก้อน</em></p>
+
+  <h2>คำถามค้าง — ทำไมล้างเฉพาะ parameter</h2>
+
+  <div class="raw">
+    <p>ไอตัว 84 ตัวที่นั่นนะ มันก็จะถูกคำนวณใหม่ มันจะเป็นคนละ value คนละ object
+    พองั้น grad มันจะเป็นศูนย์อยู่แล้ว</p>
+
+    <p>อีกอย่าง ไม่แน่ใจ คือเราจำเป็นต้องคำนวณ gradient ของพวกนั้นไหม
+    คือเราแค่ต้องการ gradient ของ weight กับ bias เท่านั้น
+    แต่คำตอบคือ เวลาคำนวณ gradient ของลูก เราต้องมี gradient ของพ่อกลับมาทั้งหมด
+    ถ้ามีสอง layer แล้วเราไม่คำนวณ gradient ของ intermediate value ของ layer ที่สอง
+    gradient ของ weight กับ bias ของ layer 1 มันก็คำนวณไม่ได้
+    เพราะ layer แรกมันอยู่ใต้ parent ที่สอง</p>
+
+    <p>ประเด็นคือที่ไม่ต้อง reset เป็นศูนย์ เพราะมันเป็น value ที่สร้างใหม่อยู่แล้ว</p>
+  </div>
+
+  <h2>ช่วงที่ 1 — เล่าทั้งเส้น</h2>
+
+  <div class="raw">
+    <p><code>Value</code> เอามาบวกเอามาคูณ มันก็ trace ออกมาเป็น graph
+    แล้ว graph เราเรียก <code>topo</code> ได้ มันจะให้ลำดับว่าต้องไล่ backward ยังไง</p>
+
+    <p><strong>Implementation detail</strong> ตอน <code>sum</code> เราใส่ argument ที่สองได้
+    ไม่ต้อง <code>sum(w*x)</code> แล้วค่อย <code>+ b</code> — ใส่ <code>b</code> เป็น start ของ <code>sum</code> ได้เลย
+    ไม่รู้ว่าจะเร็วขึ้นแค่ไหน แต่ทำได้</p>
+
+    <p><strong>เรื่องที่คิดต่อ</strong> สุดท้ายถ้าอยากให้เหมือน PyTorch เราอยากเลือก activation function ได้
+    ตอนนี้เราฝังไปเลยว่าเป็น <code>tanh</code> แต่ต่อไปอาจจะให้ input เป็น activation function
+    ก็คือเลือกได้ว่าจะ activate ยังไง — <code>tanh</code>, <code>relu</code></p>
+  </div>
+
+  <h2>ช่วงที่ 2 — เขียนในหัว</h2>
+
+  <div class="raw">
+    <p><strong>Neuron</strong> ตอน implement มันจะมี <code>parameters()</code> ด้วย
+    แล้วก็อย่าลืม <code>__repr__</code> เวลา print ออกมาจะได้เห็นว่า parameter ของ neuron มีอะไรบ้าง</p>
+
+    <p>ตอนแรกไม่รู้ว่า <code>Neuron.parameters()</code> เอาไปใช้ตอนไหน —
+    อ๋อ มันเอาไว้ใช้ตอนสุดท้ายที่ MLP เราอยาก get parameter ของ MLP
+    เราก็เลยต้องไล่ในแต่ละ layer แล้วใช้ <code>neuron.parameters()</code>
+    ถ้าไม่มี <code>Neuron.parameters()</code> ตอนทำ <code>Layer.parameters()</code>
+    กับ <code>MLP.parameters()</code> มันจะลำบาก โอเค เก็ตแล้วว่าทำไมต้องมี</p>
+
+    <p><strong><code>__call__</code></strong> เราสร้าง <code>def __call__</code>
+    argument แรกเป็น <code>self</code> argument ที่สองเป็น <code>xs</code>
+    ก็คือตัวเลขที่เอามาใส่ neuron ถ้า <code>n = Neuron(3)</code> เราก็เรียก <code>n([...])</code> ได้
+    คือเราเรียก class เป็นฟังก์ชันได้</p>
+
+    <p><strong>เรื่องที่คิดต่อ</strong> ไอ้นี่เจ๋ง ถ้าเรียนอันนี้เปล่าๆ ไม่ได้อยู่ใน context ของ micrograd
+    เราก็จะไม่รู้ว่ามันเอาไปใช้อะไร แต่พอเรียน micrograd แล้วลองใช้ฟีเจอร์ของ Python จริงๆ
+    มันทำให้รู้ว่าฟีเจอร์อย่างนี้ใช้จริงยังไง
+    อย่างเมื่อวานเรื่องดอกจันอันเดียวกับสองอัน — ดอกจันเดียวคลี่เป็น tuple
+    สองดอกจันคือ keyword arguments ได้เป็น dictionary ที่มี field <code>a=1</code> <code>b=2</code>
+    (dictionary field มันเรียกว่าอะไรนะ name-value pair ป่ะ)
+    เป็นฟีเจอร์ของ Python ที่เราจำไม่ได้สักที แต่พอมาใช้จริงกับ micrograd แล้วรู้แล้วว่าใช้ยังไง</p>
+
+    <p><strong>MLP</strong> input แรกคือจำนวน input ของทั้ง network
+    ตัวที่สองเป็น list ว่าแต่ละ layer มีกี่ neuron
+    สมมติ <code>MLP(3, [4, 4, 1])</code> — layer 1 มี 4 neuron, layer 2 มี 4, layer 3 มี 1</p>
+
+    <p><code>Layer</code> รับสองอย่าง: มี input กี่ตัว และมีกี่ neuron
+    เพราะงั้น layer แรกคือ <code>(3, 4)</code> — 3 input, 4 neuron
+    layer ต่อไป input ของมันคือ 4 เพราะ layer แรกมี 4 neuron → <code>(4, 4)</code>
+    layer สาม input คือจำนวน output ของ layer สอง = 4 → <code>(4, 1)</code></p>
+
+    <p>จะเห็นว่า column แรกคือ <code>3, 4, 4</code> และ column ที่สองคือ <code>4, 4, 1</code>
+    เพราะงั้นที่ zip ก็คือ zip <code>[3, 4, 4, 1]</code> กับ <code>[4, 4, 1]</code>
+    เราเพิ่ม input แรกเข้าไปข้างหน้า แล้วจับคู่กัน</p>
+
+    <p><strong>output ของ MLP</strong> ต่างจาก layer ตรงที่ output ของ MLP คือ output ของ layer สุดท้าย
+    เอา input ไป forward ใน layer แรก ได้ output มา เอาไปใส่ layer สอง
+    เอา output ของ layer สองไปใส่ layer สาม ไปเรื่อยๆ จนถึง layer สุดท้าย</p>
+
+    <p><strong>จุดที่ยังไม่เก็ต</strong> ตอนที่มี list ของ list แล้วอยากจะ flatten ให้เป็น list เดียว
+    unpacking ด้วยดอกจันมันใช้ไม่ได้ใน list comprehension — ตรงนั้นยังไม่เก็ตว่าทำไม
+    เกี่ยวกับ generator สักอย่าง</p>
+  </div>
+
+  <h2>ช่วงที่ 3 — อะไรพังถ้า…</h2>
+
+  <h3>ข้อ 1 · weight = 0 ทุกตัว</h3>
+
+  <div class="raw">
+    <p>ตอน run forward pass ทุกอย่างก็จะเป็น 0 หมด output เป็น 0
+    เข้า <code>tanh</code> — <code>tanh(0) = 0</code> ทุกอย่างเป็น 0
+    แล้วไปคำนวณ loss ได้ loss มา คำนวณ gradient — gradient ของ loss เป็น 1
+    คือ intermediate value เป็นศูนย์หมดเลย</p>
+
+    <p>เพราะงั้นตอน update gradient อย่าง <code>w*x + b</code> ตอนหา gradient ของ <code>w</code>
+    มันเอา gradient ของพ่อคูณกับ <code>x</code> ใช่ไหม
+    แล้วถ้า <code>x</code> เป็นศูนย์ gradient ของ <code>w</code> ก็เป็นศูนย์
+    แล้วพอ gradient เป็นศูนย์มันก็ทำอะไรไม่ได้ เพราะไม่รู้จะปรับยังไง</p>
+
+    <p>(loss คือ <code>(y_pred − y_true)²</code> ใช่ไหม)</p>
+  </div>
+
+  <h3>ข้อ 2 · weight = ±20</h3>
+
+  <div class="raw">
+    <p>weight มันจะไม่ได้อยู่ช่วง −1 ถึง 1 แล้ว มันอยู่ช่วง −20 ถึง 20
+    ถ้ามี input 3 ตัวก็มี weight 4 ตัว (<code>w</code> 3 ตัว + <code>b</code> 1 ตัว)
+    weight 4 ตัวช่วง −20 ถึง 20 ค่าที่ได้ก็คือ −80 ถึง 80</p>
+
+    <p>พอใส่เข้าไปใน <code>tanh</code> — <code>tanh(80)</code> มันแทบจะเป็น 1 แล้ว
+    ตอนทำ backprop <code>tanh'</code> คือ <code>1 − tanh²</code> ≈ 0
+    พอ gradient เข้าใกล้ 0 แล้วเอาไปคูณต่อ ก็ยิ่งน้อยเข้าไปใหญ่
+    นี่คือปัญหา vanishing gradient</p>
+  </div>
+
+  <h3>ข้อ 3 · input ไม่ครบ</h3>
+
+  <div class="raw">
+    <p>มันจะคำนวณผิด ต้องให้มันขึ้น error ว่าจำนวน input จริงกับจำนวน input ของ neuron ต้องเท่ากัน
+    โดยใช้ <code>strict</code> ใน <code>zip</code></p>
+  </div>
+
+  <h3>ข้อ 4 · 5 · 6</h3>
+
+  <div class="raw">
+    <p><strong>ข้อ 4</strong> ไม่ค่อยเข้าใจคำถาม <code>p</code> คืออะไร parameter ป่ะ</p>
+    <p><strong>ข้อ 5</strong> ยังไม่ได้ตอบ</p>
+    <p><strong>ข้อ 6</strong> ยังไม่ได้ตอบ · จำได้ว่า <code>lr</code> คือ learning rate</p>
+  </div>
+
+  <h3>ข้อ 7 · ลืม zero_grad</h3>
+
+  <div class="raw">
+    <p>ประเด็นคือเราเทรนด้วย data ใหม่ พอเทรนด้วย data ใหม่เราก็ได้ loss อันใหม่
+    เป้าหมายคือเราอยากปรับ network ให้ minimize loss เมื่อเทียบกับ input/output ชุดนั้น
+    สิ่งที่เราจะปรับในแต่ละครั้งมันต้องขึ้นกับข้อมูลใหม่ ไม่ใช่ข้อมูลเก่า
+    การที่เราไม่ reset gradient มันเหมือนว่าเรายังจำข้อมูลเก่าอยู่
+    เพราะ gradient มันยังเป็นของข้อมูลเก่า</p>
+
+    <p>เปรียบเทียบกับการเดิน — แต่ละชุดข้อมูลบอกทิศทางมา
+    ข้อมูลเก่าบอกว่าให้ตรงไป ข้อมูลใหม่บอกว่าให้ไปทางขวา
+    ถ้าไม่เซ็ตเป็นศูนย์ พอบอกให้ไปขวา เราก็ยังเดินไปข้างหน้าอยู่ด้วย
+    มันจะกลายเป็นเดินเฉียงๆ</p>
+
+    <p><strong>คำถามที่โผล่ขึ้นมาเอง</strong> อันนี้เหรอที่เขาเรียกว่า momentum
+    คือการคงทิศทางของข้อมูลก่อนหน้าไว้ เพราะมันก็ยังเป็นข้อมูลที่มีคุณค่าอยู่
+    ถ้าไป convert gradient ใหม่หมดมันเหมือนเสียข้อมูลไปเปล่าๆ
+    และเหมือนจะก้าวไปข้างหน้าได้เร็วกว่าด้วย
+    ถ้า gradient อันแรก represent ความเป็นจริง การเดินไปทิศทางนั้นก็ถูกแล้ว
+    ถ้าเราแค่ปรับทิศทางเดิมด้วย gradient อันใหม่ — อันนั้นคือ momentum ใช่ไหม</p>
+  </div>
+
+  <h2>ช่วงที่ 4</h2>
+
+  <div class="raw">
+    <p>ยังไม่ได้ทำ — ต้องไปทำงาน</p>
+  </div>
+
+  <div class="ask">
+    ตรวจคำตอบชุดนี้แล้วที่ <a href="2026-08-12-review.html"><strong>หน้า review</strong></a> —
+    ถูกเกือบหมด มีหนึ่งข้อที่กลไกผิด และสามข้อที่ยังไม่ได้ตอบ
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="2026-08-09-recall.html">← Retrieval รอบแรก</a>
+      <a href="2026-08-12-review.html">Review →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>

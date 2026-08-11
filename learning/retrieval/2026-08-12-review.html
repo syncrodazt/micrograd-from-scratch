@@ -1,0 +1,283 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review — retrieval session 2026-08-12</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="2026-08-12-recall.html">คำตอบดิบชุดนี้</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Review · 2026-08-12</div>
+    <h1>ตรวจคำตอบ — และตัวเลขที่ยืนยัน</h1>
+    <p class="standfirst">
+      ตรวจ <a href="2026-08-12-recall.html">คำตอบดิบ</a> ทีละข้อ พร้อมผลรันจริงสองชุด
+      ที่ทำให้เห็นว่าคำตอบข้อไหนถูกด้วยเหตุผลที่ถูก และข้อไหนถูกด้วยเหตุผลที่ผิด
+    </p>
+    <div class="meta">2026-08-12 · Day 6 · M1 micrograd</div>
+  </header>
+
+  <h2>สรุปผล</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>คำถาม</th><th>ผล</th></tr></thead>
+    <tbody>
+      <tr><td>ทำไมล้าง <code>grad</code> เฉพาะ parameter</td><td>✅ ถูกเป๊ะ — และตอบคำถามที่ยังไม่ได้ถามด้วย</td></tr>
+      <tr><td>เล่าทั้งเส้น · <code>__call__</code> · <code>*args</code>/<code>**kwargs</code> · <code>zip</code> ใน MLP</td><td>✅ ถูกหมด</td></tr>
+      <tr class="row-key"><td>1 · weight = 0 ทุกตัว</td><td>🟡 <strong>สรุปถูก กลไกผิด</strong></td></tr>
+      <tr><td>2 · weight = ±20</td><td>✅ ถูก ละเอียดดี</td></tr>
+      <tr><td>3 · input ไม่ครบ</td><td>✅ ถูก</td></tr>
+      <tr><td>4 · 5 · 6</td><td>⬜ ยังไม่ได้ตอบ — เฉลยไว้ข้างล่าง</td></tr>
+      <tr><td>7 · ลืม <code>zero_grad</code></td><td>✅ ถูก <strong>และไปไกลกว่าที่ถาม</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>คำถามค้าง — ตอบถูก</h2>
+
+  <blockquote class="raw">
+    <p>ไอตัว 84 ตัวมันจะถูกคำนวณใหม่ เป็น Value คนละ object
+    พองั้น grad มันก็เป็นศูนย์อยู่แล้ว</p>
+  </blockquote>
+
+  <p>
+    <strong>นั่นคือคำตอบทั้งหมด</strong> — ตัวกลางไม่ต้องล้างเพราะมันไม่ได้อยู่ให้ล้าง
+    มันตายไปแล้วตั้งแต่รอบก่อน มีแค่ 41 parameter ที่รอดข้ามรอบ
+    จึงมีแค่ 41 ตัวที่สะสมของเก่าได้
+  </p>
+
+  <p><em>(85 ก้อนนั้นเป็นตัวกลางทั้งหมด — นับหลังสร้าง network เสร็จแล้ว)</em></p>
+
+  <div class="note good">
+    <span class="note-label">และตอบคำถามที่ยังไม่ได้ถาม</span>
+    <p style="margin-bottom:0">
+      <em>“ถ้าไม่คำนวณ gradient ของ intermediate ใน layer 2
+      แล้ว gradient ของ weight ใน layer 1 ก็คำนวณไม่ได้”</em><br><br>
+      ถูก — <strong>ตัวกลางไม่ใช่เป้าหมาย แต่เป็นทางผ่านที่ขาดไม่ได้</strong>
+      เราไม่เคยใช้ gradient ของมันเลย แต่ถ้าไม่มี gradient ก็เดินย้อนต่อไม่ได้
+    </p>
+  </div>
+
+  <h2>ข้อ 1 — สรุปถูก แต่กลไกไม่ใช่อย่างที่คิด</h2>
+
+  <blockquote class="raw">
+    <p>ถ้า <code>x</code> เป็นศูนย์ gradient ของ <code>w</code> ก็เป็นศูนย์</p>
+  </blockquote>
+
+  <p>ตั้ง parameter ทุกตัวเป็น <code>0.0</code> แล้ววัดว่าใครยังมี gradient เหลืออยู่บ้าง:</p>
+
+<pre><code>output: 0.0
+
+layer 1:   0 จาก 16 parameter มี gradient ไม่เป็นศูนย์    []
+layer 2:   0 จาก 20 parameter มี gradient ไม่เป็นศูนย์    []
+layer 3:   1 จาก  5 parameter มี gradient ไม่เป็นศูนย์    [4]</code></pre>
+
+  <div class="note bad">
+    <p style="margin-bottom:0">
+      <strong>ตัวเดียวในทั้ง network ที่ยังมี gradient คือ bias ของ neuron สุดท้าย</strong>
+    </p>
+  </div>
+
+  <p>เหตุผลไม่ใช่ที่คิดไว้ — ต้องแยกเป็นสามกรณี:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ใคร</th><th>ทำไม gradient เป็นศูนย์</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>weight ของ layer 1</td>
+        <td><strong>input คือข้อมูลจริง ไม่ใช่ศูนย์</strong> (1.0, −2.0, 3.0) —
+            ที่เป็นศูนย์คือ <em>gradient ที่ไหลลงมาถึงมัน</em>
+            เพราะจะผ่าน layer 2 ได้ต้องคูณกับ weight ของ layer 2 ซึ่งเป็นศูนย์</td>
+      </tr>
+      <tr>
+        <td>weight ของ layer สุดท้าย</td>
+        <td>ถูกคูณกับ <em>activation ของชั้นก่อนหน้า</em> ซึ่งคือ <code>tanh(0) = 0</code></td>
+      </tr>
+      <tr class="row-key">
+        <td><strong>bias ของ neuron สุดท้าย</strong></td>
+        <td><strong>รอด</strong> — <code>+</code> ส่ง gradient ต่อเท่าเดิม ไม่ต้องคูณอะไรเลย</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ผลคือ <strong>network ทั้งก้อนยุบเหลือค่าคงที่ตัวเดียว</strong> —
+    เรียนรู้ได้แค่ “ควรตอบเลขอะไรโดยไม่สนใจ input”
+    ซึ่งแย่กว่าที่คิดไว้ เพราะไม่ใช่แค่ “เรียนช้า” แต่คือ<em>เรียนไม่ได้เลยตลอดกาล</em>
+  </p>
+
+  <p>
+    บทเรียนที่กว้างกว่านั้น: <strong>ทางกลับของ gradient ถูกตัดขาดได้ที่จุดใดจุดหนึ่งกลางทาง</strong>
+    ไม่จำเป็นต้องเป็นที่ตัว parameter เอง — เป็นรูปแบบเดียวกับ vanishing gradient ในข้อ 2
+    ต่างกันแค่ข้อ 2 คูณด้วยเลขเล็กมาก ส่วนข้อนี้คูณด้วยศูนย์เป๊ะ
+  </p>
+
+  <h2>ข้อ 7 — ถูก และไปไกลกว่าที่ถาม</h2>
+
+  <p>คำตอบไปจบที่ <strong>momentum</strong> ซึ่งเป็นการเชื่อมโยงที่ดี แต่มีเส้นแบ่งสำคัญ</p>
+
+  <p>เรียก <code>backward()</code> ซ้ำโดยไม่ล้างอะไรเลย ดู parameter ตัวเดียวกัน:</p>
+
+<pre><code>รอบ 1   p.grad = +0.565647
+รอบ 2   p.grad = +1.131295
+รอบ 3   p.grad = +1.696942
+รอบ 4   p.grad = +2.262590
+รอบ 5   p.grad = +2.828237</code></pre>
+
+  <p><strong>โตเป็นเส้นตรง ไม่มีขอบเขต</strong> — รอบที่ 100 จะเป็น 56 · รอบที่ 1000 เป็น 565</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>ลืม <code>zero_grad</code></th><th>Momentum</th></tr></thead>
+    <tbody>
+      <tr><td>สูตร</td><td><code>g₁+g₂+…+g_k</code></td><td><code>v ← βv + g</code> (β ≈ 0.9)</td></tr>
+      <tr><td>ของเก่า</td><td><strong>น้ำหนักเท่าเดิมตลอดกาล</strong></td><td><strong>จางลงแบบเรขาคณิต</strong></td></tr>
+      <tr><td>ขนาด</td><td>โตไม่มีที่สิ้นสุด</td><td>มีเพดานที่ ~<code>g/(1−β)</code></td></tr>
+      <tr><td>ผล</td><td>ก้าวใหญ่ขึ้นเรื่อยๆ จนระเบิด</td><td>ก้าวนิ่งขึ้น ผ่านหุบแคบได้ดีขึ้น</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      <strong>สัญชาตญาณถูก — “ทิศทางเก่ายังมีค่า” คือไอเดียเบื้องหลัง momentum จริงๆ</strong><br>
+      ต่างกันที่ <code>β</code> ตัวเดียวที่ทำให้ของเก่าจางไป ·
+      <strong>ลืม <code>zero_grad</code> คือ momentum ที่ <code>β = 1</code></strong> —
+      ซึ่งคือความต่างระหว่างเทคนิคที่ใช้ได้ กับบั๊ก
+    </p>
+  </div>
+
+  <div class="note bad">
+    <span class="note-label">อีกเส้นที่ต้องแยก</span>
+    <p style="margin-bottom:0">
+      <strong>การสะสมภายใน 1 step เป็นสิ่งที่ต้องการ</strong> — บวก gradient จากทุกตัวอย่างใน batch<br>
+      ที่ผิดคือสะสม<strong>ข้าม step</strong> · เส้นแบ่งอยู่ตรง “รอบไหน” ไม่ใช่ “สะสมหรือไม่สะสม”
+    </p>
+  </div>
+
+  <h2>ข้อ 4 · 5 · 6 — เฉลย</h2>
+
+  <h3>ข้อ 4 · <code>parameters()</code> คืนสำเนา</h3>
+
+<pre><code>def parameters(self):
+    return [Value(p.data) for p in self.ws + [self.b]]     # คืนสำเนา</code></pre>
+
+  <p>
+    <code>p.data -= lr * p.grad</code> จะเขียนลงใน<strong>สำเนา</strong>ที่ไม่มีใครใช้ แล้วสำเนานั้นก็ถูกทิ้ง
+  </p>
+
+  <p>
+    <strong>network ไม่เคยเปลี่ยนเลยสักครั้ง loss นิ่งสนิท ไม่มี error</strong> —
+    เทสต์ <code>test_parameters_are_the_real_objects_not_copies</code> มีไว้ดักตัวนี้
+    (mutation test บอกว่าพัง 10 ข้อ)
+  </p>
+
+  <h3>ข้อ 5 · <code>Layer</code> ใช้ <code>Neuron</code> ตัวเดียวซ้ำ</h3>
+
+<pre><code>n0 = Neuron(nin)
+self.neurons = [n0] * nout        # object เดียว ชี้ซ้ำ nout ครั้ง</code></pre>
+
+  <ul>
+    <li>output ทุกตัวเหมือนกันเป๊ะ</li>
+    <li><code>parameters()</code> คืน parameter ชุดเดิมซ้ำ <code>nout</code> รอบ →
+        <strong>ถูก update <code>nout</code> ครั้งต่อ step</strong> (learning rate กลายเป็น <code>nout</code> เท่าโดยไม่ตั้งใจ)</li>
+    <li>layer ที่มี 100 neuron มีความสามารถเท่ากับ 1 — <strong>อาการเดียวกับ symmetry ในข้อ 1</strong></li>
+  </ul>
+
+  <h3>ข้อ 6 · <code>+=</code> แทน <code>-=</code></h3>
+
+  <p>
+    <strong>gradient ascent</strong> — ไต่ขึ้นเขาแทนลงเขา loss เพิ่มทุกรอบจนระเบิด ·
+    เทสต์ <code>test_stepping_along_the_gradient_raises_the_output</code> มีไว้ตรึงเครื่องหมายนี้โดยเฉพาะ
+  </p>
+
+  <h2>เกร็ดที่ถามระหว่างทาง</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ถาม</th><th>ตอบ</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>sum(..., start=b)</code> เร็วขึ้นไหม</td>
+        <td>ไม่ได้เร็วขึ้น แต่ได้ <strong>node น้อยลงหนึ่งตัว</strong>
+            (ไม่ต้องบวกกับ <code>0</code> ก่อน) และอ่านแล้วตรงความหมายกว่า</td>
+      </tr>
+      <tr>
+        <td><code>**kwargs</code> เป็น dict ของอะไร</td>
+        <td>เรียกว่า <strong>key-value pair</strong> (ไม่ใช่ name-value)</td>
+      </tr>
+      <tr>
+        <td>activation ที่เลือกได้</td>
+        <td>ไอเดียถูก · <strong>PyTorch แยกคนละ module เลย</strong> —
+            <code>nn.Linear</code> ทำ <code>w·x + b</code> ส่วน <code>nn.Tanh</code> / <code>nn.ReLU</code>
+            เป็นอีกก้อน ต่อกันด้วย <code>nn.Sequential</code> ·
+            Karpathy ใช้ flag <code>nonlin=True</code> แทน · <strong>นอก scope เดือนนี้ แต่คิดถูกทาง</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>วิธีนี้ได้ผล — บันทึกไว้เป็นระบบ</h2>
+
+  <div class="note good">
+    <span class="note-label">ข้อสังเกตของตัวเอง</span>
+    <p>
+      <em>“ถ้าเกิดเราไม่มี session แบบนี้ — session แบบ recall หรือแบบพูดทบทวนตัวเอง —
+      ระดับความเข้าใจ ระดับ recall ของเราจะไม่ดีขนาดนี้”</em>
+    </p>
+    <p style="margin-bottom:0">
+      เทียบกับ <a href="2026-08-09-recall.html">รอบแรกเมื่อ 9 ส.ค.</a> ที่มี 3 จุดผิด —
+      รอบนี้ผิดกลไกข้อเดียว ทั้งที่เนื้อหาครอบคลุมกว้างกว่ามาก
+      และ<strong>คำถามที่ตัวเองตั้งขึ้นเองระหว่างเดิน</strong> (momentum, activation ที่เลือกได้)
+      ลึกกว่าคำถามที่ถูกตั้งให้
+    </p>
+  </div>
+
+  <h3>ทำไมมันได้ผล</h3>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>อ่านโน้ตซ้ำ</th><th>เดินแล้วพูดออกเสียง</th></tr></thead>
+    <tbody>
+      <tr><td>รู้สึกคุ้น จึงคิดว่ารู้แล้ว</td><td><strong>ต้องดึงออกมาเอง</strong> — คุ้นไม่ช่วย</td></tr>
+      <tr><td>ข้ามช่องว่างโดยไม่รู้ตัว</td><td>พูดว่า “เอ่อ…” ตรงไหน คือรูตรงนั้น</td></tr>
+      <tr><td>ไม่มีอะไรบังคับให้เรียบเรียง</td><td>บังคับให้เรียงลำดับเหตุผลเป็นเส้น</td></tr>
+      <tr><td>จบแล้วไม่เหลือหลักฐาน</td><td><strong>เหลือบันทึกไว้เทียบรอบหน้า</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ข้อสุดท้ายสำคัญที่สุดสำหรับ M2 — เดือนหน้าต้องเขียน <code>makemore</code> ใหม่โดยไม่เปิดวิดีโอ
+    ซึ่งวัดกันที่ <em>ดึงออกมาได้ไหม</em> ล้วนๆ ไม่ใช่ <em>เคยอ่านหรือยัง</em>
+  </p>
+
+  <div class="ask">
+    <strong>ตั้งเป็นกิจวัตร</strong> — เดินหรือวิ่ง 30 นาที ไม่แตะมือถือ
+    แล้วกลับมาเขียนคำตอบดิบลง <code>learning/retrieval/</code> ก่อนตรวจ
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="2026-08-12-recall.html">← คำตอบดิบ</a>
+      <a href="../reference/roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
