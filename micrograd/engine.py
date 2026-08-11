@@ -17,7 +17,7 @@ class Value:
         return f"Value(data = {self.data}, label = {self.label})"
 
     def __add__(self, other: "Value") -> "Value":
-        other = Value(other) if type(other) != Value else other
+        other = self._as_value(other)
         t = Value(self.data + other.data, _op="+", _prev=[self, other])
 
         def _backward():
@@ -31,7 +31,7 @@ class Value:
         return self.__add__(other)
 
     def __mul__(self, other: "Value") -> "Value":
-        other = Value(other) if type(other) != Value else other
+        other = self._as_value(other)
         t = Value(self.data * other.data, _op="*", _prev=[self, other])
 
         def _backward():
@@ -55,7 +55,7 @@ class Value:
 
     def __pow__(self, other):
         assert isinstance(other, (int, float))
-        t = Value(math.pow(self.data, other), _op="^{other}", _prev=[self])
+        t = Value(math.pow(self.data, other), _op=f"^{other}", _prev=[self])
 
         def _backward():
             self.grad += t.grad * other * math.pow(self.data, other - 1)
@@ -64,7 +64,7 @@ class Value:
         return t
 
     def __truediv__(self, other):
-        other = Value(other) if type(other) != Value else other
+        other = self._as_value(other)
         return self * other**-1
 
     def __rtruediv__(self, other):
@@ -96,3 +96,7 @@ class Value:
         order = topo(self)
         for n in order:
             n._backward()
+
+    @staticmethod
+    def _as_value(x):
+        return x if isinstance(x, Value) else Value(x)
