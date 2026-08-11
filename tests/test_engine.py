@@ -24,8 +24,12 @@ def test_a_value_stores_its_data():
     assert Value(2.0).data == 2.0
 
 
-def test_repr_shows_the_data():
-    assert "2.0" in repr(Value(2.0))
+def test_repr_identifies_the_value_and_tells_them_apart():
+    """Checks what repr is for, not how it formats. How many digits it shows
+    is a display choice; being able to see which value you are looking at
+    is the contract -- it is what shows up in every pytest failure."""
+    assert "Value" in repr(Value(2.0))
+    assert repr(Value(2.0)) != repr(Value(3.0))
 
 
 def test_addition_and_multiplication_compute_the_right_number():

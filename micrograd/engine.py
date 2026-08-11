@@ -14,7 +14,7 @@ class Value:
         self._backward = lambda: None
 
     def __repr__(self) -> str:
-        return f"Value(data = {self.data}, label = {self.label})"
+        return f"Value(data = {self.data:.4g}, label = {self.label})"
 
     def __add__(self, other: "Value") -> "Value":
         other = self._as_value(other)
