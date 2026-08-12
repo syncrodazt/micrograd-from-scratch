@@ -53,3 +53,14 @@ class MLP:
         for layer in self.layers:
             res = layer(res)
         return res
+
+    def zero_grad(self):
+        for p in self.parameters():
+            p.grad = 0.0
+
+    def update(self, lr):
+        for p in self.parameters():
+            p.data -= lr * p.grad
+
+    # def get_loss(self, x_gt, y_gt):
+    #     
