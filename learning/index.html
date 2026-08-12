@@ -193,6 +193,15 @@
       </p>
     </a>
 
+    <a class="card" href="lessons/0010-the-training-loop.html">
+      <div class="c-num">Lesson 10 · 2026-08-12 · 8 ข้อ</div>
+      <div class="c-title">Training loop — สี่บรรทัดที่ทำให้มันเรียนรู้ได้</div>
+      <p class="c-desc">
+        <code>zero_grad</code> ที่เจอเอง · เครื่องหมายที่ derive ได้ ·
+        ขนาด layer ไม่ใช่สาเหตุ แต่ <code>lr</code> เป็น · เป้าหมายที่ <code>tanh</code> ไปไม่ถึง
+      </p>
+    </a>
+
   </div>
 
   <!-- ============ REFERENCE ============ -->
@@ -209,7 +218,7 @@
       <div class="c-title">Roadmap — อยู่ตรงไหนแล้ว</div>
       <p class="c-desc">
         แผนทั้งเดือนในหน้าเดียว 5 เฟส ติ๊กได้และจำสถานะให้ ·
-        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · <strong>เฟส 0–3 ปิดแล้ว · engine เสร็จสมบูรณ์</strong> · ตอนนี้อยู่เฟส 4 (nn.py + training loop)
+        จับเวลารายขั้นได้แล้ว (▶ / ⏸) · <strong>เฟส 0–4 ปิดแล้ว · เทรน MLP ได้จริง</strong> · เหลือ README กับ makemore
       </p>
     </a>
 
@@ -319,7 +328,7 @@
 
   <div class="sec" id="status">
     <h2>อยู่ตรงไหนแล้ว</h2>
-    <span class="sec-note">Day 5 · 2026-08-11 · nn.py เสร็จ</span>
+    <span class="sec-note">Day 6 · 2026-08-12 · เฟส 4 ปิด</span>
   </div>
 
   <div class="tw">
@@ -340,7 +349,8 @@
       <tr><td><code>micrograd/viz.py</code> · เขียนเทสต์เพิ่มเอง</td><td>✅ ปิดเฟส 2</td></tr>
       <tr><td><code>tanh</code> · reflected · <code>__pow__</code> · <code>exp</code></td><td>✅ <strong>ปิดเฟส 3 · 85/85 เขียว</strong></td></tr>
       <tr><td><code>nn.py</code> — Neuron → Layer → MLP</td><td>✅ <strong>109/109 เขียว</strong></td></tr>
-      <tr><td>Training loop — forward → loss → backward → update</td><td>🔵 ต่อไป — ปิดเฟส 4</td></tr>
+      <tr><td>Training loop + loss curve</td><td>✅ <strong>ปิดเฟส 4 · เทรนได้จริง</strong></td></tr>
+      <tr><td><code>README.md</code> — อธิบาย backprop ด้วยสำนวนตัวเอง</td><td>🔵 ต่อไป — เฟส 5</td></tr>
       <tr><td>Neuron → Layer → MLP → training loop</td><td>⬜ D6–D7</td></tr>
     </tbody>
   </table>

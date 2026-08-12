@@ -1,0 +1,393 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 10 — Training loop: สี่บรรทัดที่ทำให้มันเรียนรู้ได้</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a> &nbsp;·&nbsp;
+    <a href="../reference/roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Lesson 10 · training loop</div>
+    <h1>Training loop<br>สี่บรรทัดที่ทำให้มันเรียนรู้ได้</h1>
+    <p class="standfirst">
+      วันที่ทุกอย่างมาบรรจบ — และวันที่บั๊กที่ roadmap ทำนายไว้ตั้งแต่ต้นเดือน
+      โผล่ออกมาจริงๆ แล้วถูกจับได้เอง
+    </p>
+    <div class="meta">2026-08-12 · Day 6 · ปิดเฟส 4</div>
+  </header>
+
+  <h2>สี่ขั้น และลำดับที่ห้ามสลับ</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>#</th><th>ขั้น</th><th>ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><strong>forward</strong></td><td>เอา input ผ่านเครือข่าย ได้คำทำนาย</td></tr>
+      <tr><td>2</td><td><strong>loss</strong></td><td>ยุบคำทำนายทั้งหมดกับเป้าหมาย ให้เหลือ <strong>ตัวเลขตัวเดียว</strong></td></tr>
+      <tr><td>3</td><td><strong>backward</strong></td><td>เดินย้อนจาก loss ไปกรอก <code>grad</code> ให้ทุก parameter</td></tr>
+      <tr><td>4</td><td><strong>update</strong></td><td>ขยับ parameter สวนทาง gradient</td></tr>
+      <tr class="row-key"><td>0</td><td><strong>zero_grad</strong></td><td><strong>ล้าง <code>grad</code> ก่อนรอบถัดไป</strong> — ขั้นที่ไม่มีในตำราไหนเขียนเป็นขั้นตอน แต่ขาดไม่ได้</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ขั้นที่ 5 จะวางไว้<em>ต้นรอบ</em>หรือ<em>ท้ายรอบ</em>ก็ได้ผลเหมือนกัน —
+    ขอแค่มันอยู่<strong>ระหว่าง <code>backward()</code> สองครั้ง</strong>
+  </p>
+
+  <h2>บั๊กที่ roadmap ทำนายไว้ตั้งแต่ต้นเดือน</h2>
+
+  <div class="note bad">
+    <p style="margin-bottom:0">
+      <em>“ตอนที่ลืม set gradient เป็น 0 มันเหมือนไม่ลู่เข้า อยู่ดีๆ ก็เปลี่ยนค่า
+      พอเซ็ตเป็นศูนย์ทุกครั้งก่อน forward pass ใหม่ ก็ไม่มีปัญหาแล้ว”</em>
+    </p>
+  </div>
+
+  <p>
+    วัดจริง — เรียก <code>backward()</code> ซ้ำโดยไม่ล้างอะไรเลย ดู parameter ตัวเดียวกัน:
+  </p>
+
+<pre><code>รอบ 1   p.grad = +0.565647
+รอบ 2   p.grad = +1.131295
+รอบ 3   p.grad = +1.696942
+รอบ 4   p.grad = +2.262590
+รอบ 5   p.grad = +2.828237</code></pre>
+
+  <p>
+    <strong>โตเป็นเส้นตรง ไม่มีขอบเขต</strong> — ก้าวยิ่งรอบยิ่งใหญ่ จนกระเด็นออกนอกหุบ
+    <br>รอบที่ 100 จะเป็น 56 · รอบที่ 1000 เป็น 565
+  </p>
+
+  <h3>ทำไมล้างเฉพาะ parameter</h3>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      <strong>ตัวกลางไม่ต้องล้าง เพราะมันไม่ได้อยู่ให้ล้าง</strong> —
+      forward pass แต่ละรอบสร้าง <code>Value</code> ชุดใหม่ทั้งหมด
+      ของรอบก่อนตายไปแล้ว และของใหม่เกิดมาพร้อม <code>grad = 0.0</code> อยู่แล้ว<br><br>
+      มีแค่ <strong>parameter</strong> ที่รอดข้ามรอบ จึงมีแค่ parameter ที่สะสมของเก่าได้
+    </p>
+  </div>
+
+  <p>
+    วัดกับ <code>MLP(3, [4, 4, 1])</code>: forward pass เดียวสร้าง <strong>85 ก้อน</strong> ·
+    มี <strong>41 parameter</strong> ที่อยู่ต่อ · เทรน 4 ตัวอย่าง × 100 รอบ =
+    <strong>สร้างทิ้งราว 34,000 ก้อน</strong> เหลือ 41
+  </p>
+
+  <h3>ลืม <code>zero_grad</code> ≠ momentum</h3>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>ลืม <code>zero_grad</code></th><th>Momentum</th></tr></thead>
+    <tbody>
+      <tr><td>สูตร</td><td><code>g₁+g₂+…+g_k</code></td><td><code>v ← βv + g</code> (β ≈ 0.9)</td></tr>
+      <tr><td>ของเก่า</td><td><strong>น้ำหนักเท่าเดิมตลอดกาล</strong></td><td><strong>จางลงแบบเรขาคณิต</strong></td></tr>
+      <tr><td>ขนาด</td><td>โตไม่มีที่สิ้นสุด</td><td>มีเพดานที่ ~<code>g/(1−β)</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    สัญชาตญาณที่ว่า “ทิศทางเก่ายังมีค่า” ถูกต้อง — นั่นคือไอเดียเบื้องหลัง momentum จริงๆ
+    <strong>ลืม <code>zero_grad</code> คือ momentum ที่ <code>β = 1</code></strong>
+    ซึ่งคือความต่างระหว่างเทคนิคที่ใช้ได้ กับบั๊ก
+  </p>
+
+  <p>
+    เส้นที่ต้องแยกให้ขาด: <strong>การสะสมภายใน 1 step เป็นสิ่งที่ต้องการ</strong>
+    (บวก gradient จากทุกตัวอย่างใน batch) · ที่ผิดคือสะสม<strong>ข้าม step</strong>
+  </p>
+
+  <h2>เครื่องหมายของการอัปเดต — derive ได้ ไม่ต้องจำ</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th><code>grad</code></th><th>แปลว่า</th><th>อยากได้</th><th><code>−lr·grad</code></th></tr></thead>
+    <tbody>
+      <tr><td><strong>+</strong>2</td><td>เพิ่ม <code>p</code> แล้ว loss <em>เพิ่ม</em></td><td>ลด <code>p</code></td><td>ติดลบ → <code>p</code> ลด ✅</td></tr>
+      <tr><td><strong>−</strong>3</td><td>เพิ่ม <code>p</code> แล้ว loss <em>ลด</em></td><td>เพิ่ม <code>p</code></td><td>ติดบวก → <code>p</code> เพิ่ม ✅</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>ไม่ต้องมี <code>if</code> เลย</strong> — เครื่องหมายของ gradient จัดการทั้งสองกรณีเอง
+    เก็บประโยคเดียวไว้พอ:
+  </p>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      <strong><code>grad</code> บอกทางที่ loss จะ <em>เพิ่ม</em> — เดินสวนทางเสมอ</strong>
+    </p>
+  </div>
+
+  <p>
+    และนี่คือเหตุผลที่เทสต์มีสองข้อคู่กัน — ข้อหนึ่งใช้ <code>−=</code> assert ว่าค่าลด
+    อีกข้อใช้ <code>+=</code> assert ว่าค่าเพิ่ม · <strong>ถ้าเขียนผิดเครื่องหมาย
+    ข้อที่สองจะเป็นข้อที่ยังผ่านอยู่</strong>
+  </p>
+
+  <h2>สิ่งที่วัดแล้วพบว่าคิดผิด</h2>
+
+  <p>
+    อาการ: <code>4-4-1</code> ไม่ลู่เข้า แต่ <code>8-8-1</code> ลู่ →
+    ข้อสรุปตอนนั้นคือ <em>“network เล็กเกินไป”</em>
+  </p>
+
+  <p>รัน 30 seed ต่อสถาปัตยกรรม บนข้อมูลชุดเดียวกัน:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>architecture</th><th>params</th><th>ลู่เข้า</th><th>loss กลาง</th></tr></thead>
+    <tbody>
+      <tr><td><code>[2, 2, 1]</code></td><td>17</td><td>29/30</td><td>0.00466</td></tr>
+      <tr class="row-key"><td><code>[4, 4, 1]</code></td><td>41</td><td><strong>30/30</strong></td><td>0.00307</td></tr>
+      <tr><td><code>[8, 8, 1]</code></td><td>113</td><td>30/30</td><td>0.00180</td></tr>
+      <tr><td><code>[16, 16, 1]</code></td><td>353</td><td>30/30</td><td>0.00048</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>ขนาดไม่ใช่สาเหตุ</strong> — แม้แต่ <code>2-2-1</code> ที่มี 17 parameter ก็ยังทำได้</p>
+
+  <p>ตัวจริงคือ <code>lr</code>:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th><code>lr</code></th><th><code>[4,4,1]</code></th><th><code>[8,8,1]</code></th><th></th></tr></thead>
+    <tbody>
+      <tr><td>0.001</td><td>0/20</td><td>0/20</td><td>ช้าเกินไป</td></tr>
+      <tr class="row-key"><td>0.01</td><td><strong>1/20</strong></td><td><strong>9/20</strong></td><td>← ตรงนี้แหละ</td></tr>
+      <tr><td>0.05</td><td>20/20</td><td>20/20</td><td>ช่วงที่ใช้ได้</td></tr>
+      <tr><td>0.5</td><td>10/20</td><td>9/20</td><td>เริ่มแกว่ง</td></tr>
+      <tr><td>3.0</td><td>0/20</td><td>1/20</td><td>ระเบิด</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ที่ <code>lr = 0.01</code> — <strong>network ใหญ่กว่าทนต่อ <code>lr</code> ที่เล็กเกินไปได้ดีกว่า</strong>
+    (parameter เยอะกว่า แต่ละก้าวจึงขยับผลรวมได้มากกว่า)
+    ทำให้ <em>ดูเหมือน</em> ขนาดช่วยแก้ ทั้งที่จริงมันแค่<strong>กลบอาการของ <code>lr</code> ที่ยังไม่เหมาะ</strong>
+  </p>
+
+  <div class="note bad">
+    <span class="note-label">บทเรียนเรื่องวิธีทดลอง</span>
+    <p style="margin-bottom:0">
+      <strong>เปลี่ยนสองอย่างพร้อมกัน แล้วผลดีขึ้น — ยังไม่รู้ว่าอันไหนช่วย</strong><br>
+      เปลี่ยน <code>4-4-1</code> เป็น <code>8-8-1</code> คือเปลี่ยน<em>ขนาด</em>
+      และ<em>ชุด weight เริ่มต้น</em>พร้อมกัน · วิธีแยกคือ
+      <strong>รันซ้ำหลายรอบด้วยค่าสุ่มต่างกัน แล้วนับว่ากี่รอบที่สำเร็จ</strong><br>
+      เป็นทักษะเดียวกับ <span class="g" data-t="mutation">mutation testing</span> —
+      เปลี่ยนทีละอย่าง แล้วดูว่าเกิดอะไร
+    </p>
+  </div>
+
+  <h3>ลำดับที่ควรปรับ</h3>
+
+  <div class="tw">
+  <table>
+    <tbody>
+      <tr><td><strong>1. <code>lr</code></strong></td><td>ผลแรงที่สุด · ปรับด้วย ×10 ÷10 ไม่ใช่ทีละนิด</td></tr>
+      <tr><td><strong>2. จำนวนรอบ</strong></td><td>ถูกที่สุด</td></tr>
+      <tr><td><strong>3. ขนาด layer</strong></td><td>ปรับทีหลัง เมื่อสองอันบนหมดทางแล้ว</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Seed — ทำให้การทดลองซ้ำได้</h2>
+
+<pre><code>import random
+random.seed(42)              # ← ต้องอยู่ก่อนบรรทัดที่สุ่มจริง
+net = MLP(3, [4, 4, 1])</code></pre>
+
+<pre><code>ไม่กำหนด seed        [0.0928, 0.0972, -0.1234, 0.7625]
+                     [0.3723, 0.2901, 0.3594, -0.4137]   ← คนละชุด
+
+กำหนดก่อนสร้าง       [0.2789, -0.95, -0.4499, -0.5536]
+                     [0.2789, -0.95, -0.4499, -0.5536]   ← เหมือนเป๊ะ ✅
+
+กำหนดหลังสร้าง       [0.0107, -0.9469, -0.6023, 0.2998]  ← ไม่ช่วยอะไร</code></pre>
+
+  <div class="note">
+    <span class="note-label">สองเรื่องที่จะกัดใน makemore</span>
+    <ul style="margin-bottom:0">
+      <li><code>random.seed()</code> ตั้งสถานะ<strong>ทั้งโปรแกรม</strong> —
+          อยากได้ตัวสุ่มแยกใช้ <code>rng = random.Random(42)</code></li>
+      <li><strong>แต่ละไลบรารีมี seed ของตัวเอง ไม่แชร์กัน</strong> —
+          <code>random.seed()</code> ไม่มีผลกับ <code>numpy</code> และไม่มีผลกับ <code>torch</code></li>
+    </ul>
+  </div>
+
+  <h2>กับดักที่ซ่อนอยู่ในเป้าหมาย</h2>
+
+  <p>
+    <code>tanh</code> ให้ค่าในช่วง <strong>เปิด</strong> <code>(−1, 1)</code> —
+    ไปถึง <code>±1</code> <strong>ไม่ได้เลย</strong> ต่อให้ weight ใหญ่แค่ไหน
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>อยากได้ <code>tanh(z)</code></th><th>ต้องใช้ <code>z</code></th><th><code>tanh'(z)</code></th></tr></thead>
+    <tbody>
+      <tr><td>0.9</td><td>1.47</td><td>1.90e-01</td></tr>
+      <tr><td>0.99</td><td>2.65</td><td>1.99e-02</td></tr>
+      <tr><td>0.999</td><td>3.80</td><td>2.00e-03</td></tr>
+      <tr class="row-key"><td><strong>1.0</strong></td><td><strong>∞</strong></td><td><strong>0</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>ตั้งเป้าไว้ที่ <code>±1</code> = สั่งให้ optimizer ดัน weight ขึ้นเรื่อยๆ ไม่มีที่สิ้นสุด</strong>
+    และยิ่งดัน ยิ่งเข้าเขตอิ่มตัวที่ <code>tanh'</code> เข้าใกล้ศูนย์ — ยิ่งเรียนช้าลงเรื่อยๆ
+  </p>
+
+  <p>
+    <code>loss</code> จึงมี<strong>พื้น</strong>ที่ไม่ใช่ศูนย์ ทั้งที่เครือข่ายไม่ได้ผิดอะไร —
+    ใช้ <code>±0.9</code> แทน จะเห็น loss ลงได้ลึกกว่าและเร็วกว่า
+  </p>
+
+  <h2>สิ่งที่เก็บไว้ อาจเก็บไปทั้งกราฟ</h2>
+
+<pre><code>loss_history.append(loss)          # เก็บทั้ง Value → ทั้งกราฟยังมีชีวิตอยู่
+loss_history.append(loss.data)     # เก็บแค่ตัวเลข → กราฟถูกทิ้งได้</code></pre>
+
+  <p>
+    <code>Value</code> ตัวหนึ่งอ้างถึง <code>_prev</code> ของมัน ซึ่งอ้างถึง <code>_prev</code> ต่อไปเรื่อยๆ —
+    <strong>เก็บ <code>loss</code> ไว้ตัวเดียว = เก็บ node ทุกตัวของ forward pass รอบนั้นไว้ทั้งหมด</strong>
+  </p>
+
+  <p>
+    100 รอบ × ~340 node = สามหมื่นกว่าก้อนที่ปล่อยทิ้งไม่ได้ ·
+    ตอนนี้ยังไม่เจ็บ แต่ <strong>ใน PyTorch นี่คือ memory leak คลาสสิกที่สุด</strong> —
+    <code>total += loss</code> แทน <code>total += loss.item()</code> ทำให้ VRAM เต็มกลางคัน
+  </p>
+
+  <h2>ตรวจตัวเอง</h2>
+
+  <div id="quiz"></div>
+
+  <div class="src">
+    <span class="src-label">แหล่งอ้างอิงหลัก</span>
+    Andrej Karpathy — <a href="https://www.youtube.com/watch?v=VMj-3S1tku0">building micrograd</a>
+    · <a href="https://docs.pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html">PyTorch — <code>zero_grad</code></a>
+    · <a href="https://docs.python.org/3/library/random.html#random.seed">Python docs — <code>random.seed</code></a>
+  </div>
+
+  <div class="ask">
+    ประโยคเดียวที่ควรจำ: <strong>เมื่อผลดีขึ้นหลังเปลี่ยนสองอย่าง — ยังไม่รู้อะไรเลย
+    จนกว่าจะรันซ้ำโดยเปลี่ยนทีละอย่าง</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="0009-from-engine-to-network.html">← Lesson 09</a>
+      <a href="../reference/roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
+
+<script>
+window.QUIZ = [
+  {
+    q: "<code>zero_grad</code> จะวางไว้ต้นรอบหรือท้ายรอบก็ได้ — เงื่อนไขจริงคืออะไร?",
+    opts: [
+      "ขอแค่มันอยู่ระหว่าง <code>backward()</code> สองครั้ง",
+      "ต้องอยู่ก่อน forward pass เสมอ ไม่งั้นกราฟที่สร้างใหม่จะได้ gradient ค้างมาด้วย",
+      "ต้องอยู่หลัง update เสมอ ไม่งั้นจะล้าง gradient ทิ้งก่อนที่ update จะได้ใช้"
+    ],
+    a: 0,
+    why: "gradient ถูก<i>เขียน</i>ตอน <code>backward()</code> และถูก<i>อ่าน</i>ตอน update — การล้างจึงต้องเกิดหลังอ่านเสร็จ และก่อนเขียนรอบใหม่ · ตัวเลือกที่สามฟังดูสมเหตุสมผลแต่สลับลำดับผิด: ถ้าล้างก่อน update ก็จะ update ด้วยศูนย์ ซึ่งคือไม่ทำอะไรเลย"
+  },
+  {
+    q: "ทำไมตัวกลาง 85 ก้อนต่อ forward pass ถึงไม่ต้องล้าง <code>grad</code>?",
+    opts: [
+      "มันตายไปแล้วตั้งแต่รอบก่อน — รอบใหม่สร้าง object ชุดใหม่ที่ <code>grad = 0.0</code> อยู่แล้ว",
+      "<code>backward()</code> ล้าง gradient ของ node ที่ไม่ใช่ parameter ให้อัตโนมัติทุกครั้ง",
+      "gradient ของตัวกลางไม่เคยถูกใช้ ค่าที่ค้างอยู่จึงไม่ส่งผลอะไรต่อผลลัพธ์เลย"
+    ],
+    a: 0,
+    why: "มีแค่ parameter ที่รอดข้ามรอบ จึงมีแค่ parameter ที่สะสมของเก่าได้ · ตัวเลือกที่สามผิดชัดเจน — gradient ของตัวกลาง<b>ถูกใช้แน่นอน</b> มันคือทางผ่านที่ทำให้ gradient เดินย้อนไปถึงชั้นแรกได้"
+  },
+  {
+    q: "ลืม <code>zero_grad</code> ต่างจาก momentum ตรงไหน?",
+    opts: [
+      "momentum ทำให้ของเก่าจางลงแบบเรขาคณิตด้วย <code>β &lt; 1</code> · การลืมคือ <code>β = 1</code> ซึ่งโตไม่มีขอบเขต",
+      "momentum สะสม gradient ข้าม step ส่วนการลืม <code>zero_grad</code> สะสมภายใน step เดียวเท่านั้น",
+      "momentum ใช้ค่าเฉลี่ยของ gradient ทั้งหมด ส่วนการลืมใช้ผลรวมซึ่งต่างกันแค่ตัวหาร"
+    ],
+    a: 0,
+    why: "ทั้งคู่คือการสะสมทิศทางเก่า — ต่างกันที่<b><code>β</code> ตัวเดียวที่ทำให้ของเก่าจางไป</b> · momentum มีเพดานที่ราว <code>g/(1−β)</code> ส่วนการลืมโตเป็นเส้นตรงไม่มีที่สิ้นสุด (วัดได้: 0.57 → 1.13 → 1.70 → 2.26 → 2.83) · สัญชาตญาณที่ว่า “ทิศทางเก่ายังมีค่า” ถูกต้อง แต่ต้องมีตัวหน่วง"
+  },
+  {
+    q: "ทำไม <code>p.data -= lr * p.grad</code> ถึงใช้ได้กับทั้ง gradient บวกและลบ โดยไม่ต้องมี <code>if</code>?",
+    opts: [
+      "เพราะเครื่องหมายของ gradient จัดการเอง — <code>grad</code> บอกทางที่ loss จะเพิ่ม จึงเดินสวนเสมอ",
+      "เพราะ <code>lr</code> เป็นบวกเสมอ ผลคูณจึงเป็นบวกเสมอ และการลบจึงลดค่า <code>p</code> เสมอ",
+      "เพราะ <code>abs()</code> ถูกใส่ไว้ใน <code>backward()</code> อยู่แล้ว gradient จึงไม่เคยติดลบ"
+    ],
+    a: 0,
+    why: "<code>grad = +2</code> → <code>−lr·grad</code> ติดลบ → <code>p</code> ลด · <code>grad = −3</code> → <code>−lr·grad</code> ติดบวก → <code>p</code> เพิ่ม · <b>สูตรเดียวถูกทั้งสองกรณี</b> เพราะเครื่องหมายมาจาก gradient เอง · ตัวเลือกที่สองผิดตรง “ลดค่า p เสมอ” ซึ่งเป็นเท็จเมื่อ gradient ติดลบ"
+  },
+  {
+    q: "<code>4-4-1</code> ไม่ลู่เข้า แต่ <code>8-8-1</code> ลู่ — วัดแล้วสาเหตุจริงคืออะไร?",
+    opts: [
+      "<code>lr</code> — <code>4-4-1</code> ลู่เข้า 30/30 ครั้งเมื่อ <code>lr</code> เหมาะสม ขนาดไม่ใช่ปัญหา",
+      "ขนาดจริงๆ — <code>4-4-1</code> มี parameter ไม่พอที่จะแทนฟังก์ชันเป้าหมายได้",
+      "ค่าสุ่มเริ่มต้น — <code>4-4-1</code> ลู่เข้าได้แค่บางครั้งขึ้นกับโชคของ seed"
+    ],
+    a: 0,
+    why: "รัน 30 seed: <code>4-4-1</code> ลู่เข้า 30/30 และแม้แต่ <code>2-2-1</code> (17 parameter) ก็ยังได้ 29/30 · ที่ <code>lr = 0.01</code> ต่างหากที่ <code>4-4-1</code> ได้ 1/20 ส่วน <code>8-8-1</code> ได้ 9/20 — <b>network ใหญ่กว่ากลบอาการของ <code>lr</code> ที่เล็กเกินไป</b> ทำให้ดูเหมือนขนาดช่วยแก้"
+  },
+  {
+    q: "ตั้งเป้าหมายไว้ที่ <code>1.0</code> พอดี กับ network ที่จบด้วย <code>tanh</code> — ผลคือ?",
+    opts: [
+      "ไปถึงไม่ได้เลย · optimizer จะดัน weight ขึ้นเรื่อยๆ เข้าเขตอิ่มตัวที่ <code>tanh'</code> ≈ 0",
+      "ไปถึงได้พอดีเมื่อ weight โตพอ เพราะ <code>tanh</code> ให้ค่าในช่วงปิด <code>[−1, 1]</code>",
+      "loss จะติดลบ เพราะคำทำนายเกิน 1 ไปเล็กน้อยก่อนจะย้อนกลับลงมาเข้าที่"
+    ],
+    a: 0,
+    why: "<code>tanh</code> ให้ค่าในช่วง<b>เปิด</b> <code>(−1, 1)</code> — <code>tanh(z) = 1</code> ต้องใช้ <code>z = ∞</code> · แค่จะได้ 0.999 ก็ต้อง <code>z = 3.8</code> ซึ่ง <code>tanh'</code> เหลือ 0.002 แล้ว · ผลคือ loss มีพื้นที่ไม่ใช่ศูนย์ และยิ่งเข้าใกล้เป้ายิ่งเรียนช้า · ใช้ <code>±0.9</code> แทนจะดีกว่ามาก"
+  },
+  {
+    q: "<code>loss_history.append(loss)</code> ต่างจาก <code>append(loss.data)</code> ยังไง?",
+    opts: [
+      "เก็บ <code>Value</code> ไว้ = เก็บทั้งกราฟของรอบนั้นไว้ด้วย เพราะมันอ้างถึง <code>_prev</code> ต่อกันเป็นทอด",
+      "ไม่ต่างกันเลยในทางปฏิบัติ เพราะ Python เก็บเฉพาะตัวเลขให้อัตโนมัติเมื่อไม่ได้ใช้ต่อ",
+      "เก็บ <code>Value</code> จะช้ากว่าตอน plot เพราะต้องเรียก <code>.data</code> ทีหลังทุกครั้ง"
+    ],
+    a: 0,
+    why: "<code>Value</code> อ้าง <code>_prev</code> ซึ่งอ้างต่อไปเรื่อยๆ — <b>เก็บ loss ไว้ตัวเดียวคือเก็บ node ทุกตัวของ forward pass รอบนั้น</b> · 100 รอบ × ~340 node = สามหมื่นกว่าก้อนที่ปล่อยทิ้งไม่ได้ · ใน PyTorch นี่คือ memory leak คลาสสิก: <code>total += loss</code> แทน <code>total += loss.item()</code>"
+  },
+  {
+    q: "เปลี่ยนสองอย่างพร้อมกันแล้วผลดีขึ้น — สรุปอะไรได้?",
+    opts: [
+      "ยังไม่รู้อะไรเลย ต้องรันซ้ำโดยเปลี่ยนทีละอย่างก่อน",
+      "สรุปได้ว่าอย่างน้อยหนึ่งในสองอย่างนั้นช่วย ซึ่งเพียงพอสำหรับการตัดสินใจต่อไป",
+      "สรุปได้ว่าทั้งสองอย่างช่วย เพราะถ้าอย่างหนึ่งทำให้แย่ลง ผลรวมก็คงไม่ดีขึ้น"
+    ],
+    a: 0,
+    why: "ตัวเลือกที่สามผิดชัดเจน — อย่างหนึ่งอาจช่วยมากจนกลบอีกอย่างที่ทำให้แย่ลง · ตัวเลือกที่สองก็ยังตัดสินใจต่อไม่ได้ เพราะไม่รู้ว่าจะปรับอันไหน · <b>วิธีแยกคือรันหลายรอบด้วยค่าสุ่มต่างกัน แล้วนับอัตราสำเร็จ</b> ทักษะเดียวกับ mutation testing"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
