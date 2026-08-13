@@ -1,0 +1,255 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ทำ deliverable ไปทำไม — นโยบายที่ตกลงกับตัวเอง</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="roadmap.html">Roadmap</a> &nbsp;·&nbsp;
+    <a href="glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Policy · อ่านซ้ำเมื่อไหร่ก็ตามที่เริ่มลังเล</div>
+    <h1>ทำ deliverable ไปทำไม</h1>
+    <p class="standfirst">
+      เขียนไว้เพราะถ้านโยบายไม่ชัด ทุกครั้งที่ลงมือจะกลับมาถามตัวเองว่า
+      “ทำไปทำไม” แล้วพลังงานหมดไปกับการลังเลแทนที่จะไปกับงาน
+    </p>
+    <div class="meta">ตกลงไว้ 2026-08-12 · Day 6</div>
+  </header>
+
+  <h2>อ่านสามบรรทัดนี้ก่อน ถ้าไม่มีเวลา</h2>
+
+  <div class="note good">
+    <ol style="margin-bottom:0">
+      <li><strong>README กับ <code>learning/</code> เป็นคนละชิ้น สำหรับคนละคน — ห้ามรวมกัน</strong></li>
+      <li><strong>สิ่งที่มีค่าที่สุดในรีโปนี้ คือบันทึกของบั๊ก ไม่ใช่โค้ดที่ทำงานได้</strong></li>
+      <li><strong>งานที่ไม่มีใครเห็น ไม่ได้ซื่อสัตย์กว่า — มันแค่มองไม่เห็น</strong></li>
+    </ol>
+  </div>
+
+  <h2>Deliverable ทั้งสี่ และแต่ละอันมีไว้ทำอะไร</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>#</th><th>อะไร</th><th>มีไว้ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>repo public บน GitHub</td><td>ให้มีที่อยู่ · กราฟ contribution ต่อเนื่อง</td></tr>
+      <tr class="row-key"><td>2</td><td><strong><code>README.md</code> ภาษาอังกฤษ</strong></td><td><strong>ทำให้คนอ่าน 60 วินาทีเชื่อว่าเข้าใจจริง</strong></td></tr>
+      <tr><td>3</td><td>รูป computation graph</td><td>ทำให้เห็นทันทีว่าไม่ใช่รีโปก๊อปวาง</td></tr>
+      <tr><td>4</td><td><code>makemore</code> + loss curve</td><td>พิสูจน์ว่า engine ใช้งานได้จริง ไม่ใช่ของเล่น</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    บวก <code>learning/</code> ที่โตขึ้นมาเองระหว่างทาง — <strong>ไม่ได้อยู่ในแผนตอนแรก
+    แต่กลายเป็นของที่มีค่าที่สุดชิ้นหนึ่ง</strong> ด้วยเหตุผลข้างล่าง
+  </p>
+
+  <h2>กฎข้อที่ 1 — สองชิ้น สองคนอ่าน ห้ามรวมกัน</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th><code>README.md</code></th><th><code>learning/</code></th></tr></thead>
+    <tbody>
+      <tr><td>ใคร</td><td>recruiter · engineer</td><td>คนที่กำลังเรียนตาม Karpathy</td></tr>
+      <tr><td>เวลาที่เขามีให้</td><td><strong>60 วินาที</strong></td><td>หลายชั่วโมง</td></tr>
+      <tr><td>ภาษา</td><td><strong>อังกฤษ</strong></td><td>ไทย</td></tr>
+      <tr><td>ต้องทำอะไรให้เขา</td><td><em>เชื่อว่าคนนี้เข้าใจจริง</em></td><td><em>ผ่านจุดที่ติดไปได้</em></td></tr>
+      <tr><td>ความยาว</td><td>หน้าเดียว</td><td>สิบบทเรียนขึ้นไป</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note bad">
+    <p style="margin-bottom:0">
+      <strong>เอามารวมกันแล้วพังทั้งคู่</strong> — recruiter จมกับสิบบทเรียนภาษาไทย ·
+      คนเรียนได้แค่บทสรุปหน้าเดียวที่ไม่พอให้ทำตาม
+    </p>
+  </div>
+
+  <h3>วิธีที่ได้ทั้งสองอย่าง</h3>
+
+  <p>
+    README เป็นหน้าเดียว กระชับ อังกฤษ — แล้ว<strong>มีบรรทัดเดียวชี้ไปที่ <code>learning/</code></strong>
+  </p>
+
+  <p>บรรทัดนั้นทำงานสองหน้าที่พร้อมกัน:</p>
+
+  <ul>
+    <li>คนเรียน → เจอทางเข้า</li>
+    <li>recruiter → <strong>เห็นว่ามีสิบบทเรียนอยู่ข้างหลัง โดยไม่ต้องอ่านสักบท</strong></li>
+  </ul>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      <strong>ไม่ต้องเขียนว่า “ผมเข้าใจลึก” ถ้ามีของที่ลึกวางอยู่ให้เห็น</strong>
+    </p>
+  </div>
+
+  <h2>กฎข้อที่ 2 — value อยู่ที่บั๊ก ไม่ได้อยู่ที่โค้ด</h2>
+
+  <p>
+    คลิปของ Karpathy ยาวสองชั่วโมง และพูดจากมุมของคนที่รู้ทุกอย่างมาสิบปีแล้ว
+    ปรากฏการณ์นี้มีชื่อว่า <strong>curse of knowledge</strong> —
+    คนที่รู้แล้ว<em>มองไม่เห็น</em>ว่าอะไรยาก เพราะช่องว่างที่เคยมีถูกถมไปนานแล้ว
+  </p>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      เขาอธิบาย backprop ได้ดีกว่าเราแน่นอน —
+      <strong>แต่เขาเขียนบันทึกความสับสนของตัวเองไม่ได้อีกแล้ว
+      เพราะเขาไม่สับสนมาสิบปีแล้ว</strong>
+    </p>
+  </div>
+
+  <h3>สิ่งที่มีเฉพาะในรีโปนี้</h3>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>บันทึกไว้</th><th>อยู่ในวิดีโอไหม</th></tr></thead>
+    <tbody>
+      <tr><td><code>trace()</code> ที่เขียนผิดสามแบบก่อนจะถูก</td><td>ไม่</td></tr>
+      <tr><td><code>t._backward = _backward</code> ที่เยื้องเกินไปหนึ่งชั้น</td><td>ไม่</td></tr>
+      <tr><td>เทสต์ที่ผ่านทั้งที่โค้ดผิด เพราะ operation อยู่นอกสุด</td><td>ไม่</td></tr>
+      <tr><td><code>4-4-1</code> ที่คิดว่าเล็กไป แต่จริงๆ เป็นเรื่อง <code>lr</code></td><td>ไม่</td></tr>
+      <tr><td><code>zip</code> ที่ตัดของทิ้งเงียบๆ</td><td>ไม่</td></tr>
+      <tr><td><code>_as_value</code> ที่เขียนเงื่อนไขกลับด้าน แล้วเทสต์จับได้ใน 1 วินาที</td><td>ไม่</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>ไม่มีอันไหนอยู่ในวิดีโอได้เลย</strong> — เพราะวิดีโอคือการ<em>แสดง</em>คำตอบที่รู้อยู่แล้ว
+    ส่วนนี่คือการ<em>หา</em>คำตอบ
+  </p>
+
+  <p>
+    และนี่คือคำตอบของคำถาม <em>“จะพิสูจน์ยังไงว่าไม่ใช่รีโปก๊อปวาง”</em> —
+    <strong>บันทึกของบั๊กที่ไม่มีทางเกิดกับคนที่ก๊อปโค้ดมา</strong>
+  </p>
+
+  <h2>กฎข้อที่ 3 — บันทึกวิธีคิด ไม่ใช่บันทึกอารมณ์</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>ค่า</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><em>“ตอนนั้นงงว่าทำไม <code>trace</code> ช้า”</em></td>
+        <td>น้อย — เป็นไดอารี่</td>
+      </tr>
+      <tr class="row-key">
+        <td><em>“งงว่าทำไมช้า → วัดได้ 524,287 calls ที่ depth 18 →
+            เพราะไม่มี guard → 13.4 µs เหลือ 1.77 µs”</em></td>
+        <td><strong>มาก — เป็นวิธีคิดที่เอาไปใช้กับปัญหาอื่นได้</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    เกณฑ์เดียวก่อนบันทึกอะไรลงไป: <strong>คนอ่านเอาไปใช้กับปัญหาที่ไม่ใช่ micrograd ได้ไหม</strong>
+  </p>
+
+  <h2>กฎข้อที่ 4 — ลำดับ และของที่ตัดได้</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ลำดับ</th><th>งาน</th><th>ตัดได้ไหม</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>README.md</code></td><td><strong>ไม่ได้</strong> — คือ deliverable จริง</td></tr>
+      <tr><td>2</td><td><code>makemore</code> + loss curve</td><td><strong>ไม่ได้</strong> — M2 ทั้งเดือนวางอยู่บนมัน</td></tr>
+      <tr><td>3</td><td>รูปกราฟใน README</td><td>ไม่ควร — ถูกและได้ผลมาก</td></tr>
+      <tr class="row-key"><td>4</td><td>เอา <code>learning/</code> ขึ้นเป็นเว็บไซต์</td><td><strong>ตัดได้ — ตัดเป็นอันแรก</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note bad">
+    <span class="note-label">ทำไมเว็บไซต์ถึงอยู่ท้ายสุด</span>
+    <p style="margin-bottom:0">
+      <strong>มันคือการกระจาย ไม่ใช่การเรียนรู้</strong> —
+      ไม่ได้ทำให้เข้าใจอะไรเพิ่มขึ้นแม้แต่นิดเดียว<br>
+      และ CLAUDE.md §4 ระบุ “docs sites” ไว้ในรายการนอก scope ·
+      GitHub Pages บนไฟล์ HTML ที่มีอยู่แล้วใช้เวลาจริงราวสองนาที ซึ่งคนละเรื่องกับการสร้าง
+      docs infrastructure — <strong>แต่ยังต้องทำหลังข้อ 1–3 เสร็จเท่านั้น</strong>
+    </p>
+  </div>
+
+  <p>
+    กฎที่ตั้งไว้เองใน roadmap: <strong>ถ้าตามหลัง ให้ตัด scope ไม่ใช่ยืดเวลา</strong> —
+    เว็บไซต์คือสิ่งแรกที่ควรถูกตัด
+  </p>
+
+  <h2>กฎข้อที่ 5 — เรื่องที่ยากที่สุด ซึ่งไม่เกี่ยวกับโค้ดเลย</h2>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      <em>“โดย tendency ของเรา เราไม่กล้าโชว์อะไร แต่เราอยากเปลี่ยนตรงนั้น”</em>
+    </p>
+  </div>
+
+  <p>
+    ความลังเลนี้มักมาจากความรู้สึกว่าการเผยแพร่งานตัวเอง = การอวด
+    แต่ลองแยกสองอย่างนี้ออกจากกัน:
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>อวด</th><th>บันทึกที่คนอื่นอ่านได้</th></tr></thead>
+    <tbody>
+      <tr><td>อ้างสิ่งที่ยังทำไม่ได้</td><td><strong>แสดงสิ่งที่ทำไปแล้วจริงๆ</strong></td></tr>
+      <tr><td>ซ่อนจุดที่ผิด</td><td><strong>บันทึกจุดที่ผิดไว้ทั้งหมด</strong></td></tr>
+      <tr><td>เป้าหมายคือให้คนชม</td><td>เป้าหมายคือให้คนถัดไปติดน้อยลง</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    รีโปนี้อยู่คอลัมน์ขวาทั้งหมด — <strong>มันมีบทเรียนทั้งบทที่ชื่อว่า
+    “บั๊กสามตัวของวันนี้”</strong> ไม่มีใครอวดด้วยการเขียนแบบนั้น
+  </p>
+
+  <div class="note good">
+    <span class="note-label">ประโยคที่ควรกลับมาอ่านตอนลังเล</span>
+    <p style="margin-bottom:0">
+      <strong>งานที่ไม่มีใครเห็น ไม่ได้ซื่อสัตย์กว่างานที่มีคนเห็น — มันแค่มองไม่เห็น</strong><br><br>
+      งานทำเสร็จไปแล้ว การไม่เผยแพร่ไม่ได้ทำให้มันบริสุทธิ์ขึ้น
+      มันแค่ทำให้ 17 เดือนนี้กลายเป็นเรื่องที่ไม่มีใครรู้
+    </p>
+  </div>
+
+  <p>
+    และในบริบทของการเปลี่ยนสายงาน <strong>การมองไม่เห็นคือรูปแบบของความล้มเหลว</strong> —
+    ไม่ใช่ความถ่อมตัว · CADDi / Woven / NVIDIA ตัดสินจากสิ่งที่เห็นได้เท่านั้น
+    ความเข้าใจที่อยู่ในหัวอย่างเดียว ไม่มีช่องให้กรอกในใบสมัคร
+  </p>
+
+  <div class="ask">
+    ถ้าอ่านถึงตรงนี้แล้วยังลังเล ให้ถามคำถามเดียว:
+    <strong>“ถ้าเมื่อสองสัปดาห์ก่อนมีรีโปแบบนี้อยู่ ตอนที่ตัวเองกำลังงงกับ <code>trace()</code>
+    มันจะช่วยได้ไหม”</strong> — ถ้าคำตอบคือใช่ ก็มีคนอีกหลายคนที่กำลังอยู่ตรงนั้นพอดี
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="roadmap.html">← Roadmap</a>
+      <a href="../index.html">Learning log →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
