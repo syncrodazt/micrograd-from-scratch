@@ -153,3 +153,24 @@ LEARNING-LOG.md    # daily: what I understood that I didn't yesterday
 Ask yourself: **"Am I about to save him time in a way that costs him understanding?"**
 
 If yes — don't. Ask a question instead.
+
+---
+
+## 9. makemore — what changes in phase 6
+
+`makemore/` lives in **this repo**, not a new one (§7 already says so). That keeps
+`from micrograd.engine import Value` free — no packaging, which §4 forbids anyway.
+The September rewrite-with-no-video is a different artifact and can be its own repo.
+
+**Everything in §2 still applies.** I write 100% of `makemore/` — `data.py`, `bigram.py`,
+`mlp.py`, the sampling, the loss. You may still write `tests/`, the dataset download, and
+matplotlib helpers.
+
+**numpy:** allowed for data prep only — counting bigrams, building the 27×27 table.
+Never inside the engine, never in a forward or backward pass. If a gradient flows through
+it, it has to be `Value`.
+
+**Know before choosing sizes:** the engine is scalar, so one training example builds
+thousands of `Value` objects, not one tensor op. Measure the cost first — count the nodes
+one forward pass creates, then work backwards to how many examples × steps actually fit.
+Picking a network size and discovering it is too slow afterwards wastes a day.

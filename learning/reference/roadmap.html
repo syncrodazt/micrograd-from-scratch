@@ -292,20 +292,50 @@
       <span class="pill todo">รอ</span>
       <span class="phase-count" data-phase-count></span>
     </div>
+    <p class="phase-note">
+      อยู่ในรีโปนี้ที่โฟลเดอร์ <code>makemore/</code> — <code>from micrograd.engine import Value</code>
+      ใช้ได้ทันที ไม่ต้อง packaging · <strong>เขียนเองทั้งหมดเหมือน <code>micrograd/</code></strong>
+      · <code>numpy</code> ใช้ได้เฉพาะตอนเตรียมข้อมูล ห้ามอยู่ในเส้นทางที่ gradient ไหลผ่าน
+    </p>
 
-    <label class="task" data-id="p5-1"><input type="checkbox"><span class="t-body">
-      <span class="t-title">Bigram model — นับ แล้ว sample</span>
-      <span class="t-why">numpy ใช้ได้ตรงนี้ (data prep เท่านั้น ไม่ใช่ใน engine)</span>
+    <label class="task" data-id="mm-0"><input type="checkbox"><span class="t-body">
+      <span class="t-title">โหลด <code>names.txt</code> · สร้าง <code>stoi</code> / <code>itos</code></span>
+      <span class="t-why"><strong><span class="g" data-t="hashtable">dict</span> ได้ใช้จริงเป็นครั้งแรก</strong> — ตรงกับที่เตรียมไว้ใน <a href="data-structures.html">Data structures</a> · ตัดสินใจว่า <code>.</code> จะแทนทั้งจุดเริ่มและจุดจบ</span>
     </span></label>
 
-    <label class="task" data-id="p5-2"><input type="checkbox"><span class="t-body">
-      <span class="t-title">MLP ตัวแรก เทรนด้วย engine ที่เขียนเอง</span>
-      <span class="t-why">จุดที่ทุกอย่างของเดือนนี้มาบรรจบกัน</span>
+    <label class="task" data-id="p5-1"><input type="checkbox"><span class="t-body">
+      <span class="t-title">Bigram model — นับคู่ตัวอักษรเป็นตาราง 27×27</span>
+      <span class="t-why">array 2 มิติ · <code>numpy</code> ใช้ได้ตรงนี้ · ยังไม่มี <code>Value</code> เข้ามาเกี่ยวเลย</span>
+    </span></label>
+
+    <label class="task" data-id="mm-1"><input type="checkbox"><span class="t-body">
+      <span class="t-title">Sample ชื่อออกมาจากตาราง</span>
+      <span class="t-why"><strong>prefix sum + สุ่มตามความน่าจะเป็น</strong> — โครงสร้างที่ <a href="data-structures.html">Data structures</a> บอกไว้ว่าจะเจอที่ makemore #1 พอดี</span>
+    </span></label>
+
+    <label class="task crit" data-id="mm-2"><input type="checkbox"><span class="t-body">
+      <span class="t-title">วัด loss ของ bigram — negative log likelihood</span>
+      <span class="t-why"><strong>cross-entropy โผล่ครั้งแรก</strong> · ตอบคำถามที่ค้างไว้ตั้งแต่เฟส 4 ว่าทำไมงานทำนายความน่าจะเป็นถึงใช้ MSE ไม่ได้ · เลขนี้คือเส้นฐานที่ MLP ต้องเอาชนะ</span>
+    </span></label>
+
+    <label class="task crit" data-id="mm-3"><input type="checkbox"><span class="t-body">
+      <span class="t-title"><strong>วัดต้นทุนก่อนเลือกขนาด</strong> — forward pass เดียวสร้าง <code>Value</code> กี่ก้อน</span>
+      <span class="t-why">engine เป็น scalar หนึ่งตัวอย่างสร้าง node หลักพัน ไม่ใช่ tensor op เดียว · <strong>คำนวณย้อนว่ารันไหวกี่ตัวอย่าง × กี่รอบ แล้วค่อยเลือกขนาด</strong> — เลือกก่อนแล้วค่อยรู้ว่าช้า เสียไปทั้งวัน · วิธีเดียวกับที่นับได้ 85 ก้อนใน <code>MLP(3,[4,4,1])</code></span>
+    </span></label>
+
+    <label class="task crit" data-id="p5-2"><input type="checkbox"><span class="t-body">
+      <span class="t-title">MLP ตัวแรก — embedding table เทรนด้วย engine ที่เขียนเอง</span>
+      <span class="t-why"><strong>จุดที่ทุกอย่างของเดือนนี้มาบรรจบ</strong> · <code>C[X]</code> คือ <span class="g" data-t="gather">gather</span> ไม่ใช่การคูณเมทริกซ์ — และ backward ของมันคือ scatter-add ซึ่งต้อง<em>บวก</em>ด้วยเหตุผลเดียวกับ <code>+=</code> ในวันที่ 2</span>
+    </span></label>
+
+    <label class="task" data-id="mm-4"><input type="checkbox"><span class="t-body">
+      <span class="t-title">เทียบ loss ของ MLP กับ bigram</span>
+      <span class="t-why">ตัวเลขเดียวที่ตอบว่า MLP คุ้มกับความซับซ้อนที่เพิ่มมาไหม · ถ้าไม่ชนะ นั่นก็เป็นผลการทดลองที่ใช้ได้ ไม่ใช่ความล้มเหลว</span>
     </span></label>
 
     <label class="task" data-id="p5-3"><input type="checkbox"><span class="t-body">
       <span class="t-title">Loss curve</span>
-      <span class="t-why">matplotlib — deliverable ข้อ 4</span>
+      <span class="t-why">matplotlib — <strong>deliverable ข้อ 4</strong></span>
     </span></label>
   </div>
 
