@@ -1,0 +1,245 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>อธิบายเรื่องเทคนิคเป็นภาษาอังกฤษ — วิธีที่ใช้ได้จริง</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="why-deliverables.html">ทำไปทำไม</a> &nbsp;·&nbsp;
+    <a href="roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Reference · วิธีฝึก ไม่ใช่ไวยากรณ์</div>
+    <h1>อธิบายเรื่องเทคนิค<br>เป็นภาษาอังกฤษ</h1>
+    <p class="standfirst">
+      เขียนหลังจากลองอธิบาย backprop เป็นภาษาอังกฤษระหว่างเดิน 30 นาที
+      แล้วพบว่าเนื้อหาออกมาได้ แต่รู้สึกสะดุดกว่าตอนพูดไทยมาก —
+      หน้านี้คือคำวินิจฉัยว่าทำไม และทำอะไรได้บ้าง
+    </p>
+    <div class="meta">2026-08-12 · Day 6</div>
+  </header>
+
+  <h2>อาการ</h2>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      <em>“ตอนพูดไทยเรามี command มากกว่า เราจะพูดอะไรก็ได้ …
+      ส่วนตอนพูดอังกฤษ confidence ในการก้าวแต่ละก้าวมันน้อยกว่า
+      บางทีเราก็กังวลแกรมมาร์ เราเติม s หรือเปล่า”</em>
+    </p>
+  </div>
+
+  <h2>คำวินิจฉัย — ไม่ใช่ปัญหาภาษา</h2>
+
+  <div class="note good">
+    <span class="note-label">รากของปัญหา</span>
+    <p style="margin-bottom:0">
+      <strong>working memory เต็ม</strong> — กำลังทำสองอย่างยากพร้อมกัน
+    </p>
+  </div>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>งานที่ 1 · จัดโครงสร้าง</th><th>งานที่ 2 · แปลงเป็นประโยค</th></tr></thead>
+    <tbody>
+      <tr><td>ทำอะไร</td><td>พูดเรื่องไหนก่อน · ลงลึกแค่ไหน · ย้อนกลับตรงไหน</td><td>ไวยากรณ์ · คำศัพท์ · การออกเสียง</td></tr>
+      <tr><td><strong>พูดไทย</strong></td><td>ได้สมองเกือบทั้งก้อน</td><td><strong>ฟรี</strong></td></tr>
+      <tr class="row-key"><td><strong>พูดอังกฤษ</strong></td><td><strong>เหลือครึ่งเดียว → หลงทาง</strong></td><td>กินไปครึ่งหนึ่ง</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>ทางแก้จึงไม่ใช่ “ฝึกภาษาอังกฤษให้เก่งขึ้น”</strong> ซึ่งช้าและวัดผลไม่ได้ —
+    แต่คือ<strong>ลดภาระของงานใดงานหนึ่งลง</strong> ซึ่งทำได้ทันที
+  </p>
+
+  <h2>6 วิธี เรียงตามผลตอบแทน</h2>
+
+  <h3>1 ⭐ แยกสองงานออกจากกัน</h3>
+
+  <p>
+    <strong>วางโครงเป็นภาษาไทยหรือเป็น bullet ก่อน แล้วค่อยพูดอังกฤษตามโครง</strong> —
+    อย่าแต่งโครงกับแต่งประโยคพร้อมกัน
+  </p>
+
+  <p>พอโครงถูกวางไว้ล่วงหน้า สมองทั้งก้อนไปอยู่ที่ประโยคได้</p>
+
+  <h3>2 ⭐ ใช้โครงเดิมทุกครั้ง</h3>
+
+  <p>
+    ถ้าโครงเหมือนเดิม <strong>การตัดสินใจเรื่องโครงถูกทำไปแล้วล่วงหน้า</strong> —
+    นี่คือคำตอบตรงๆ ของ “ไม่รู้จะพูด detail ขนาดไหน” (ดูโครงถาวรข้างล่าง)
+  </p>
+
+  <h3>3 ⭐ เลิกกังวลไวยากรณ์ตอนพูด</h3>
+
+  <div class="note bad">
+    <span class="note-label">ข้อผิดที่กังวลอยู่ คือข้อผิดที่มีผลน้อยที่สุด</span>
+<pre style="margin:.6rem 0 0"><code>"the neuron have two parameter"      ← ผิด 2 ที่ ไม่มีใครเข้าใจผิดเลย
+"the gradient tells you the value"   ← ถูกทุกตัว แต่ความหมายผิด</code></pre>
+  </div>
+
+  <p>
+    <code>s</code> กับ <code>the</code> แทบไม่พาความหมายเลย —
+    <strong>ความคล่องสำคัญกว่าความถูกต้อง สำหรับการ<em>พูด</em></strong>
+    เก็บความถูกต้องไว้ให้งานเขียนซึ่งมีเวลาแก้
+  </p>
+
+  <p>
+    การหยุดกลางประโยคเพื่อเช็ค <code>s</code>
+    <strong>ทำให้เสียโครงสร้างซึ่งเป็นสิ่งที่สำคัญจริงๆ</strong> —
+    จ่ายของแพงเพื่อซื้อของถูก
+  </p>
+
+  <h3>4 สะสม<em>วลี</em> ไม่ใช่คำ</h3>
+
+  <p>
+    อังกฤษเชิงเทคนิควิ่งด้วยวลีสำเร็จรูป — จำได้แล้วมันจะออกมาเองโดยไม่กินสมาธิ
+  </p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>วลี</th><th>ใช้ตอน</th></tr></thead>
+    <tbody>
+      <tr><td><code>the derivative of X <strong>with respect to</strong> Y</code></td><td>พูดถึงอนุพันธ์ ← ใช้ถูกอยู่แล้ว</td></tr>
+      <tr><td><code>the gradient <strong>flows backward through</strong> the graph</code></td><td>อธิบาย backward pass</td></tr>
+      <tr><td><code><strong>the key insight is that</strong> …</code></td><td>ก่อนพูดข้อที่สำคัญที่สุด</td></tr>
+      <tr><td><code><strong>this boils down to</strong> …</code></td><td>ย่อเรื่องซับซ้อนให้เหลือแก่น</td></tr>
+      <tr><td><code><strong>it turns out that</strong> …</code></td><td>เกริ่นผลที่น่าประหลาดใจ</td></tr>
+      <tr><td><code><strong>what this buys us is</strong> …</code></td><td>บอกว่าได้อะไรจากการทำแบบนี้</td></tr>
+      <tr><td><code><strong>the catch is that</strong> …</code></td><td>บอกข้อเสียหรือข้อแลกเปลี่ยน</td></tr>
+      <tr><td><code><strong>rather than</strong> X, we …</code></td><td>เทียบทางเลือก</td></tr>
+      <tr><td><code>X <strong>comes for free</strong></code></td><td>ได้มาโดยไม่ต้องทำเพิ่ม</td></tr>
+      <tr><td><code>we <strong>fall back to</strong> X</code></td><td>ทางถอย (เช่น reflected operator)</td></tr>
+      <tr><td><code>this <strong>fails silently</strong></code></td><td>ผิดโดยไม่มี error ← ธีมของทั้งเดือน</td></tr>
+      <tr><td><code>X is <strong>a special case of</strong> Y</code></td><td>gradient เป็นกรณีพิเศษของ Jacobian</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><em>เพิ่มเข้าตารางนี้ทุกครั้งที่เจอวลีที่อยากใช้แต่นึกไม่ออกตอนพูด</em></p>
+
+  <h3>5 อธิบายเรื่องเดิม 3 ความยาว</h3>
+
+  <div class="tw">
+  <table>
+    <tbody>
+      <tr><td><strong>30 วินาที</strong></td><td>แก่นล้วน</td></tr>
+      <tr><td><strong>3 นาที</strong></td><td>แก่น + ตัวอย่างหนึ่ง</td></tr>
+      <tr><td><strong>15 นาที</strong></td><td>เต็ม</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>ความสามารถในการย่อคือทักษะที่ตอบคำถาม “ลงลึกแค่ไหน”</strong> —
+    และในสัมภาษณ์จริง เขาถามสั้นก่อนเสมอ แล้วค่อยเจาะลงไปตามที่เขาสนใจ
+  </p>
+
+  <h3>6 เขียนก่อน พูดทีหลัง — สำหรับเนื้อหาใหม่</h3>
+
+  <p>
+    การเขียนให้เวลาเรียบเรียง พอเขียนแล้ว การพูดจะกลายเป็น<strong>การระลึก</strong>สิ่งที่เรียบเรียงไว้แล้ว
+    ไม่ใช่การแต่งสด — <code>README.md</code> จะทำหน้าที่นี้ให้เอง
+  </p>
+
+  <h2>กฎเดียวที่ตอบว่า “ลงลึกแค่ไหน”</h2>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      <strong>รายละเอียดที่ใส่ ต้องเป็นสิ่งที่คนฟังต้องรู้เพื่อเข้าใจประโยค<em>ถัดไป</em> เท่านั้น</strong>
+    </p>
+  </div>
+
+  <p>
+    ตัวอย่างจริงจากรอบที่พูด: อธิบายว่า neuron ที่มีหลาย input ต้องมี
+    <code>W1x1 + W2x2 + W3x3</code> — <strong>แต่ประโยคถัดไปคือ backprop
+    ซึ่งไม่ต้องใช้ข้อมูลนั้นเลย</strong> ตัดออกได้ทั้งท่อน
+  </p>
+
+  <p>
+    ความรู้สึกว่า <em>“ไม่มีเวลาอธิบาย เพราะ detail เยอะมาก”</em>
+    คือสัญญาณว่า<strong>ใส่ detail ผิดที่ ไม่ใช่ว่าเวลาไม่พอ</strong>
+  </p>
+
+  <h2>โครงถาวร — ใช้ซ้ำได้ทุกครั้ง</h2>
+
+<pre><code>1. WHY            What problem were people trying to solve?
+2. WHAT           A neural network is a computational graph.
+3. HOW            Training = predict → measure the error → adjust.
+4. THE HARD PART  Numerical gradients need one forward pass per parameter.
+                  With a billion parameters that is a billion passes.
+5. THE ANSWER     Backprop: one backward pass, all the gradients.
+                  It works because intermediate results are reused.
+6. PROOF          I built it from scratch. Here is the graph it draws.</code></pre>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      หกขั้นนี้ยาว 30 วินาทีก็ได้ 15 นาทีก็ได้ — <strong>และมันคือโครงของ
+      <code>README.md</code> ด้วย</strong> ไม่ต้องคิดสองรอบ
+    </p>
+  </div>
+
+  <h2>สิ่งที่ทำได้ดีอยู่แล้ว — อย่าทิ้ง</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ที่พูดไป</th><th>ทำไมถึงดี</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><em>“There's a better question than that: what problem are people trying to solve?”</em></td>
+        <td><strong>ไม่แนะนำศัพท์ก่อนแนะนำปัญหาที่ศัพท์นั้นแก้</strong> — ครูที่สอนดีใช้วิธีนี้ คนส่วนใหญ่ไม่ทำ</td>
+      </tr>
+      <tr>
+        <td>iPhone เลือกข้อความจากรูป</td>
+        <td>ตัวอย่างที่คนฟังเคยใช้เอง ไม่ใช่ตัวอย่างในตำรา</td>
+      </tr>
+      <tr>
+        <td>มีดกับการทำอาหาร</td>
+        <td>ตอบ “ทำไมต้องเรียนของพื้นฐาน” ได้ในประโยคเดียว</td>
+      </tr>
+      <tr>
+        <td>numerical gradient ช้าเกินไป</td>
+        <td><strong>เหตุผลจริงที่ backprop มีอยู่</strong> — ไม่ใช่คำอธิบายลอยๆ</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>จุดที่ยังขาด</h3>
+
+  <div class="note bad">
+    <p style="margin-bottom:0">
+      <em>“Backprop runs one backward pass and gives you all the gradients”</em> —
+      <strong>นี่คือการอ้าง ไม่ใช่คำอธิบาย</strong><br>
+      สิ่งที่ขาดคือ <em>ทำไมมันทำได้</em>: <strong>ผลลัพธ์กลางทางถูกใช้ซ้ำ</strong> —
+      gradient ที่คำนวณให้ node หนึ่ง ถูกส่งต่อให้ทุก node ที่อยู่ใต้มัน โดยไม่ต้องคำนวณใหม่
+    </p>
+  </div>
+
+  <div class="ask">
+    วิธีวัดว่าดีขึ้นจริง: <strong>อัดเสียงตัวเองทุกครั้ง แล้วนับว่าหยุดกี่ครั้ง</strong> —
+    ไม่ใช่นับว่าผิดไวยากรณ์กี่ที่ · จำนวนครั้งที่หยุดคือตัวชี้วัดของ working memory ที่เหลืออยู่
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="why-deliverables.html">← ทำไปทำไม</a>
+      <a href="roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
