@@ -251,4 +251,36 @@ window.GLOSSARY = {
     en: "remote and remote-tracking branch",
     def: "<code>origin</code> คือชื่อเล่นของ URL ปลายทาง ส่วน <code>origin/main</code> คือ pointer <em>ในเครื่องเรา</em> ที่จำว่าตอนคุยกับ remote ครั้งล่าสุด main ฝั่งโน้นอยู่ตรงไหน — มันคือ estimate ที่อัปเดตเฉพาะตอน fetch/pull/push เท่านั้น"
   }
+  ,
+  /* ---- makemore ---- */
+  "onehot": {
+    term: "One-hot encoding",
+    en: "one-hot encoding",
+    def: "แทนหมวดหมู่ด้วยเวกเตอร์ที่เป็น 1 อยู่ช่องเดียว ที่เหลือเป็น 0 — เพราะการใส่ index ตรงๆ จะยัด<strong>ลำดับและขนาดปลอม</strong>เข้าไป (ทำให้ <code>e</code> ดูมากกว่า <code>a</code> ห้าเท่า) สิ่งที่ต้องเห็นให้ได้: <code>one_hot(i) @ W</code> <strong>คือแถวที่ <code>i</code> ของ <code>W</code> ตรงๆ</strong> ไม่ใช่การคูณ จึงเป็น <span class='g' data-t='gather'>gather</span> ที่เขียนในรูปการคูณเมทริกซ์"
+  },
+  "softmax": {
+    term: "Softmax",
+    en: "softmax",
+    def: "แปลงเลขชุดหนึ่ง (<span class='g' data-t='logit'>logit</span>) ให้เป็นความน่าจะเป็น สองขั้น: <code>exp</code> ทำให้เป็นบวกทุกตัว แล้วหารด้วยผลรวมเพื่อให้บวกกันได้ 1 — คิดง่ายๆ ว่า <code>exp</code> เปลี่ยน logit กลับเป็น “จำนวนนับ” แล้วการหารคือการทำให้เป็นสัดส่วน"
+  },
+  "logit": {
+    term: "Logit",
+    en: "logit",
+    def: "ค่าดิบก่อนเข้า softmax ติดลบได้ ไม่มีขอบเขต — ตีความว่าเป็น <strong>log ของจำนวนนับ</strong> เพราะ <code>exp</code> จะแปลงมันกลับเป็นจำนวนนับพอดี"
+  },
+  "likelihood": {
+    term: "Likelihood",
+    en: "likelihood",
+    def: "นิพจน์เดียวกับ probability แต่<strong>ถือคนละตัวแปรไว้คงที่</strong> — probability ตรึงพารามิเตอร์แล้วถามถึงข้อมูล ส่วน likelihood ตรึง<em>ข้อมูลที่เห็นแล้ว</em> แล้วถามว่าพารามิเตอร์ชุดไหนทำให้ข้อมูลนี้น่าเกิด นั่นคือเหตุผลที่ maximize มันเทียบกับพารามิเตอร์ได้ แต่มันไม่ใช่ความน่าจะเป็นของพารามิเตอร์"
+  },
+  "crossentropy": {
+    term: "Cross-entropy / NLL",
+    en: "negative log likelihood",
+    def: "loss ของงานทำนายความน่าจะเป็น: เอา log ของความน่าจะเป็นที่โมเดลให้กับ<em>คำตอบที่ถูก</em> มาเฉลี่ยแล้วใส่ลบ · log เปลี่ยนการคูณกันยาวๆ ให้เป็นการบวก และเครื่องหมายลบทำให้ “ยิ่งน้อยยิ่งดี” · ต่ำสุดคือ 0 เมื่อทำนายถูกด้วยความมั่นใจเต็ม"
+  },
+  "smoothing": {
+    term: "Smoothing / regularization",
+    en: "smoothing",
+    def: "กันไม่ให้ความน่าจะเป็นเป็นศูนย์พอดี เพราะ <code>log(0) = −∞</code> ทำให้ loss ระเบิด · ฝั่งนับใช้บวก 1 เข้าไปทุกช่อง ฝั่ง neural ใช้บวก <code>0.01*(W**2).mean()</code> เข้าไปใน loss — <strong>สองอันนี้คือสิ่งเดียวกัน</strong> ทั้งคู่ดันการแจกแจงเข้าหาแบบสม่ำเสมอ"
+  }
 };
