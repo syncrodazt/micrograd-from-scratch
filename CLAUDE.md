@@ -166,9 +166,14 @@ The September rewrite-with-no-video is a different artifact and can be its own r
 `mlp.py`, the sampling, the loss. You may still write `tests/`, the dataset download, and
 matplotlib helpers.
 
-**numpy:** allowed for data prep only — counting bigrams, building the 27×27 table.
-Never inside the engine, never in a forward or backward pass. If a gradient flows through
-it, it has to be `Value`.
+**PyTorch is allowed in `makemore/` — decided 13 Aug.** Karpathy uses torch from makemore
+part 1 onwards, and learning how it is actually used is a goal in itself. `micrograd/` stays
+pure: no numpy, no torch, ever. So the README claim is scoped — *the engine* uses neither,
+which is the honest and checkable version anyway.
+
+**One step keeps the engine connected:** train the neural bigram once with `micrograd`
+before switching to torch for everything else. Measured at roughly 13 minutes for 5,000
+bigrams over 100 steps. Skip it and the engine built all month never trains anything real.
 
 **Know before choosing sizes:** the engine is scalar, so one training example builds
 thousands of `Value` objects, not one tensor op. Measure the cost first — count the nodes
