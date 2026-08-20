@@ -1,0 +1,379 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review — retrieval session 2026-08-21</title>
+<link rel="stylesheet" href="../assets/style.css">
+
+<body data-glossary-href="../reference/glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="2026-08-21-recall.html">คำตอบดิบชุดนี้</a> &nbsp;·&nbsp;
+    <a href="../reference/glossary.html">Glossary</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Review · 2026-08-21</div>
+    <h1>ตรวจคำตอบ — และคำถามที่ตั้งเองแล้ววัดได้จริง</h1>
+    <p class="standfirst">
+      ตรวจ <a href="2026-08-21-recall.html">คำตอบดิบ</a> ทีละข้อ ·
+      คำถามเรื่อง memory ที่ตั้งเองระหว่างวิ่ง กลายเป็นสิ่งที่วัดได้และเจอของจริง ·
+      และหนึ่งข้อที่โจทย์ผิดเอง ไม่ใช่คำตอบผิด
+    </p>
+    <div class="meta">2026-08-21 · Day 7 · หลังหยุดไป 3–4 วัน</div>
+  </header>
+
+  <h2>สรุปผล</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>คำถาม</th><th>ผล</th></tr></thead>
+    <tbody>
+      <tr><td><code>Value</code> เก็บอะไรบ้าง</td><td>🟡 <strong>ได้ 4 จาก 6</strong></td></tr>
+      <tr><td><code>a * b</code> เกิดอะไรขึ้น</td><td>✅ ถูกหมด รวมทั้ง <code>_op</code> ที่ใช้แค่ตอนวาดกราฟ</td></tr>
+      <tr class="row-key"><td><code>_backward</code> จับอะไร ทำไมต้องจับ</td><td>✅ ถูก — <strong>และคำถามที่ตั้งเองคือของดีที่สุดในรอบนี้</strong></td></tr>
+      <tr class="row-key"><td><code>backward()</code> ทำอะไรบ้าง</td><td>✅ <strong>แก้ตัวเองกลางทาง — และโจทย์ผิดเอง ไม่ใช่คำตอบผิด</strong></td></tr>
+      <tr><td><code>Neuron</code> → <code>Layer</code> → <code>MLP</code></td><td>✅ ถูก · ขนาน vs อนุกรม เป็นการมองที่ดี</td></tr>
+      <tr><td><code>parameters()</code> คืนอะไร / ไม่คืนอะไร</td><td>🟡 ลงเอยถูก · “ไม่คืนอะไร” <strong>นึกไม่ออก</strong></td></tr>
+      <tr><td>Training loop + <code>zero_grad</code></td><td>🟡 ถูกตอนกลาง <strong>แล้วหลุดตอนท้าย</strong></td></tr>
+      <tr><td>เส้นฐานของการนับคือเท่าไหร่</td><td>❌ <strong>ไม่ได้ตัวเลข</strong></td></tr>
+      <tr><td><code>one_hot(5) @ W</code> เท่ากับอะไร</td><td>🟡 <strong>พูดถูกแล้วพูดผิดทับ</strong></td></tr>
+      <tr><td>logit → exp → count → หาร → probability</td><td>✅ ถูกทุกขั้น เรียกชื่อ <code>logit</code> = log count ได้เอง</td></tr>
+      <tr class="row-key"><td>ทำไม loss ต้องเป็น NLL</td><td>✅ <strong>ดีที่สุดของทั้งรอบ</strong> — และวัดยืนยันได้</td></tr>
+      <tr><td>likelihood vs probability · ช่วง 3 · ช่วง 4</td><td>⬜ ไม่ได้ตอบ</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>ข้อที่โจทย์ผิดเอง</h2>
+
+  <blockquote class="raw">
+    <p>เออเมื่อกี้พูดผิดว่ะ … แล้วถ้าพี่บอกทำสี่อย่างนี่มันคืออะไรนะ
+    เพราะตอนเราคิดตอนนี้มันมีแค่สองอย่างป่ะ</p>
+  </blockquote>
+
+  <p>
+    <strong>โจทย์ที่ผมตั้งว่า “<code>backward()</code> ทำ 4 อย่าง” ผิด</strong> —
+    ในโค้ดที่เขียนเองมี <strong>3 บรรทัด 3 อย่าง</strong>:
+  </p>
+
+<pre><code>def backward(self) -&gt; None:
+    self.grad = 1.0          1. ตั้ง grad ของ root
+    order = topo(self)       2. เรียงลำดับ
+    for n in order:          3. เรียก _backward ตามลำดับนั้น
+        n._backward()</code></pre>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      <strong>ที่แก้ตัวเองนั้นถูก 100%</strong> — <code>backward()</code> คำนวณ gradient อย่างเดียว ·
+      การอัปเดต parameter กับ <code>zero_grad</code> อยู่ใน training loop ไม่ใช่ใน <code>backward()</code><br><br>
+      และที่นับได้ “สองอย่าง” ก็เกือบครบ — ที่ขาดคือ <code>topo(self)</code> ซึ่งเป็นขั้นแยกจริงๆ
+      <strong>ส่วน <code>reversed()</code> ไม่ได้อยู่ใน <code>backward()</code> เพราะย้ายไปไว้ใน
+      <code>topo()</code> แล้ว</strong> — การออกแบบของตัวเอง ต่างจากของ Karpathy ตรงนี้
+    </p>
+  </div>
+
+  <h2><code>Value</code> — ได้ 4 จาก 6</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>field</th><th>ตอบได้?</th><th>มีไว้ทำไม</th></tr></thead>
+    <tbody>
+      <tr><td><code>data</code></td><td>✅</td><td>ค่าของ node</td></tr>
+      <tr><td><code>grad</code></td><td>✅</td><td>อนุพันธ์ของ loss เทียบกับ node นี้</td></tr>
+      <tr><td><code>_prev</code></td><td>✅</td><td>ใช้เดินกราฟตอน topological sort</td></tr>
+      <tr><td><code>_op</code></td><td>✅ <em>(บอกเองว่าใช้แค่ตอนวาดกราฟ — ถูก)</em></td><td>ป้ายกำกับสำหรับ graphviz</td></tr>
+      <tr class="row-key"><td><code>_backward</code></td><td><strong>❌ ไม่ได้นับเป็น field</strong></td><td><strong>closure ที่เก็บวิธีกระจาย gradient ของ node นั้นโดยเฉพาะ</strong></td></tr>
+      <tr><td><code>label</code></td><td>❌</td><td>ชื่อที่ตั้งเองสำหรับอ่านกราฟ</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <code>_backward</code> เป็นตัวที่น่าสนใจที่สุด — <strong>พูดถึงมันตลอดทั้งสามข้อ
+    แต่ไม่ได้นับว่ามันคือ field ที่เก็บอยู่บน object</strong>
+    ทั้งที่มันคือสิ่งที่ทำให้ <code>_op</code> ไม่ต้องถูกอ่านตอน backward เลย
+  </p>
+
+  <h3><code>_prev</code> เป็น list หรือ set — ที่ลังเลไว้</h3>
+
+  <p>
+    <strong>โค้ดที่เขียนเองใช้ <code>list</code></strong> (<code>self._prev = list(_prev)</code>)
+    และเหตุผลที่ให้ไว้ก็เป็นเหตุผลที่ถูก
+  </p>
+
+  <div class="note">
+    <p style="margin-bottom:0">
+      <strong>ที่ต้องระวังคือคำว่า “ลำดับไม่สำคัญ”</strong> — สำหรับ<em>ความถูกต้องของ gradient</em>
+      ไม่สำคัญจริง เพราะ <code>_backward</code> เป็น closure ที่จับ <code>self</code> กับ
+      <code>other</code> ไว้แล้ว <strong>และไม่เคยอ่าน <code>_prev</code> เลย</strong><br>
+      แต่ <code>set</code> จะยุบตัวซ้ำ — <code>x + x</code> จะเหลือ <code>_prev</code> ตัวเดียว
+      ทำให้<strong>กราฟที่วาดออกมาโกหก</strong> ทั้งที่ตัวเลข gradient ยังถูก
+    </p>
+  </div>
+
+  <h2>⭐ คำถามที่ตั้งเองระหว่างวิ่ง — วัดแล้ว และเจอของจริง</h2>
+
+  <blockquote class="raw">
+    <p>เฮ้ยมันจะมีปัญหาหรือเปล่าเรายังไม่รู้ … closure มันฝังข้อมูลใส่ในฟังก์ชัน
+    มันเปลือง memory แค่ไหน … มันไปเก็บข้อมูลไว้ไหน เก็บใน RAM หรือยังไง</p>
+  </blockquote>
+
+  <p>รันวัดจริงบน engine ที่เขียนเอง:</p>
+
+<pre><code>sizeof(Value instance dict) : 280 bytes
+sizeof(_backward function)  : 160 bytes
+free vars captured          : ('other', 'self', 't')
+cells                       : 3</code></pre>
+
+  <p>
+    <strong>ราคาของ closure คือประมาณ 160 ไบต์ต่อ node</strong> บวก cell อีก 3 ตัว —
+    ไม่ได้ copy ข้อมูล แค่ถือ<em>การอ้างอิง</em> ไปยัง object เดิม
+    ซึ่ง <code>_prev</code> ก็ถืออยู่แล้วอยู่ดี
+  </p>
+
+  <h3>แต่มีของที่ไม่ได้คิดถึง และมันสำคัญกว่า</h3>
+
+<pre><code>does the closure capture t itself?  True</code></pre>
+
+  <div class="note bad">
+    <span class="note-label">reference cycle</span>
+    <p style="margin-bottom:0">
+      <code>t._backward</code> เป็น closure ที่จับ <code>t</code> ไว้ —
+      <strong><code>t</code> ชี้ไป <code>_backward</code> และ <code>_backward</code> ชี้กลับมาที่ <code>t</code></strong><br>
+      แปลว่าตัวนับ reference ของ Python ปล่อย <code>t</code> ทิ้งเองไม่ได้ ต้องรอ
+      <span class="g" data-t="gc">cycle collector</span> มาเก็บ
+    </p>
+  </div>
+
+  <p>วัดโดยทิ้ง reference สุดท้ายของกราฟ แล้วดูว่ามันตายทันทีไหม:</p>
+
+<pre><code>root still alive after refcount drop?  True     ← ยังไม่ตาย
+freed only by the cycle collector?     True     ← ตายตอน gc.collect()
+objects collected                      23</code></pre>
+
+  <p>
+    <strong>คำถามที่ตั้งเองถูกทาง</strong> — มีต้นทุนจริง แต่ไม่ใช่ที่คิด ·
+    ไม่ใช่ “เปลือง RAM เพราะ copy ข้อมูล” แต่เป็น
+    <strong>“node ตายช้ากว่าที่ควร เพราะเป็นวงกลม”</strong>
+  </p>
+
+  <p>
+    ต่อยอดจากที่เคยวัดไว้ใน <a href="../lessons/0010-the-training-loop.html">Lesson 10</a>:
+    เทรน 100 รอบสร้างทิ้งราว 34,000 ก้อน — <strong>ทั้ง 34,000 ก้อนนั้นต้องรอ cycle collector
+    ไม่มีก้อนไหนถูกปล่อยทันที</strong> · ที่สเกลนี้ยังไม่เจ็บ แต่เป็นเหตุผลหนึ่งที่ PyTorch
+    ไม่เก็บ backward function ไว้บน tensor แบบนี้
+  </p>
+
+  <h2><code>parameters()</code> — “ไม่คืนอะไร” คือคำตอบที่นึกไม่ออก</h2>
+
+  <p>
+    ที่ลงเอยว่า<strong>ต้องคืน <code>Value</code> ทั้ง object ไม่ใช่ <code>.data</code></strong> ถูก
+    และเหตุผลก็ถูก: ถ้าคืนแค่ตัวเลข การเขียน <code>p.data -= lr * p.grad</code>
+    จะไปตกที่ก้อนที่ network ไม่ได้อ่าน
+  </p>
+
+  <div class="note good">
+    <span class="note-label">ส่วนที่นึกไม่ออก</span>
+    <p style="margin-bottom:0">
+      <strong><code>parameters()</code> ไม่คืน “ตัวกลาง”</strong> —
+      <code>Value</code> ที่เกิดจาก <code>w*x</code>, ผลบวก, และ <code>tanh</code><br>
+      วัดไว้แล้วใน Lesson 10: <code>MLP(3,[4,4,1])</code> forward pass เดียวสร้าง
+      <strong>85 ก้อน</strong> แต่ <code>parameters()</code> คืนแค่ <strong>41</strong><br><br>
+      เส้นแบ่งคือ <strong>“อะไรอยู่ข้ามรอบ”</strong> — parameter อยู่ต่อ ตัวกลางตายทุกรอบ
+      และนั่นคือเหตุผลเดียวกับที่ <code>zero_grad</code> ล้างแค่ parameter
+    </p>
+  </div>
+
+  <h2><code>zero_grad</code> — ถูกตอนกลาง แล้วหลุดตอนท้าย</h2>
+
+  <div class="tw">
+  <table>
+    <tbody>
+      <tr><td>ตอนกลาง</td><td><em>“อย่าลืม Set Gradient เป็น 0 ของทุก Parameter”</em> — ✅ ถูก</td></tr>
+      <tr class="row-key"><td>ตอนท้าย</td><td><em>“ขั้นที่ 0 คือ Preprocessing Input Data เหรอ? Normalization?”</em> — ❌</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>ขั้นที่ 0 คือ <code>zero_grad</code> ตัวที่พูดถูกไปแล้วเมื่อครู่</strong> —
+    ไม่ใช่ normalization · เงื่อนไขจริงคือมันต้องอยู่<strong>ระหว่าง <code>backward()</code> สองครั้ง</strong>
+    จะวางต้นรอบหรือท้ายรอบก็ได้
+  </p>
+
+  <p>
+    น่าสังเกตว่า<strong>นี่คือบั๊กที่เจอเองกับมือเมื่อ 12 ส.ค.</strong> และอธิบายได้ดีมากตอนนั้น —
+    <strong>9 วันผ่านไปแล้วชื่อของมันหลุด</strong> ทั้งที่กลไกยังจำได้ ·
+    ข้อนี้ต้องอยู่ในรอบซ้อมก่อน 26 ส.ค.
+  </p>
+
+  <h2>makemore — เส้นฐานที่ยังไม่ติดตัว</h2>
+
+  <blockquote class="raw">
+    <p>เส้นฐานที่หนึ่งนับอะไรได้อะไร เล็กเส้นฐานคือเท่าไร ก็คือนับ Bigram ตรงๆ</p>
+  </blockquote>
+
+  <p>
+    ตอบว่า<em>ทำยังไง</em>ได้ แต่<strong>ไม่ได้ตัวเลข</strong> ·
+    เลขนี้คือสิ่งที่ทำให้เฟส 6 ทั้งเฟสวัดผลได้:
+  </p>
+
+<pre><code>bigram ทั้งหมด          228,146 คู่
+NLL ของโมเดลนับ         2.4540      ← ต้องจำให้ได้
+ช่องที่เป็นศูนย์          102 / 729</code></pre>
+
+  <p>
+    <strong>ถ้าเขียน <code>bigram.py</code> แล้วได้เลขอื่น แปลว่ามีบั๊ก</strong> —
+    เป็นเลขเดียวในเฟส 6 ที่มีเฉลยล่วงหน้า
+  </p>
+
+  <h2><code>one_hot(5) @ W</code> — พูดถูกแล้วพูดผิดทับ</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>ที่พูด</th><th></th></tr></thead>
+    <tbody>
+      <tr class="row-key"><td><em>“มันก็เหมือนจับ Row ของไอเวทนั่นน่ะ”</em></td><td>✅ <strong>ถูกเป๊ะ — และเป็นความก้าวหน้าจากรอบก่อน</strong></td></tr>
+      <tr><td><em>“เท่ากับ Probability ของการเกิดแต่ละอักษรหลัง a”</em></td><td>❌ นั่นคือ<strong>หลัง</strong> softmax แล้ว</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <code>one_hot(5) @ W</code> คือ <strong>แถวที่ 5 ของ <code>W</code> ดิบๆ = logit</strong> ·
+    กว่าจะเป็น probability ต้องผ่าน <code>exp</code> แล้วหารด้วยผลรวมก่อน —
+    <strong>ซึ่งเล่าถูกทุกขั้นในย่อหน้าถัดมา</strong> แค่พูดข้ามขั้นตอนตรงนี้
+  </p>
+
+  <h3>และช่วงของ <code>W</code> ไม่ใช่ −1 ถึง 1</h3>
+
+  <blockquote class="raw">
+    <p>ไอเวทของ Neural Network มันคือ -1 ถึง 1</p>
+  </blockquote>
+
+  <p>
+    นั่นคือ <code>uniform(-1, 1)</code> ซึ่งเป็นสิ่งที่ <code>Neuron.__init__</code>
+    <strong>ของ micrograd</strong> ใช้ · makemore ใช้ <code>torch.randn</code> ซึ่งเป็น gaussian ไม่มีขอบ:
+  </p>
+
+<pre><code>randn(27,27)   (makemore ใช้)   −2.620 .. 3.752
+uniform(-1,1)  (Neuron ใช้)     −0.994 .. 0.998
+
+ค่าที่หลุดออกนอก [-1, 1] ของ randn : 30.9%</code></pre>
+
+  <p>
+    <strong>ความรู้จากโปรเจกต์เดิมไหลข้ามมาโดยไม่รู้ตัว</strong> — เป็นรูปแบบที่จะเจอบ่อยขึ้น
+    ตอนที่ micrograd กับ torch อยู่ใน repo เดียวกัน
+  </p>
+
+  <h2>⭐ ท่อนที่ดีที่สุด — และตัวเลขที่ยืนยัน</h2>
+
+  <blockquote class="raw">
+    <p>Property ของการเกิด Emma เนี่ยมันก็คือ Property ของแต่ละคู่มาคูณกัน …
+    พอมาคูณกันมันจะเข้าใกล้ศูนย์ … ซึ่งมันไม่สะดวก เราก็เลย Take log
+    พอ Take log แล้วมันก็จะเป็นเหมือนแบบเอา Property มาแค่บวกกัน</p>
+  </blockquote>
+
+  <p>
+    <strong>นี่คือการ derive cross-entropy ออกมาเองจากศูนย์ ไม่ได้ท่องมา</strong> ·
+    วัดจริงว่ามัน “เข้าใกล้ศูนย์” เร็วแค่ไหน:
+  </p>
+
+<pre><code>ava          p = 1.656744e-04
+emma         p = 3.478214e-06
+olivia       p = 2.483135e-08
+alexandria   p = 6.311320e-12</code></pre>
+
+  <p>ชื่อยาวขึ้นนิดเดียว ความน่าจะเป็นหายไปเป็นล้านเท่า · แล้วถ้าคูณต่อไปเรื่อยๆ:</p>
+
+<pre><code>คูณ probability เดิมซ้ำๆ → ได้ 0.0 พอดี หลังจาก 408 ตัว
+
+log-likelihood ของทั้ง corpus = −559,873.6
+exp ของค่านั้น                 = 0.0   (float64 รับไม่ไหว)
+228,146 bigram → NLL ต่อคู่    = 2.4540</code></pre>
+
+  <div class="note good">
+    <p style="margin-bottom:0">
+      <strong>“มันไม่สะดวก” ที่พูดไว้ ในทางตัวเลขคือ “มันเป็นศูนย์พอดี”</strong> —
+      ไม่ใช่แค่เล็กจนอ่านยาก แต่<strong>ข้อมูลหายไปหมดจริงๆ</strong>
+      คูณแค่ 408 ครั้งก็ตันแล้ว ส่วน corpus มี 228,146 ครั้ง<br><br>
+      <code>log</code> จึงไม่ใช่แค่ความสะดวก — <strong>ถ้าไม่ใช้ ตัวเลขจะเป็น 0.0
+      แล้ว gradient เป็นศูนย์หมด เทรนไม่ได้เลย</strong>
+    </p>
+  </div>
+
+  <h3>จุดที่พูดสลับ</h3>
+
+  <p>
+    <em>“Property มันน้อยกว่าหนึ่ง แล้วพอ Take log อะไรของอะไรที่<strong>มากกว่า</strong>หนึ่งมันก็จะติดลบ”</em>
+    — สลับคำ · <code>log</code> ของอะไรที่<strong>น้อยกว่า</strong> 1 ถึงจะติดลบ ·
+    ประโยคก่อนหน้าและหลังจากนั้นถูกหมด จึงเป็นแค่การพูดสลับ ไม่ใช่ความเข้าใจผิด
+  </p>
+
+  <h2>เทียบกับรอบก่อน</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>9 ส.ค.</th><th>12 ส.ค.</th><th>21 ส.ค.</th></tr></thead>
+    <tbody>
+      <tr><td>ขอบเขต</td><td>engine</td><td>engine + <code>nn.py</code></td><td><strong>+ makemore</strong></td></tr>
+      <tr><td>ผิดแบบกลไก</td><td>3 จุด</td><td>1 จุด</td><td><strong>0 จุด</strong></td></tr>
+      <tr class="row-key"><td>แก้ตัวเองกลางทาง</td><td>—</td><td>—</td><td><strong>1 ครั้ง ✅</strong></td></tr>
+      <tr class="row-key"><td>เถียงกลับโจทย์</td><td>—</td><td>—</td><td><strong>1 ครั้ง และถูก ✅</strong></td></tr>
+      <tr><td>ทำครบทุกช่วง</td><td>ครบ</td><td>ครบ</td><td><strong>2 จาก 4</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    <strong>ที่ผิดตอนนี้เป็นคนละชนิดกับที่ผิดตอนต้นเดือน</strong> —
+    9 ส.ค. ผิดที่กลไก (<code>id</code> vs <code>hash</code>, Newton ≠ gradient descent) ·
+    วันนี้กลไกถูกหมด ที่หายคือ<strong>ตัวเลขกับชื่อ</strong> (2.4540, คำว่า <code>zero_grad</code>,
+    <code>_backward</code> ในฐานะ field)
+  </p>
+
+  <div class="note bad">
+    <span class="note-label">แต่มีสิ่งที่ตัวเลขนี้ไม่ได้บอก</span>
+    <p style="margin-bottom:0">
+      <strong>ทำได้แค่ 2 จาก 4 ช่วง</strong> — ช่วง “อะไรพังถ้า…” ซึ่งเป็นช่วงที่ให้ผลมากที่สุด
+      ไม่ได้ทำเลย · เล่าเรื่องที่รู้แล้วใช้เวลามากกว่าที่คิดเสมอ<br>
+      <strong>รอบหน้าเอาช่วง 3 ขึ้นก่อน</strong> ส่วนการเล่าทั้งเส้นไว้ท้ายสุด
+    </p>
+  </div>
+
+  <h2>รายการที่ต้องซ้อมก่อน 26 ส.ค.</h2>
+
+  <div class="tw">
+  <table>
+    <tbody>
+      <tr><td><strong>1</strong></td><td><code>_backward</code> และ <code>label</code> เป็น field ของ <code>Value</code></td></tr>
+      <tr><td><strong>2</strong></td><td><code>backward()</code> = 3 ขั้น · <code>reversed()</code> อยู่ใน <code>topo()</code> ไม่ใช่ใน <code>backward()</code></td></tr>
+      <tr><td><strong>3</strong></td><td><code>parameters()</code> <strong>ไม่</strong>คืนตัวกลาง — 41 จาก 85</td></tr>
+      <tr class="row-key"><td><strong>4</strong></td><td><strong>ชื่อ <code>zero_grad</code></strong> และเงื่อนไขว่าต้องอยู่ระหว่าง <code>backward()</code> สองครั้ง</td></tr>
+      <tr><td><strong>5</strong></td><td><strong>2.4540</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="ask">
+    ประโยคเดียวที่ควรจำจากรอบนี้: <strong>กลไกยังอยู่ครบ สิ่งที่หายไปคือชื่อกับตัวเลข —
+    ซึ่งเป็นของที่ซ้อมกลับมาได้เร็วที่สุด</strong>
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="2026-08-21-recall.html">← คำตอบดิบ</a>
+      <a href="../reference/roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
