@@ -1,0 +1,444 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13 การทดลอง — รันเองให้เห็นกับตา</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  details.ans {
+    margin: .9rem 0 0;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  details.ans > summary {
+    cursor: pointer;
+    padding: .5rem .8rem;
+    font-size: .82rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  details.ans[open] > summary { border-bottom: 1px solid var(--rule); }
+  details.ans > div { padding: .2rem .8rem .6rem; }
+  details.ans pre { margin: .6rem 0; }
+  .exp { margin: 1.6rem 0 2.2rem; }
+  .exp h3 { margin-bottom: .3rem; }
+  .exp-q {
+    font-weight: 600;
+    margin: .2rem 0 .6rem;
+    padding-left: .7rem;
+    border-left: 3px solid var(--accent);
+  }
+  .tier { margin-top: 2.6rem; }
+</style>
+
+<body data-glossary-href="glossary.html">
+<div class="shell">
+<main>
+
+  <div class="crumbs">
+    <a href="../index.html">← Learning log</a> &nbsp;·&nbsp;
+    <a href="glossary.html">Glossary</a> &nbsp;·&nbsp;
+    <a href="roadmap.html">Roadmap</a>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">Reference · รันเอง ไม่ใช่อ่านเอา</div>
+    <h1>13 การทดลอง<br>ที่ต้องเห็นตัวเลขกับตาตัวเอง</h1>
+    <p class="standfirst">
+      ทุกตัวเลขในบทเรียนของเดือนนี้มาจากการรันจริง —
+      หน้านี้คือรายการว่ารันอะไรบ้าง เพื่อให้รันเองได้ใหม่ทั้งหมด
+      <strong>มีแต่โจทย์กับเฉลยที่เป็นตัวเลข ไม่มีโค้ด</strong>
+    </p>
+    <div class="meta">2026-08-21 · Day 7</div>
+  </header>
+
+  <div class="note bad">
+    <span class="note-label">เหตุผลที่หน้านี้มีอยู่</span>
+    <p style="margin-bottom:0">
+      <em>“แค่ตอบเนี่ยบางทีมันก็ตอบได้เหมือนเดาๆ อะนะ
+      แต่ถ้าเกิดจะให้เข้าใจจริงๆ เราต้องลอง implement แต่ละอันด้วยตัวเองไง”</em>
+    </p>
+  </div>
+
+  <h2>วิธีใช้</h2>
+
+  <div class="tw">
+  <table>
+    <tbody>
+      <tr><td><strong>1</strong></td><td><strong>อ่านโจทย์ แล้วทายตัวเลขก่อน</strong> — เขียนไว้ในกระดาษด้วยซ้ำ</td></tr>
+      <tr><td><strong>2</strong></td><td>เขียนโค้ดเอง <strong>อย่าเปิดเฉลย</strong></td></tr>
+      <tr class="row-key"><td><strong>3</strong></td><td>ค่อยกดเปิดเฉลยเทียบ — <strong>ถ้าไม่ตรง อย่างน้อยหนึ่งฝั่งมีบั๊ก และการหาว่าฝั่งไหนคือบทเรียน</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>
+    ทุกข้อรันบน <code>names.txt</code> 32,033 ชื่อ หรือบน <code>micrograd/</code> ที่เขียนเอง ·
+    ไม่มีข้อไหนต้องใช้ GPU และไม่มีข้อไหนใช้เวลาเกินไม่กี่นาที
+    <em>ยกเว้นข้อ 11</em>
+  </p>
+
+  <!-- ================================================= TIER 1 -->
+
+  <h2 class="tier">ระดับ 1 — เซลล์เดียว ประมาณ 5 นาที</h2>
+
+  <div class="exp">
+    <h3>1 · บรรทัดว่างหนึ่งบรรทัดใน <code>names.txt</code></h3>
+    <p class="exp-q">มันเปลี่ยนตาราง 27×27 ไปกี่ช่อง และเปลี่ยนอะไรตอน sample?</p>
+    <ul>
+      <li>สร้างตารางนับสองอัน — อันหนึ่งจากข้อมูลปกติ อีกอันเติมชื่อว่าง <code>""</code> เข้าไป 1 ตัว</li>
+      <li>เทียบทีละช่อง แล้วนับว่าต่างกันกี่ช่อง</li>
+      <li>คำนวณ <code>p(. | .)</code> ของตารางที่ปนเปื้อน แล้วแปลงเป็น “ต่อการ sample 1 ล้านชื่อ”</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>ช่อง (0,0) = (. , .)   0 -> 1
+ช่องอื่น เปลี่ยน 0 ช่อง
+
+p( . | . ) = 1/32,034 = 0.00003122
+-> sample 1,000,000 ชื่อ ได้ชื่อว่างราว 31 ชื่อ</code></pre>
+      <p style="margin-bottom:0">
+        <strong>NLL แทบไม่ขยับ เทสต์ทั่วไปผ่านหมด</strong> — แต่โมเดลเชื่อไปแล้วว่า
+        ชื่อที่ไม่มีตัวอักษรเลยเป็นไปได้
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>2 · คูณ probability ซ้ำๆ จนกลายเป็นศูนย์</h3>
+    <p class="exp-q">float64 ทนการคูณความน่าจะเป็นได้กี่ตัวก่อนจะเป็น <code>0.0</code> พอดี?</p>
+    <ul>
+      <li>หยิบ <code>p</code> ของ bigram ตัวหนึ่ง แล้วคูณสะสมไปเรื่อยๆ นับจำนวนครั้งจนได้ <code>0.0</code> เป๊ะ</li>
+      <li>คำนวณ <code>P(ชื่อ)</code> ของชื่อสั้นและชื่อยาว เทียบกัน</li>
+      <li>รวม <code>log p</code> ของทั้ง corpus แล้วลอง <code>exp</code> กลับ</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>ava          1.656744e-04
+emma         3.478214e-06
+olivia       2.483135e-08
+alexandria   6.311320e-12
+
+คูณซ้ำ -> ได้ 0.0 พอดี หลังจาก 408 ตัว
+corpus มี 228,146 ตัว
+
+log-likelihood ทั้ง corpus = -559,873.6
+exp ของค่านั้น              = 0.0   (underflow)
+NLL ต่อ bigram              = 2.4540</code></pre>
+      <p style="margin-bottom:0">
+        <strong><code>log</code> ไม่ใช่ความสะดวก</strong> — ถ้าไม่ใช้ ตัวเลขเป็นศูนย์
+        แล้ว gradient เป็นศูนย์หมด เทรนไม่ได้เลย
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>3 · <code>zip</code> ที่ไม่มี <code>strict=True</code></h3>
+    <p class="exp-q">ส่ง input มา 2 ตัวให้ neuron ที่รอ 3 ตัว — จะรู้ตัวไหม?</p>
+    <ul>
+      <li>เอา <code>Neuron(3)</code> มาเรียกด้วย list ที่มีแค่ 2 ตัว</li>
+      <li>ดูว่าได้อะไรกลับมา แล้วลองใส่ <code>strict=True</code> เทียบ</li>
+      <li>ลองทำแบบเดียวกันใน <code>MLP</code> ลึกๆ แล้วถามตัวเองว่าจะไล่เจอยังไง</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>n = Neuron(3)
+n([1.0, 2.0])
+-> Value(data = 0.9689875274388016)      ไม่มี error เลย
+
+zip(self.ws, xs, strict=True)
+-> ValueError: zip() argument 2 is shorter than argument 1</code></pre>
+      <p style="margin-bottom:0">
+        <strong>14 ตัวอักษร เปลี่ยนตัวเลขผิดเงียบๆ ให้เป็น error ที่ชี้จุดทันที</strong>
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>4 · <code>&lt;S&gt;</code> กับ <code>&lt;E&gt;</code> แยกกัน แทนที่จะยุบเป็น <code>.</code></h3>
+    <p class="exp-q">NLL เปลี่ยนไหม แล้วมีอะไรพังตอน normalize?</p>
+    <ul>
+      <li>สร้างตาราง 28×28 โดยใช้สองโทเคนแยก แล้วคำนวณ NLL เทียบกับแบบ 27×27</li>
+      <li><strong>ลองหารทุกแถวด้วยผลรวมของแถว</strong> — สังเกตว่าเกิดอะไรขึ้น</li>
+      <li>นับว่าช่องที่เป็นศูนย์เพิ่มมากี่ช่อง</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>NLL แบบ .        = 2.454014
+NLL แบบ &lt;S&gt;/&lt;E&gt;  = 2.454014      เท่ากันเป๊ะ
+
+แถว &lt;E&gt; -> sum = 0  ->  0/0
+คอลัมน์ &lt;S&gt; -> ศูนย์ทั้งคอลัมน์
+ช่องตายเพิ่มมา 55 ช่อง</code></pre>
+      <p style="margin-bottom:0">
+        <strong>Python ล้วนโยน <code>ZeroDivisionError</code> · torch ให้ <code>nan</code> เงียบๆ</strong>
+        แล้วแพร่ไปทั่ว tensor · ถ้าเทรน network บน 28 โทเคน แถว <code>&lt;E&gt;</code>
+        ไม่เคยได้ gradient เลย ส่วนคอลัมน์ <code>&lt;S&gt;</code> ถูกกดลงหา −∞ ไม่มีวันหยุด
+      </p>
+    </div></details>
+  </div>
+
+  <!-- ================================================= TIER 2 -->
+
+  <h2 class="tier">ระดับ 2 — ประมาณ 20 นาที ⭐</h2>
+
+  <div class="exp">
+    <h3>5 · ลบ <code>reversed()</code> ออกจาก <code>topo()</code> ⭐</h3>
+    <p class="exp-q">parameter กี่ตัวจาก 41 ที่ได้ gradient ถูก และมี error กี่ตัว?</p>
+    <ul>
+      <li>สร้าง <code>MLP(3, [4, 4, 1])</code> forward หนึ่งครั้ง เก็บ gradient ที่ถูกต้องไว้</li>
+      <li>ล้าง gradient ทั้งกราฟ แล้วเรียก <code>_backward()</code> <strong>ตามลำดับกลับด้าน</strong></li>
+      <li>นับว่ากี่ตัวที่ <code>grad == 0.0</code> พอดี และกี่ตัวที่ตรงกับของจริง</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>parameter ทั้งหมด               : 41
+grad = 0.0 พอดี (ไม่ได้เรียนเลย) : 41
+ตรงกับของจริง                   :  0
+
+ถูก -0.035150   |   ไม่มี reversed +0.000000
+ถูก +0.070301   |   ไม่มี reversed +0.000000
+
+node ทั้งกราฟ = 126 | ไม่มี error ขึ้นเลยสักตัว</code></pre>
+      <p style="margin-bottom:0">
+        <strong>41 จาก 41 ไม่ใช่ “ส่วนใหญ่” แต่ทั้งหมด</strong> —
+        training loop จะรันครบ 100 รอบ อัปเดตด้วยศูนย์ทุกครั้ง
+        แล้วรายงาน loss ที่ไม่ขยับ
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>6 · ตาราง 2 มิติของเหรียญ</h3>
+    <p class="exp-q">บวกตามแกนไหนได้ 1 และบวกตามแกนไหนไม่ได้อะไรเลย?</p>
+    <ul>
+      <li>โยน 10 ครั้ง · สร้างตารางที่แถว = จำนวนหัว 0–10 คอลัมน์ = <code>p</code> หลายค่า</li>
+      <li>บวกตามคอลัมน์ (ตรึง <code>p</code>) และบวกตามแถว (ตรึงข้อมูล)</li>
+      <li>หาช่องที่ <code>k = 7</code> ตัดกับ <code>p = 0.5</code></li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>  หัว |  p=0.1   p=0.3   p=0.5   p=0.7   p=0.9
+    3 | 0.0574  0.2668  0.1172  0.0090  0.0000
+    5 | 0.0015  0.1029  0.2461  0.1029  0.0015
+    7 | 0.0000  0.0090  0.1172  0.2668  0.0574  *
+  ----+----------------------------------------
+ รวม | 1.0000  1.0000  1.0000  1.0000  1.0000
+
+แถวที่ 7 รวม = 0.4504    ไม่ได้แปลว่าอะไร</code></pre>
+      <p style="margin-bottom:0">
+        <strong>ลงคอลัมน์ = probability (รวมได้ 1) · ข้ามแถว = likelihood (ไม่ได้ 1)</strong><br>
+        ช่อง <code>*</code> คือ 0.1172 — ปรากฏใน<em>ทั้งสองแบบ</em> เพราะมันคือช่องเดียว
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>7 · <code>C(10,7)</code> ขยับจุดสูงสุดไหม</h3>
+    <p class="exp-q">ตัดสัมประสิทธิ์ทวินามทิ้ง แล้ว argmax เปลี่ยนไปไหม?</p>
+    <ul>
+      <li>คำนวณ likelihood ของ “หัว 7 จาก 10” ตลอดช่วง <code>p</code> — ทั้งแบบมีและไม่มี <code>C(10,7)</code></li>
+      <li>หาตำแหน่งสูงสุดของทั้งสองเส้น</li>
+      <li>หารความสูงของยอดทั้งสองเส้น</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>p        มี C(10,7)     ไม่มี C(10,7)
+0.50     0.117188      0.000977
+0.70     0.266828      0.002224    <- สูงสุดทั้งคู่
+0.80     0.201327      0.001678
+
+จุดสูงสุด: p = 0.7 ทั้งสองแบบ
+สูงต่างกัน 120.0 เท่า  (= C(10,7) พอดี)</code></pre>
+      <p style="margin-bottom:0">
+        หลักการเดียวกับ <code>log</code> — <strong>ค่าคงที่เทียบกับพารามิเตอร์
+        ยกกราฟทั้งเส้นโดยไม่ย้ายยอด</strong> · และนี่คือเหตุผลที่ multinomial coefficient
+        หายไปจาก loss ของ makemore
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>8 · ลืม <code>zero_grad</code> — ตื้นกับลึกไม่เหมือนกัน</h3>
+    <p class="exp-q">รอบที่ 100 gradient เป็นกี่เท่าของรอบแรก — และคำตอบเดียวใช้ได้กับทุก parameter จริงไหม?</p>
+    <ul>
+      <li>เรียก <code>backward()</code> ซ้ำบนกราฟเดิม โดยไม่ล้างและไม่อัปเดตอะไรเลย</li>
+      <li>ดู <strong>สองตัว</strong>: parameter ของชั้นสุดท้าย (ติด root) และของชั้นแรก (ลึกสุด)</li>
+      <li>แยกทดลองอีกอัน: training loop จริงที่ต่างกันแค่มี/ไม่มี <code>zero_grad</code></li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>ลูกโดยตรงของ root  (L = a * 2.0)
+   รอบ   1 -> 2.0     (x1)
+   รอบ 100 -> 200.0   (x100)        เชิงเส้น
+
+ใน MLP จริง
+   รอบ |  ชั้นสุดท้าย        |  ชั้นแรก
+      1 |  +0.910922 (x1)    |  +0.000483 (x1)
+      3 | +19.129353 (x21)   |  +0.079744 (x165)
+    100 | +8.4e7   (x9.2e7)  |  +2.4e16  (x5e19)
+
+training loop จริง (lr = 0.05)
+   step |  มี zero_grad          |  ลืม
+    100 | loss 0.00030  g -0.0007 | loss 0.04000  g +0.9169</code></pre>
+      <p style="margin-bottom:0">
+        <strong>เชิงเส้นเฉพาะตอนที่ parameter เป็นลูกโดยตรงของ root</strong> —
+        มี node ตัวกลางเมื่อไหร่ ตัวกลางก็สะสมด้วย กลายเป็นทบต้น<br>
+        ใน loop จริงมันไม่ระเบิด แต่<strong>กระเด็นไปติดขอบ <code>tanh</code> แล้วค้างที่
+        <code>0.04000</code> เป๊ะทุก step</strong> — ดูเหมือนลู่เข้า ทั้งที่ตายแล้ว
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>9 · เป้าที่ <code>1.0</code> เทียบกับ <code>0.9</code></h3>
+    <p class="exp-q">ตั้งเป้าที่ <code>tanh</code> ไปไม่ถึง แล้ว loss ต่างกันกี่เท่าหลัง 400 รอบ?</p>
+    <ul>
+      <li>เทรน <code>MLP(3, [4, 4, 1])</code> สองรอบด้วย seed เดียวกัน ต่างกันแค่เป้าหมาย <code>±1.0</code> กับ <code>±0.9</code></li>
+      <li>บันทึก loss และผลรวม <code>|grad|</code> ทุก step</li>
+      <li>ดู output จริงตอนจบ ว่าห่างจากเป้าแค่ไหน</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>รอบ |  เป้า 1.0                |  เป้า 0.9
+    |  loss       |grad|       |  loss       |grad|
+ 50 |  0.014804   0.336383     |  0.001227   0.147666
+400 |  0.001368   0.033090     |  0.000026   0.008647
+
+output เป้า 1.0 : 0.98140  -0.98459  -0.97796  0.98271
+output เป้า 0.9 : 0.90001  -0.90330  -0.89614  0.89970</code></pre>
+      <p style="margin-bottom:0">
+        loss ต่างกัน <strong>53 เท่า</strong> · เป้า 0.9 ตรงถึงทศนิยม 4 ตำแหน่ง
+        ส่วนเป้า 1.0 ยังห่าง 0.019<br>
+        <strong>บทเรียนที่ใหญ่กว่า: gradient เล็ก แปลได้สองอย่างที่ตรงข้ามกัน</strong> —
+        ถึงจุดต่ำสุดแล้ว หรืออยู่ในเขตแบน · <strong>แยกจาก gradient อย่างเดียวไม่ได้ ต้องดู loss ประกอบ</strong>
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>10 · ความถี่ที่นับได้ ชนะทุกอย่างจริงไหม ⭐</h3>
+    <p class="exp-q">สุ่มขยับการแจกแจง 200,000 ครั้ง จะเจอที่ NLL ต่ำกว่ากี่ครั้ง?</p>
+    <ul>
+      <li>หยิบแถวเดียวของตารางนับ เช่นแถวของ <code>a</code> — 27 ช่อง</li>
+      <li>คำนวณ NLL ที่ความถี่ที่นับได้</li>
+      <li>รบกวนด้วย noise เล็กๆ แล้ว normalize ใหม่ · ทำซ้ำหลายแสนครั้ง นับว่าเจอที่ดีกว่ากี่ครั้ง</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>แถวของ 'a' : 33,885 ตัวอย่าง, 27 ช่อง
+
+NLL ที่ความถี่ที่นับได้        = 2.682714
+สุ่มขยับ 200,000 ครั้ง -> ดีกว่า 0 ครั้ง
+
+ตัวที่ตามหลัง a หนักสุด
+   .  6640 -> 0.195957     l  2528 -> 0.074605
+   n  5438 -> 0.160484     h  2332 -> 0.068821
+   r  3264 -> 0.096326</code></pre>
+      <p style="margin-bottom:0">
+        <strong>นี่คือ “เฉลยปิด” ที่พิสูจน์ด้วยมือเปล่า</strong> —
+        maximum likelihood ของ multinomial คือความถี่ที่นับได้เสมอ
+        และนั่นคือเหตุผลที่ neural bigram ลู่เข้าหาตารางนับพอดี
+      </p>
+    </div></details>
+  </div>
+
+  <!-- ================================================= TIER 3 -->
+
+  <h2 class="tier">ระดับ 3 — ครึ่งวัน</h2>
+
+  <div class="exp">
+    <h3>11 · ป้อน index ตรงๆ เทียบกับ one-hot</h3>
+    <p class="exp-q">โมเดลที่รับตัวเลข <code>0–26</code> ตรงๆ ทำได้ดีแค่ไหน?</p>
+    <ul>
+      <li>เทรนโมเดลที่รับ index เป็นเลขตัวเดียว — พารามิเตอร์แค่ 27 ตัว (และลองแบบมี bias อีกรอบ)</li>
+      <li>เทียบกับ one-hot 27×27 และกับการทายมั่ว <code>1/27</code></li>
+      <li><strong>สังเกตแถวของ <code>.</code> เป็นพิเศษ</strong> — มัน index เท่าไหร่ แล้วผลคูณออกมาเป็นอะไร</li>
+      <li>ระวัง: learning rate สูงไปนิดเดียว optimizer ระเบิดแล้วได้ NLL หลักร้อย · <strong>พิมพ์ loss ทุกร้อย step เพื่อยืนยันว่ามันลง</strong></li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>D  ทายมั่ว 1/27        (0 param)   -> NLL = 3.2958
+B  index ตรงๆ         (27 param)  -> NLL = 2.8740
+C  index + bias       (54 param)  -> NLL = 2.7628
+A  one-hot           (729 param)  -> NLL = 2.4540</code></pre>
+      <p style="margin-bottom:0">
+        <code>'.'</code> มี index = 0 → <code>0 × w = 0</code> ทุกช่อง →
+        <strong>softmax ให้ 1/27 เท่ากันหมด · โมเดลถูกบังคับให้ทายมั่วว่าชื่อขึ้นต้นด้วยอะไร</strong>
+        และไม่มีค่า <code>w</code> ไหนแก้ได้<br><br>
+        <strong>นี่คือรูปธรรมของ “index ยัดโครงสร้างปลอม”</strong> — มันไม่ได้แค่บอกว่า
+        <code>e</code> มากกว่า <code>a</code> ห้าเท่า แต่ยังบอกว่า <code>.</code> คือศูนย์ คือไม่มีอะไรเลย
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>12 · ตารางนับระเบิดตอน context ยาวขึ้น</h3>
+    <p class="exp-q">ที่ context 5 ตัว ข้อมูลแตะได้กี่เปอร์เซ็นต์ของตาราง?</p>
+    <ul>
+      <li>สำหรับ context 1 ถึง 5 ตัว — นับว่าตารางต้องมีกี่ช่อง</li>
+      <li>นับว่า context ที่โผล่จริงในข้อมูลมีกี่แบบ</li>
+      <li>หารกัน</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>context    ช่องในตาราง    ที่ข้อมูลใช้จริง    ใช้ไป
+ 1 ตัว              729              27      100%
+ 2 ตัว           19,683             602     82.6%
+ 3 ตัว          531,441           5,686     28.9%
+ 4 ตัว       14,348,907          22,135      4.2%
+ 5 ตัว      387,420,489          41,276      0.29%</code></pre>
+      <p style="margin-bottom:0">
+        <strong>การนับไม่ได้พังเพราะช้า มันพังเพราะไม่มีข้อมูลจะเติม</strong> —
+        99.7% ของตารางเป็นศูนย์ล้วน แปลว่า <code>log(0)</code> ทุกที่ที่เจอของใหม่<br>
+        และนั่นคือทั้งหมดของ makemore ตอนที่ 2
+      </p>
+    </div></details>
+  </div>
+
+  <div class="exp">
+    <h3>13 · <code>_backward</code> สร้างวงกลม</h3>
+    <p class="exp-q"><code>Value</code> ถูกปล่อยทันทีที่ไม่มีใครถือมันแล้วจริงไหม?</p>
+    <ul>
+      <li>ดูว่า closure ของ <code>_backward</code> จับตัวแปรอะไรไว้บ้าง — <strong>มันจับ node ที่มันแปะอยู่ด้วยหรือเปล่า</strong></li>
+      <li>สร้างกราฟเล็กๆ · ทำ <code>weakref</code> ไปที่ root · ลบ reference ทั้งหมด</li>
+      <li>เช็คว่า root ตายทันทีไหม แล้วค่อยเรียก cycle collector แล้วเช็คใหม่</li>
+    </ul>
+    <details class="ans"><summary>▸ ตัวเลขที่ต้องเจอ</summary><div>
+<pre><code>sizeof(_backward function)  : 160 bytes
+free vars captured          : ('other', 'self', 't')
+closure จับ t ตัวเองด้วยไหม  : True     <- วงกลม
+
+root ตายทันทีที่ refcount หมด  : False
+ตายตอน gc.collect()            : True, 23 objects</code></pre>
+      <p style="margin-bottom:0">
+        ราคาของ closure ไม่ใช่ “เปลือง RAM เพราะ copy ข้อมูล” —
+        <strong>แต่คือ node ทุกตัวตายช้ากว่าที่ควร เพราะเป็นวงกลม</strong><br>
+        เทรน 100 รอบสร้างทิ้งราว 34,000 ก้อน · <strong>ไม่มีก้อนไหนถูกปล่อยทันทีเลยสักก้อน</strong>
+      </p>
+    </div></details>
+  </div>
+
+  <!-- ================================================= -->
+
+  <h2 class="tier">เริ่มที่ไหนถ้ามีเวลาแค่ชั่วโมงเดียว</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>ข้อ</th><th>เพราะ</th></tr></thead>
+    <tbody>
+      <tr class="row-key"><td><strong>1</strong></td><td>ข้อ 5 · ลบ <code>reversed()</code></td><td>พิสูจน์ว่า topological sort ไม่ใช่เรื่องความสวยงาม — <strong>41 จาก 41 เป็นศูนย์</strong></td></tr>
+      <tr class="row-key"><td><strong>2</strong></td><td>ข้อ 10 · สุ่มขยับความถี่</td><td>พิสูจน์ “เฉลยปิด” ด้วยมือเปล่า — ทั้งเฟส 6 ตั้งอยู่บนข้อนี้</td></tr>
+      <tr><td><strong>3</strong></td><td>ข้อ 2 · underflow</td><td>ถูกที่สุด และเปลี่ยน <code>log</code> จาก “สูตร” เป็น “สิ่งที่ขาดไม่ได้”</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="ask">
+    กติกาข้อเดียว: <strong>ทายตัวเลขก่อนเปิดเฉลยเสมอ</strong> —
+    ตัวเลขที่ทายผิดคือสิ่งเดียวในหน้านี้ที่สอนอะไรได้จริง
+  </div>
+
+  <div class="footer">
+    <div class="pager">
+      <a href="../index.html">← Learning log</a>
+      <a href="roadmap.html">Roadmap →</a>
+    </div>
+  </div>
+
+</main>
+
+<nav class="toc"></nav>
+</div>
+
+<script src="../assets/glossary-data.js"></script>
+<script src="../assets/lesson.js"></script>
+<script src="../assets/nav.js"></script>
