@@ -52,7 +52,6 @@ import pytest
 
 from makemore.data import bigrams, itos, load_words, stoi
 
-
 # --------------------------------------------------------------- helpers
 
 
@@ -119,6 +118,19 @@ def test_blank_lines_and_stray_whitespace_do_not_become_names(tmp_path):
     pair, which lands in the one cell of the table that should never be
     touched -- and nothing raises."""
     p = write_names(tmp_path, "\nada\n\n  bo  \ncy\n\n")
+    assert load_words(p) == ["ada", "bo", "cy"]
+
+
+def test_a_line_of_nothing_but_spaces_is_not_a_name(tmp_path):
+    """Sharper than the test above, and it catches an ordering mistake that
+    one cannot: a line has to be judged empty *after* its whitespace comes
+    off, not before. Check first and strip second, and a line of three
+    spaces survives the check, then becomes "" on the way into the list.
+
+    The result is an empty name that no later stage will complain about --
+    it just adds a ('.', '.') pair to the table.
+    """
+    p = write_names(tmp_path, "ada\n   \nbo\n\t\ncy\n")
     assert load_words(p) == ["ada", "bo", "cy"]
 
 
